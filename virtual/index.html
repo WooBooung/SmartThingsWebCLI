@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+</head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Virtual Device Creator</title>
+<style>
+    .category-container,
+    .capability-container {
+        display: flex;
+        flex-wrap: wrap;
+        max-width: auto;
+        /* Adjust width as needed */
+        max-height: 400px;
+        /* Adjust height to show approximately 10 lines */
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .category-item,
+    .capability-item {
+        width: auto;
+        /* Adjust width to fit two items per row */
+        box-sizing: border-box;
+        padding: 0px;
+    }
+
+    #profilesList {
+        width: auto;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-gap: 10px;
+        overflow-y: auto;
+        max-height: 500px;
+        /* 5줄 높이 */
+        border: 1px solid #ccc;
+        padding: 10px;
+    }
+
+    .profile-item {
+        text-align: center;
+        cursor: pointer;
+    }
+
+    #customCapabilities {
+        width: 50%;
+        box-sizing: border-box;
+    }
+</style>
+</head>
+
+<body>
+    <header>
+        <h1>Virtual Device Creator</h1>
+    </header>
+    <div class="container">
+        <a href="./../virtual">Virtual Device Creator</a> | <a href="./../events">Virtual Device send event</a><br>
+        <a href="./../capability">Capability Creator</a> | <a href="./../capabilityPresentation">Capability
+            Presentation</a><br>
+        <a href="./../profile">Device Profile</a> | <a href="./../configuration">Device Configuration</a> | <a
+            href="./../presentation">Device Presentation</a><br>
+        <a href="./../edge">Edge drivers</a> | <a href="./../channels">Edge channels</a><br>
+        <main>
+            <form id="deviceForm">
+                <a href="https://account.smartthings.com/tokens" target="_blank">Create PAT</a>
+                <label for="patToken">PAT Token: <input type="password" size=30 id="patToken" name="patToken" required
+                        onchange="loadData()"><input type="checkbox" id="togglePassword"
+                        onclick="togglePasswordVisibility()">Show</label>
+                <button type="button" onclick="saveData()">Save</button>
+                <button type="button" onclick="loadData()">Load</button>
+                <button type="button" onclick="clearData()">Clear</button></br>
+                This information is stored on your local PC, not on a server</br></br>
+
+                <label for="locationId">Location:
+                    <select id="locationId" name="locationId" required onchange="loadRooms(); loadHubs();">
+                        <option value="">Select Location</option>
+                    </select></label>
+
+                <label for="roomId">Room:
+                    <select id="roomId" name="roomId" required>
+                        <option value="">Select Room</option>
+                    </select></label>
+
+                <label for="executionTarget">Execution Target:
+                    <select id="executionTarget" name="executionTarget" required onchange="toggleHubDriverVisibility()">
+                        <option value="CLOUD" selected>Cloud</option>
+                        <option value="LOCAL">Local</option>
+                    </select></label>
+
+                <div id="localOptions" style="display:none;">
+                    <label for="hubId">Hub ID:
+                        <select id="hubId" name="hubId" onchange="loadDrivers()">
+                            <option value="">Select Hub</option>
+                        </select></label>
+
+                    <label for="driverId">Installed Driver:
+                        <select id="driverId" name="driverId">
+                            <option value="">Select a installed driver</option>
+                        </select></label>
+                </div>
+
+                <label for="deviceName">Device Label: <input type="text" size=20 id="deviceName" name="deviceName"
+                        required></label>
+
+                <h3>Create by Prototype</h3>
+                <label for="prototype">Prototype:
+                    <select id="prototype" name="prototype">
+                        <option value="VIRTUAL_SWITCH">Switch</option>
+                        <option value="VIRTUAL_DIMMER_SWITCH">Dimmer Switch</option>
+                        <option value="VIRTUAL_BUTTON">Button</option>
+                        <option value="VIRTUAL_CAMERA">Camera</option>
+                        <option value="VIRTUAL_COLOR_BULB">Color Bulb</option>
+                        <option value="VIRTUAL_CONTACT_SENSOR">Contact Sensor</option>
+                        <option value="VIRTUAL_DIMMER">Dimmer (no switch)</option>
+                        <option value="VIRTUAL_GARAGE_DOOR_OPENER">Garage Door Opener</option>
+                        <option value="VIRTUAL_LOCK">Lock</option>
+                        <option value="VIRTUAL_METERED_SWITCH">Metered Switch</option>
+                        <option value="VIRTUAL_MOTION_SENSOR">Motion Sensor</option>
+                        <option value="VIRTUAL_MULTI_SENSOR">Multi-Sensor</option>
+                        <option value="VIRTUAL_PRESENCE_SENSOR">Presence Sensor</option>
+                        <option value="VIRTUAL_REFRIGERATOR">Refrigerator</option>
+                        <option value="VIRTUAL_RGBW_BULB">RGBW Bulb</option>
+                        <option value="VIRTUAL_SIREN">Siren</option>
+                        <option value="VIRTUAL_THERMOSTAT">Thermostat</option>
+                    </select></label><br>
+                <button type="button" onclick="createVirtualDeviceByPrototype()">Create by Prototype</button>
+                <pre id="result3"></pre><br>
+
+                <br>
+                <hr><br>
+                <h3>Create by my profiles</h3>
+                <label for="profilesList">Profiles:
+                    <select id="profilesList" onchange="getProfileById()">
+                        <option value="">Select Profile</option>
+                    </select></label>
+
+                <label for="profileId">Profile ID:
+                    <input type="text" id="profileId" name="profileId" onchange="getProfile()"></label>
+                <label for="profileBody">Profile Body (YAML or JSON):</label>
+                <textarea id="profileBody" name="profileBody" rows="20" cols="100" required></textarea></br>
+                <button type="button" onclick="createVirtualDeviceByProfileId()">Create by selected
+                    profileId</button><br>
+                <pre id="result2"></pre><br>
+
+                <br>
+                <hr><br>
+                <h3>Create by custom Profile</h3>
+
+                <label for="deviceCategory">Device Category: <a
+                        href="https://developer.smartthings.com/docs/devices/device-profiles#categories"
+                        target="_blank">(Reference)</a></label>
+                <select id="deviceCategory" name="deviceCategory" class="category-container">
+                    <!-- Options for device categories will be dynamically added here -->
+                </select><br>
+
+                <label for="capabilities">Capabilities:<a
+                        href="https://developer.smartthings.com/docs/devices/capabilities/capabilities-reference"
+                        target="_blank">(Reference)</a></label>
+                <button type="button" onclick="uncheckAll()">All Uncheck</button>
+                <div id="capabilities" class="capability-container"></div><br>
+
+                <label for="customCapabilityList">My custom capability list:</label>
+                <div id="customCapabilityList" class="capability-container"></div><br>
+
+                <label for="customCapabilities">Selected Capabilities(separator: next line):</label>
+                <textarea id="customCapabilities" name="customCapabilities" rows="10" cols="50"></textarea><br><br>
+                <button type="button" onclick="createVirtualDeviceByProfile()">Virtual device create</button><br>
+                <pre id="result"></pre>
+            </form>
+
+            <script>
+                let selectedCapabilities = [];
+
+                function togglePasswordVisibility() {
+                    var passwordField = document.getElementById('patToken');
+                    var toggleCheckbox = document.getElementById('togglePassword');
+                    if (toggleCheckbox.checked) {
+                        passwordField.type = 'text';
+                    } else {
+                        passwordField.type = 'password';
+                    }
+                }
+
+                // 데이터 저장 함수
+                function saveData() {
+                    var patData = document.getElementById('patToken').value;
+                    localStorage.setItem('patData', patData);
+                    alert('Data saved!');
+                }
+
+                // 데이터 로드 함수
+                function loadData() {
+                    var patData = localStorage.getItem('patData');
+                    if (patData !== null) {
+                        document.getElementById('patToken').value = patData;
+                        listProfiles();
+                        loadLocations();
+                        loadCapabilities();
+                        listCapabilities();
+                    }
+                }
+
+                // 데이터 삭제 함수
+                function clearData() {
+                    localStorage.removeItem('patData');
+                    document.getElementById('patToken').value = '';
+                    alert('Data cleared!');
+                }
+
+                const deviceCategories = [
+                    'AirConditioner', 'AirPurifier', 'AirQualityDetector', 'Battery', 'Blind', 'BluRayPlayer',
+                    'BluetoothCarSpeaker', 'BluetoothTracker', 'Bridges', 'Button', 'Camera', 'Car', 'Charger',
+                    'ClothingCareMachine', 'CoffeeMaker', 'ContactSensor', 'Cooktop', 'CubeRefrigerator',
+                    'CurbPowerMeter', 'Dehumidifier', 'Dishwasher', 'Door', 'DoorBell', 'Dryer', 'Earbuds',
+                    'ElectricVehicleCharger', 'Elevator', 'Fan', 'Feeder', 'FitnessMat', 'Flashlight', 'GarageDoor',
+                    'GasValve', 'GasMeter', 'GenericSensor', 'HealthTracker', 'Heatedmattresspad', 'HomeTheater', 'Hub',
+                    'Humidifier', 'HumiditySensor', 'IrRemote', 'Irrigation', 'KimchiRefrigerator', 'KitchenHood',
+                    'LeakSensor', 'Light', 'LightSensor', 'MicroFiberFilter', 'Microwave', 'Mobile', 'MobilePresence',
+                    'MotionSensor', 'MultiFunctionalSensor', 'NetworkAudio', 'Networking', 'Others', 'Oven', 'PresenceSensor',
+                    'Printer', 'PrinterMultiFunction', 'Projector', 'Pump', 'Range', 'Receiver', 'Refrigerator', 'RemoteController',
+                    'RiceCooker', 'RobotCleaner', 'ScaleToMeasureMassOfHumanBody', 'Scanner', 'SecurityPanel', 'SetTop',
+                    'Shade', 'ShoesCareMachine', 'Siren', 'SmartLock', 'SmartPlug', 'SmokeDetector', 'SolarPanel', 'SoundSensor',
+                    'SoundMachine', 'Speaker', 'StickVacuumCleaner', 'Storage', 'Stove', 'Switch', 'Television', 'TempSensor',
+                    'Thermostat', 'Tracker', 'UPnPMediaRenderer', 'Vent', 'VisionSensor', 'VoiceAssistance', 'Washer', 'WaterHeater',
+                    'WaterValve', 'WaterPurifier', 'WiFiRouter', 'Window', 'WineCellar'
+                ];
+
+                function createCategoryOptions() {
+                    const select = document.getElementById('deviceCategory');
+                    deviceCategories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category;
+                        option.textContent = category;
+                        select.appendChild(option);
+                    });
+					
+					 select.value = 'Switch';
+                }
+
+                async function loadLocations() {
+                    const patToken = document.getElementById('patToken').value;
+                    try {
+                        const response = await fetch('https://api.smartthings.com/v1/locations', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        const locationSelect = document.getElementById('locationId');
+                        locationSelect.innerHTML = '<option value="">Select Location</option>';
+                        data.items.forEach(location => {
+                            const option = document.createElement('option');
+                            option.value = location.locationId;
+                            option.textContent = location.name;
+                            locationSelect.appendChild(option);
+                        });
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error loading locations: ' + error.message;
+                    }
+                }
+
+                async function loadRooms() {
+                    const patToken = document.getElementById('patToken').value;
+                    const locationId = document.getElementById('locationId').value;
+                    if (!locationId) return;
+
+                    try {
+                        const response = await fetch(`https://api.smartthings.com/v1/locations/${locationId}/rooms`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        const roomSelect = document.getElementById('roomId');
+                        roomSelect.innerHTML = '<option value="">Select Room</option>';
+                        data.items.forEach(room => {
+                            const option = document.createElement('option');
+                            option.value = room.roomId;
+                            option.textContent = room.name;
+                            roomSelect.appendChild(option);
+                        });
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error loading rooms: ' + error.message;
+                    }
+                }
+
+                async function loadHubs() {
+                    const patToken = document.getElementById('patToken').value;
+                    const locationId = document.getElementById('locationId').value;
+                    if (!locationId) return;
+
+                    try {
+                        const response = await fetch(`https://api.smartthings.com/v1/devices?locationId=${locationId}&type=HUB`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        const hubSelect = document.getElementById('hubId');
+                        hubSelect.innerHTML = '<option value="">Select Hub</option>';
+                        data.items.forEach(hub => {
+                            const option = document.createElement('option');
+                            option.value = hub.deviceId;
+                            option.textContent = hub.label;
+                            hubSelect.appendChild(option);
+                        });
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error loading hubs: ' + error.message;
+                    }
+                }
+
+                async function loadDrivers() {
+                    const patToken = document.getElementById('patToken').value;
+                    const hubId = document.getElementById('hubId').value;
+                    if (!hubId) return;
+
+                    try {
+                        const response = await fetch(`https://api.smartthings.com/v1/hubdevices/${hubId}/drivers`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        const driverSelect = document.getElementById('driverId');
+                        driverSelect.innerHTML = '<option value="">Select a installed driver</option>';
+                        data.forEach(driver => {
+                            const option = document.createElement('option');
+                            option.value = driver.driverId;
+                            option.textContent = driver.name;
+                            driverSelect.appendChild(option);
+                        });
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error loading drivers: ' + error.message;
+                    }
+                }
+
+                async function loadCapabilities() {
+                    const patToken = document.getElementById('patToken').value;
+                    try {
+                        const response = await fetch('https://api.smartthings.com/v1/capabilities', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        const capabilitiesDiv = document.getElementById('capabilities');
+                        capabilitiesDiv.innerHTML = '';
+
+                        const sortedCapabilities = data.items.sort((a, b) => a.id.localeCompare(b.id));
+                        sortedCapabilities.forEach(capability => {
+                            const label = document.createElement('label');
+                            label.textContent = capability.id;
+                            label.className = 'capability-item';
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.value = capability.id;
+                            checkbox.addEventListener('change', updateCustomCapabilities);
+                            label.prepend(checkbox);
+                            capabilitiesDiv.appendChild(label);
+                        });
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error loading capabilities: ' + error.message;
+                    }
+                }
+
+                async function listCapabilities() {
+                    const patToken = document.getElementById("patToken").value;
+                    if (!patToken) return;
+                    try {
+                        const response = await fetch('https://api.smartthings.com/v1/capabilities/namespaces', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        const namespaces = data.filter(item => item.ownerType === "organization").map(item => item.name);
+                        const namespacePromises = namespaces.map(namespace =>
+                            fetch(`https://api.smartthings.com/v1/capabilities/namespaces/${namespace}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${patToken}`
+                                }
+                            }).then(response => response.json())
+                        );
+
+                        const results = await Promise.all(namespacePromises);
+                        const customCapabilitiesDiv = document.getElementById('customCapabilityList');
+                        customCapabilitiesDiv.innerHTML = '';
+
+                        results.forEach(namespaceData => {
+                            if (namespaceData && namespaceData.items) {
+                                namespaceData.items.forEach(capability => {
+                                    const label = document.createElement('label');
+                                    label.textContent = capability.id;
+                                    label.className = 'capability-item';
+                                    const checkbox = document.createElement('input');
+                                    checkbox.type = 'checkbox';
+                                    checkbox.value = capability.id;
+                                    checkbox.addEventListener('change', updateCustomCapabilities);
+                                    label.prepend(checkbox);
+                                    customCapabilitiesDiv.appendChild(label);
+                                });
+                            }
+                        });
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error loading custom capabilities: ' + error.message;
+                    }
+                }
+
+                function updateCustomCapabilities(event) {
+                    const capability = event.target.value;
+                    if (event.target.checked) {
+                        selectedCapabilities.push(capability);
+                    } else {
+                        const index = selectedCapabilities.indexOf(capability);
+                        if (index > -1) {
+                            selectedCapabilities.splice(index, 1);
+                        }
+                    }
+                    document.getElementById('customCapabilities').value = selectedCapabilities.join('\n');
+                }
+
+                function uncheckAll() {
+                    const checkboxes = document.querySelectorAll('#capabilities input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    selectedCapabilities = [];
+                    document.getElementById('customCapabilities').value = '';
+                }
+
+                function toggleHubDriverVisibility() {
+                    const executionTarget = document.getElementById('executionTarget').value;
+                    const localOptions = document.getElementById('localOptions');
+                    if (executionTarget === 'LOCAL') {
+                        localOptions.style.display = 'block';
+                    } else {
+                        localOptions.style.display = 'none';
+                    }
+                }
+
+                async function createVirtualDeviceByProfile() {
+                    const patToken = document.getElementById('patToken').value;
+                    const deviceName = document.getElementById('deviceName').value;
+                    const locationId = document.getElementById('locationId').value;
+                    const roomId = document.getElementById('roomId').value;
+                    const hubId = document.getElementById('hubId').value;
+                    const driverId = document.getElementById('driverId').value;
+                    const deviceCategory = document.getElementById('deviceCategory').value;
+                    const capabilities = document.getElementById('customCapabilities').value.split('\n').map(cap => cap.trim()).filter(Boolean);
+                    const executionTarget = document.getElementById('executionTarget').value;
+
+                    if (!deviceName) {
+                        alert('Device Label을 입력해야 합니다.');
+                        return;
+                    }
+
+                    const payload = {
+                        name: deviceName,
+                        owner: {
+                            ownerId: locationId,
+                            ownerType: "LOCATION"
+                        },
+                        roomId: roomId,
+                        deviceProfile: {
+                            components: [
+                                {
+                                    capabilities: capabilities.map(cap => ({ id: cap, version: 1 })),
+                                    "categories": [
+                                        {
+                                            name: deviceCategory,
+                                            categoryType: "manufacturer"
+                                        }
+                                    ],
+                                    id: "main"
+                                }
+                            ]
+                        },
+                        executionTarget: executionTarget
+                    };
+
+                    if (executionTarget === 'LOCAL') {
+                        payload.hubId = hubId;
+                        payload.driverId = driverId;
+                    }
+
+                    try {
+                        const response = await fetch('https://api.smartthings.com/v1/virtualdevices', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload, null, 2)
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(`${response.status} - ` + JSON.stringify(errorData, null, 2));
+                        }
+
+                        const data = await response.json();
+                        document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error creating virtual device: ' + error.message + '\nRequested payload: ' + JSON.stringify(payload, null, 2);
+                    }
+                }
+
+                async function createVirtualDeviceByProfileId() {
+                    const patToken = document.getElementById('patToken').value;
+                    const deviceName = document.getElementById('deviceName').value;
+                    const locationId = document.getElementById('locationId').value;
+                    const roomId = document.getElementById('roomId').value;
+                    const hubId = document.getElementById('hubId').value;
+                    const driverId = document.getElementById('driverId').value;
+                    const profileId = document.getElementById('profileId').value;
+                    const executionTarget = document.getElementById('executionTarget').value;
+
+                    const payload = {
+                        name: deviceName,
+                        owner: {
+                            ownerId: locationId,
+                            ownerType: "LOCATION"
+                        },
+                        roomId: roomId,
+                        deviceProfileId: profileId,
+                        executionTarget: executionTarget
+                    };
+
+                    if (executionTarget === 'LOCAL') {
+                        payload.hubId = hubId;
+                        payload.driverId = driverId;
+                    }
+
+                    try {
+                        const response = await fetch('https://api.smartthings.com/v1/virtualdevices', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload, null, 2)
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(`${response.status} - ` + JSON.stringify(errorData, null, 2));
+                        }
+
+                        const data = await response.json();
+                        document.getElementById('result2').textContent = JSON.stringify(data, null, 2);
+                    } catch (error) {
+                        document.getElementById('result2').textContent = 'Error creating virtual device: ' + error.message + '\nRequest payload: ' + JSON.stringify(payload, null, 2);
+                    }
+                }
+
+                async function createVirtualDeviceByPrototype() {
+                    const patToken = document.getElementById('patToken').value;
+                    const deviceName = document.getElementById('deviceName').value;
+                    const locationId = document.getElementById('locationId').value;
+                    const roomId = document.getElementById('roomId').value;
+                    const hubId = document.getElementById('hubId').value;
+                    const driverId = document.getElementById('driverId').value;
+                    const prototype = document.getElementById('prototype').value;
+                    const executionTarget = document.getElementById('executionTarget').value;
+
+                    const payload = {
+                        name: deviceName,
+                        owner: {
+                            ownerId: locationId,
+                            ownerType: "LOCATION"
+                        },
+                        roomId: roomId,
+                        prototype: prototype,
+                        executionTarget: executionTarget
+                    };
+
+                    if (executionTarget === 'LOCAL') {
+                        payload.hubId = hubId;
+                        payload.driverId = driverId;
+                    }
+
+                    try {
+                        const response = await fetch('https://api.smartthings.com/v1/virtualdevices/prototypes', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(payload, null, 2)
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(`${response.status} - ` + JSON.stringify(errorData, null, 2));
+                        }
+
+                        const data = await response.json();
+                        document.getElementById('result3').textContent = JSON.stringify(data, null, 2);
+                    } catch (error) {
+                        document.getElementById('result3').textContent = 'Error creating virtual device by prototype: ' + error.message + '\nRequested payload: ' + JSON.stringify(payload, null, 2);
+                    }
+                }
+
+                function getProfile() {
+                    const patToken = document.getElementById("patToken").value;
+                    const profileId = document.getElementById("profileId").value;
+                    if (!profileId) {
+                        document.getElementById("result").textContent = 'Please enter Profile ID.';
+                        return;
+                    }
+                    fetch(`https://api.smartthings.com/v1/deviceprofiles/${profileId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json();
+                            } else {
+                                return response.json().then(data => {
+                                    throw new Error(JSON.stringify(data));
+                                });
+                            }
+                        })
+                        .then(data => {
+                            const jsonData = JSON.stringify(data, null, 2);
+                            document.getElementById("profileBody").value = jsonData;
+                            document.getElementById("result2").textContent = 'Profile retrieved successfully';
+                        })
+                        .catch(error => {
+                            document.getElementById("result2").textContent = `Error: ${error}`;
+                        });
+                }
+
+                function getProfileById() {
+                    const profileId = document.getElementById("profilesList").value;
+                    if (profileId) {
+                        document.getElementById("profileId").value = profileId;
+                        getProfile();
+                    }
+                }
+
+                function listProfiles() {
+                    const patToken = document.getElementById("patToken").value;
+                    if (!patToken) return;
+                    fetch('https://api.smartthings.com/v1/deviceprofiles', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            const profilesList = document.getElementById("profilesList");
+                            profilesList.innerHTML = '<option value="">Select Profile</option>';
+                            if (data && data.items) {
+                                data.items.forEach(profile => {
+                                    const option = document.createElement("option");
+                                    option.value = profile.id;
+                                    option.textContent = profile.name;
+                                    profilesList.appendChild(option);
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            document.getElementById("result2").textContent = `Error: ${error}`;
+                        });
+                }
+
+                window.onload = function () {
+                    loadData();
+                }
+
+                // Initialize category options on page load
+                createCategoryOptions();
+            </script>
+
+        </main>
+    </div>
+    <footer>
+        <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver
+                cafe</a></p>
+    </footer>
+</body>
+
+</html>

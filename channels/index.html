@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+    <meta charset="UTF-8">
+    <title>Channels</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
+    <style>
+        #channelDetails,
+        #invitesDetails {
+            height: 180px;
+            width: 80%;
+            overflow-y: scroll;
+            border: 1px solid #000;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #newChannelDetails {
+            height: 120px;
+            width: 80%;
+            overflow-y: scroll;
+            border: 1px solid #000;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        #channelList,
+        #inviteList {
+            height: 150px;
+            width: 80%;
+            overflow-y: scroll;
+            border: 1px solid #000;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .channel-item,
+        .invite-item,
+        .driver-item {
+            border: 1px solid #ccc;
+            padding: 5px;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .channel-item:hover,
+        .invite-item:hover,
+        .driver-item:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Channels</h1>
+    </header>
+    <div class="container">
+        <a href="./../virtual">Virtual Device Creator</a> | <a href="./../events">Virtual Device send event</a><br>
+        <a href="./../capability">Capability Creator</a> | <a href="./../capabilityPresentation">Capability
+            Presentation</a><br>
+        <a href="./../profile">Device Profile</a> | <a href="./../configuration">Device Configuration</a> | <a
+            href="./../presentation">Device Presentation</a><br>
+        <a href="./../edge">Edge drivers</a> | <a href="./../channels">Edge channels</a><br>
+        <main>
+            <form id="configurationForm">
+                <a href="https://account.smartthings.com/tokens" target="_blank">Create PAT</a>
+                <label for="patToken">PAT Token:<input type="password" size=30 id="patToken" name="patToken" required
+                        onchange="loadData()"><input type="checkbox" id="togglePassword"
+                        onclick="togglePasswordVisibility()">Show<br></label>
+                <button type="button" onclick="saveData()">Save</button>
+                <button type="button" onclick="loadData()">Load</button>
+                <button type="button" onclick="clearData()">Clear</button></br>
+                This information is stored on your local PC, not on a server</br></br>
+            </form>
+
+            <h3>Channels</h3>
+
+            <h4>Create Channel</h4>
+            <label for="newChannelName">Name:</label>
+            <input type="text" id="newChannelName" name="newChannelName"><br>
+            <label for="newChannelDescription">Description:</label>
+            <input type="text" id="newChannelDescription" name="newChannelDescription"><br>
+            <label for="newChannelTermsOfServiceUrl">Terms of Service URL:</label>
+            <input type="text" id="newChannelTermsOfServiceUrl" value="email.com"
+                name="newChannelTermsOfServiceUrl"><br>
+            <button type="button" onclick="createChannel()">Create Channel</button>
+
+            <br><br><button type="button" onclick="listChannels()">List Channels</button>
+            <select id="channelDropdown" onchange="showChannelDetails(this.value)">
+                <option value="">Select a channel</option>
+            </select><br><br>
+
+            <label>Selected channel:</label><br>
+            <textarea id="channelDetails"></textarea><br>
+            <button type="button" id="updateChannelBtn" style="display:none" onclick="updateChannel()">Update
+                Channel</button>
+            <button type="button" id="deleteChannelBtn" style="display:none" onclick="deleteChannel()">Delete
+                Channel</button>
+
+            <h4>Assign Driver to Selected Channel</h4>
+            <label for="driverId">Driver ID:</label>
+            <select id="driverList"></select><br><br>
+            <button type="button" id="assignDriverBtn" style="display:none" onclick="assignDriverToChannel()">Assign
+                Driver to Channel</button>
+
+            <br>
+            <hr>
+
+            <h3>Invites</h3>
+
+            <h4>Create Invitation</h4>
+            <label>must select one of the channels generated above to see the Create Invitation button</label><br>
+            <label for="inviteName">Name:</label>
+            <input type="text" id="inviteName" name="inviteName"><br>
+            <label for="inviteDescription">Description:</label>
+            <input type="text" id="inviteDescription" name="inviteDescription"><br>
+            <label for="inviteOwner">Owner:</label>
+            <input type="text" id="inviteOwner" name="inviteOwner"><br>
+            <label for="inviteTermsUrl">Terms URL:</label>
+            <input type="text" id="inviteTermsUrl" value="https://smartthings.com" name="inviteTermsUrl"><br>
+            <button type="button" id="createInviteBtn" style="display:none" onclick="createInvite()">Create
+                Invitation</button>
+            <br><br><button type="button" id="listInviteBtn" style="display:none" onclick="listInvites()">List
+                Invites</button>
+            <div id="inviteList"></div><br>
+
+            <label>Selected invite:</label><br>
+            <textarea id="invitesDetails"></textarea><br>
+            <button type="button" id="deleteInviteBtn" style="display:none" onclick="deleteInvite()">Delete
+                Invitation</button>
+
+            <h3>Result:</h3>
+            <pre id="result"></pre>
+
+            <script>
+                function togglePasswordVisibility() {
+                    var passwordField = document.getElementById('patToken');
+                    var toggleCheckbox = document.getElementById('togglePassword');
+                    if (toggleCheckbox.checked) {
+                        passwordField.type = 'text';
+                    } else {
+                        passwordField.type = 'password';
+                    }
+                }
+
+                function saveData() {
+                    var patData = document.getElementById('patToken').value;
+                    localStorage.setItem('patData', patData);
+                    alert('Data saved!');
+                }
+
+                function loadData() {
+                    var patData = localStorage.getItem('patData');
+                    if (patData !== null) {
+                        document.getElementById('patToken').value = patData;
+                        listChannels();
+                        listDrivers();
+                    } else if (document.getElementById("patToken").value !== null) {
+                        listChannels();
+                        listDrivers();
+                    }
+                }
+
+                function clearData() {
+                    localStorage.removeItem('patData');
+                    document.getElementById('patToken').value = '';
+                    alert('Data cleared!');
+                }
+
+                function listChannels() {
+                    const patToken = document.getElementById("patToken").value;
+                    fetch(`https://api.smartthings.com/v1/distchannels`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            const channelDropdown = document.getElementById("channelDropdown");
+                            channelDropdown.innerHTML = '<option value="">Select a channel</option>';
+                            data.items.forEach(channel => {
+                                const option = document.createElement("option");
+                                option.value = channel.channelId;
+                                option.text = `${channel.name}`;
+                                channelDropdown.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error fetching channels: ${error}`;
+                        });
+                }
+
+                function showChannelDetails(channelId) {
+                    const patToken = document.getElementById("patToken").value;
+
+                    fetch(`https://api.smartthings.com/v1/distchannels/${channelId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById("channelDetails").value = JSON.stringify(data, null, 2);
+                            document.getElementById("updateChannelBtn").style.display = 'inline';
+                            document.getElementById("deleteChannelBtn").style.display = 'inline';
+                            document.getElementById("assignDriverBtn").style.display = 'inline';
+                            document.getElementById("createInviteBtn").style.display = 'inline';
+                            document.getElementById("listInviteBtn").style.display = 'inline';
+                            document.getElementById("updateChannelBtn").setAttribute('data-channel-id', channelId);
+                            document.getElementById("deleteChannelBtn").setAttribute('data-channel-id', channelId);
+                            document.getElementById("assignDriverBtn").setAttribute('data-channel-id', channelId);
+                            document.getElementById("createInviteBtn").setAttribute('data-channel-id', channelId);
+                        })
+                        .catch(error => {
+                            document.getElementById("channelDetails").value = `Error fetching channel details: ${error}`;
+                        });
+                }
+
+                function updateChannel() {
+                    const patToken = document.getElementById("patToken").value;
+                    const channelId = document.getElementById("updateChannelBtn").getAttribute('data-channel-id');
+                    const channelDetails = document.getElementById("channelDetails").value;
+
+                    if (!isJsonString(channelDetails)) {
+                        document.getElementById("result").textContent = 'Invalid JSON payload';
+                        return;
+                    }
+
+                    fetch(`https://api.smartthings.com/v1/distchannels/${channelId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: channelDetails
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(data => {
+                                    throw new Error(JSON.stringify(data));
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error updating channel ${channelId}: ${error}`;
+                        });
+                }
+
+                function deleteChannel() {
+                    const patToken = document.getElementById("patToken").value;
+                    const channelId = document.getElementById("deleteChannelBtn").getAttribute('data-channel-id');
+                    fetch(`https://api.smartthings.com/v1/distchannels/${channelId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => {
+                            if (response.ok) {
+                                document.getElementById("result").textContent = `Channel ${channelId} deleted successfully.`;
+                                listChannels();
+                            } else {
+                                return response.json().then(data => {
+                                    throw new Error(JSON.stringify(data));
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error deleting channel: ${error}`;
+                        });
+                }
+
+                function createChannel() {
+                    const patToken = document.getElementById("patToken").value;
+                    const name = document.getElementById("newChannelName").value;
+                    const description = document.getElementById("newChannelDescription").value;
+                    const termsOfServiceUrl = document.getElementById("newChannelTermsOfServiceUrl").value;
+
+                    if (!name || !description || !termsOfServiceUrl) {
+                        document.getElementById("result").textContent = 'Error: Name, description, and terms of service URL are required fields.';
+                        return;
+                    }
+
+                    const payload = {
+                        "name": name,
+                        "description": description,
+                        "type": "DRIVER",
+                        "termsOfServiceUrl": termsOfServiceUrl
+                    };
+
+                    fetch(`https://api.smartthings.com/v1/distchannels`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+                            listChannels();
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error creating channel: ${error}`;
+                        });
+                }
+
+                function listDrivers() {
+                    const patToken = document.getElementById("patToken").value;
+                    fetch(`https://api.smartthings.com/v1/drivers`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            const driverList = document.getElementById("driverList");
+                            driverList.innerHTML = '<option value="">Select a driver</option>';
+                            data.items.forEach(driver => {
+                                const option = document.createElement("option");
+                                option.value = driver.driverId;
+                                option.text = `${driver.name} version: ${driver.version}`;
+                                option.setAttribute('data-version', driver.version);
+                                driverList.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error fetching drivers: ${error}`;
+                        });
+                }
+
+                function assignDriverToChannel() {
+                    const patToken = document.getElementById("patToken").value;
+                    const channelId = document.getElementById("assignDriverBtn").getAttribute('data-channel-id');
+                    const driverList = document.getElementById("driverList");
+                    const selectedDriver = driverList.options[driverList.selectedIndex];
+                    const driverId = selectedDriver.value;
+                    const version = selectedDriver.getAttribute('data-version');
+
+                    const payload = {
+                        "driverId": driverId,
+                        "version": version
+                    };
+
+                    fetch(`https://api.smartthings.com/v1/distchannels/${channelId}/drivers`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Network response was not ok: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error assigning driver to channel: ${error.message}`;
+                        });
+                }
+
+                function listInvites() {
+                    const patToken = document.getElementById("patToken").value;
+                    const channelId = document.getElementById("updateChannelBtn").getAttribute('data-channel-id');
+                    const params = `resource=st1:developer::channel/${channelId}`
+                    const url = `https://api.weekendproject.net/invites?${params}`
+                    fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Network response was not ok: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            const inviteList = document.getElementById("inviteList");
+                            inviteList.innerHTML = '';
+                            data.items.forEach(invite => {
+                                const div = document.createElement("div");
+                                div.className = "invite-item";
+                                div.textContent = `id: ${invite.id} AcceptUrl: ${invite.acceptUrl}`;
+                                div.onclick = () => showInviteDetails(invite.id);
+                                inviteList.appendChild(div);
+                            });
+                        })
+                        .catch(error => {
+                            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                                document.getElementById('result').textContent = 'Fetch error: Failed to fetch. Possible CORS issue or network problem.';
+                            } else {
+                                document.getElementById('result').textContent = `Fetch error: ${error.message}`;
+                            }
+                        });
+                }
+
+                function showInviteDetails(inviteId) {
+                    const patToken = document.getElementById("patToken").value;
+                    fetch(`https://api.weekendproject.net/invites/${inviteId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Network response was not ok: ${response.statusText}`);
+                            }
+                            document.getElementById("deleteInviteBtn").style.display = 'inline';
+                            document.getElementById("deleteInviteBtn").setAttribute('data-invite-id', inviteId);
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById("invitesDetails").value = JSON.stringify(data, null, 2);
+                        })
+                        .catch(error => {
+                            document.getElementById("invitesDetails").value = `Error fetching invite details: ${error.message}`;
+                        });
+                }
+
+                function deleteInvite() {
+                    const patToken = document.getElementById("patToken").value;
+                    const inviteId = document.getElementById("deleteInviteBtn").getAttribute('data-invite-id');
+                    fetch(`https://api.weekendproject.net/invites/${inviteId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => {
+                            document.getElementById("invitesDetails").value = "";
+                            if (response.status === 202) {
+                                document.getElementById("result").textContent = `Invite ${inviteId} deleted successfully.`;
+                                listInvites();
+                                return null;
+                            } else {
+                                throw new Error(`Network response was not ok: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error deleting invite: ${error.message}`;
+                        });
+                }
+
+                function createInvite() {
+                    const patToken = document.getElementById("patToken").value;
+                    const channelId = document.getElementById("createInviteBtn").getAttribute('data-channel-id');
+                    const inviteName = document.getElementById("inviteName").value;
+                    const inviteDescription = document.getElementById("inviteDescription").value;
+                    const inviteOwner = document.getElementById("inviteOwner").value;
+                    const inviteTermsUrl = document.getElementById("inviteTermsUrl").value;
+
+                    if (!channelId || !inviteName || !inviteDescription || !inviteOwner || !inviteTermsUrl) {
+                        document.getElementById("result").textContent = 'Error: All fields (channelId, inviteName, inviteDescription, inviteOwner, inviteTermsUrl) are required.';
+                        return;
+                    }
+
+                    const payload = {
+                        "resource": {
+                            "root": {
+                                "service": "developer"
+                            },
+                            "components": [
+                                {
+                                    "id": channelId,
+                                    "kind": "channel"
+                                }
+                            ]
+                        },
+                        "profileId": "61a79569-e8fd-4a4d-9b9c-a4a55ccdd15e",
+                        "metadata": {
+                            "name": inviteName,
+                            "description": inviteDescription,
+                            "owner": inviteOwner,
+                            "termsUrl": inviteTermsUrl
+                        }
+                    };
+
+                    fetch(`https://api.weekendproject.net/invites`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Network response was not ok: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+                            listInvites();
+                            showInviteDetails(data.invitationId);
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error creating invite: ${error.message}`;
+                        });
+                }
+
+                function isJsonString(str) {
+                    try {
+                        JSON.parse(str);
+                    } catch (e) {
+                        return false;
+                    }
+                    return true;
+                }
+
+                window.onload = function () {
+                    loadData();
+                }
+            </script>
+        </main>
+    </div>
+    <footer>
+        <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver
+                cafe</a></p>
+    </footer>
+</body>
+
+</html>

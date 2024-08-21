@@ -1,0 +1,120 @@
+
+/* Reset some basic elements */
+body, h1, h2, h3, h4, h5, h6, p, ul, ol {
+    list-style: none;
+}
+
+/* Basic styling for body */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+/* Container */
+.container {
+    width: 80%;
+    margin: auto;
+    overflow: hidden;
+    padding: 20px;
+}
+
+/* Header and Footer */
+header, footer {
+    background: #333;
+    color: #fff;
+    padding: 10px 0;
+    text-align: center;
+}
+
+header h1, footer p {
+    margin: 0;
+}
+
+/* Main content area */
+main {
+    background: #fff;
+    padding: 20px;
+    margin: 20px 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Form styling */
+form {
+    margin: 20px 0;
+}
+
+form label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+form input {
+    margin: 20px 20px;
+    
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+form select, form textarea {
+    width: auto;
+    
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* Button styling */
+button {
+    display: inline-block;
+    background: #333;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+}
+
+button:hover {
+    background: #555;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        width: 100%;
+    }
+
+    header, footer {
+        text-align: center;
+    }
+
+    main {
+        padding: 10px;
+        margin: 10px 0;
+    }
+
+    button {
+        padding: 10px 30px;
+    }
+}
+
+/* Desktop Design */
+@media (min-width: 769px) {
+    .container {
+        width: 60%;
+    }
+
+    main {
+        padding: 30px;
+        margin: 30px 0;
+    }
+
+    button {
+        padding: 10px 30px;
+    }
+}

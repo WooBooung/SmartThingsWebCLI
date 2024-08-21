@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="../style.css">
+    <meta charset="UTF-8">
+    <title>Edge driver</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
+    <style>
+        #driverDetails {
+            height: 300px;
+            width: auto;
+            overflow-y: scroll;
+            border: 1px solid #000;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Edge driver</h1>
+    </header>
+    <div class="container">
+        <a href="./../virtual">Virtual Device Creator</a> | <a href="./../events">Virtual Device send event</a><br>
+        <a href="./../capability">Capability Creator</a> | <a href="./../capabilityPresentation">Capability
+            Presentation</a><br>
+        <a href="./../profile">Device Profile</a> | <a href="./../configuration">Device Configuration</a> | <a
+            href="./../presentation">Device Presentation</a><br>
+        <a href="./../edge">Edge drivers</a> | <a href="./../channels">Edge channels</a><br>
+        <br>Reference link: <a
+            href="https://github.com/SmartThingsCommunity/SmartThingsEdgeDrivers/tree/main/drivers/SmartThings"
+            target="_blank">Example official edge drivers</a><br>
+        <main>
+            <form id="configurationForm">
+                <a href="https://account.smartthings.com/tokens" target="_blank">Create PAT</a>
+                <label for="patToken">PAT Token: <input type="password" size=30 id="patToken" name="patToken"
+                        required><input type="checkbox" id="togglePassword"
+                        onclick="togglePasswordVisibility()">Show</label>
+
+                <button type="button" onclick="saveData()">Save</button>
+                <button type="button" onclick="loadData()">Load</button>
+                <button type="button" onclick="clearData()">Clear</button></br>
+                This information is stored on your local PC, not on a server</br></br>
+            </form>
+
+            <h3>Upload Driver Package</h3>
+            <p>How to zip driver files</p>
+            <img src="compress_example.png" alt="Example zipping"><br>
+            <input type="file" id="driverPackage" accept=".zip"><br>
+            <button type="button" onclick="uploadDriverPackage()">Upload Driver Package</button><br><br>
+
+            <label>Driver list:</label>
+            <select id="driverDropdown" class="dropdown" onchange="showDriverDetails(this.value)">
+                <option value="">Select a driver</option>
+            </select><br><br>
+
+            <label>Driver Details:</label>
+            <pre id="driverDetails"></pre>
+
+            <button type="button" id="deleteDriverBtn" style="display:none" onclick="deleteDriver()">Delete
+                Driver</button>
+
+            <h3>Assign Selected Driver to Selected Channel</h3>
+            <label>Channel list:</label>
+            <select id="channelDropdown" class="dropdown"></select><br><br>
+            <button type="button" id="assignDriverBtn" style="display:none" onclick="assignDriverToChannel()">Assign
+                Driver to Channel</button>
+
+            <br>
+            <hr><br>
+            <h3>Clean unused drivers</h3>
+            <label for="locationId">Location:
+                <select id="locationId" name="locationId" onchange="loadHubs();">
+                    <option value="">Select Location</option>
+                </select></label><br><br>
+
+            <label for="hubId">Hub:
+                <select id="hubId" name="hubId" onchange="listUnusedDrivers();">
+                    <option value="">Select Hub</option>
+                </select></label><br><br>
+
+            <label>Unused Drivers:</label>
+            <select id="unusedDrivers" class="dropdown">
+                <option value="">Select unused driver</option>
+            </select><br><br>
+            <button type="button" id="deleteUnusedDriverBtn" onclick="deleteUnusedDriver()">Delete Selected Unused
+                Driver</button><br><br>
+
+            <h3>Result:</h3>
+            <pre id="result"></pre>
+
+            <label>Current Installed Drivers on Hub:</label>
+            <pre id="currentDrivers"></pre>
+
+            <script>
+                function togglePasswordVisibility() {
+                    var passwordField = document.getElementById('patToken');
+                    var toggleCheckbox = document.getElementById('togglePassword');
+                    if (toggleCheckbox.checked) {
+                        passwordField.type = 'text';
+                    } else {
+                        passwordField.type = 'password';
+                    }
+                }
+
+                function saveData() {
+                    var patData = document.getElementById('patToken').value;
+                    localStorage.setItem('patData', patData);
+                    alert('Data saved!');
+                }
+
+                function loadData() {
+                    var patData = localStorage.getItem('patData');
+                    if (patData !== null) {
+                        document.getElementById('patToken').value = patData;
+                        listDrivers();
+                        listChannels();
+                        loadLocations();
+                    }
+                }
+
+                function clearData() {
+                    localStorage.removeItem('patData');
+                    document.getElementById('patToken').value = '';
+                    alert('Data cleared!');
+                }
+
+                async function loadLocations() {
+                    const patToken = document.getElementById('patToken').value;
+                    try {
+                        const response = await fetch('https://api.smartthings.com/v1/locations', {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        const locationSelect = document.getElementById('locationId');
+                        locationSelect.innerHTML = '<option value="">Select Location</option>';
+                        data.items.forEach(location => {
+                            const option = document.createElement('option');
+                            option.value = location.locationId;
+                            option.textContent = location.name;
+                            locationSelect.appendChild(option);
+                        });
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error loading locations: ' + error.message;
+                    }
+                }
+
+                async function loadHubs() {
+                    const patToken = document.getElementById('patToken').value;
+                    const locationId = document.getElementById('locationId').value;
+                    if (!locationId) return;
+
+                    try {
+                        const response = await fetch(`https://api.smartthings.com/v1/devices?locationId=${locationId}&type=HUB`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const data = await response.json();
+                        const hubSelect = document.getElementById('hubId');
+                        hubSelect.innerHTML = '<option value="">Select Hub</option>';
+                        data.items.forEach(hub => {
+                            const option = document.createElement('option');
+                            option.value = hub.deviceId;
+                            option.textContent = hub.label;
+                            hubSelect.appendChild(option);
+                        });
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error loading hubs: ' + error.message;
+                    }
+                }
+
+                async function fetchDeviceDetails(deviceId, patToken) {
+                    const response = await fetch(`https://api.smartthings.com/v1/devices/${deviceId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                }
+
+                async function listUnusedDrivers() {
+                    const patToken = document.getElementById('patToken').value;
+                    const hubId = document.getElementById('hubId').value;
+                    if (!hubId) return;
+
+                    try {
+                        // Fetch installed drivers on the hub
+                        const installedDriversResponse = await fetch(`https://api.smartthings.com/v1/hubdevices/${hubId}/drivers`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!installedDriversResponse.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const installedDrivers = await installedDriversResponse.json();
+                        const installedDriverMap = new Map(installedDrivers.map(driver => [driver.driverId, driver.name]));
+                        const installedDriverIds = new Set(installedDriverMap.keys());
+
+                        // Fetch devices in the location
+                        const locationId = document.getElementById('locationId').value;
+                        const devicesResponse = await fetch(`https://api.smartthings.com/v1/devices?locationId=${locationId}&type=LAN&type=MATTER&type=ZIGBEE&type=ZWAVE`, {
+                            method: 'GET',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!devicesResponse.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+
+                        const devices = await devicesResponse.json();
+                        const usedDriverIds = new Set();
+
+                        // Recursive function to find driverId in the device details
+                        function findDriverId(obj) {
+                            if (typeof obj !== 'object' || obj === null) {
+                                return;
+                            }
+                            if (obj.hasOwnProperty('driverId')) {
+                                usedDriverIds.add(obj.driverId);
+                            }
+                            for (let key in obj) {
+                                if (obj.hasOwnProperty(key)) {
+                                    findDriverId(obj[key]);
+                                }
+                            }
+                        }
+
+                        for (const device of devices.items) {
+                            findDriverId(device);
+                        }
+
+                        // Find unused drivers
+                        const unusedDrivers = [...installedDriverIds].filter(driverId => !usedDriverIds.has(driverId));
+
+                        // Print installedDriverIds for debugging
+                        console.log('Installed Driver IDs:', installedDriverIds);
+                        console.log('Used Driver IDs:', usedDriverIds);
+                        console.log('Unused Drivers:', unusedDrivers);
+
+                        // Display unused drivers
+                        const unusedDriversSelect = document.getElementById('unusedDrivers');
+                        unusedDriversSelect.innerHTML = '';
+                        unusedDrivers.forEach(driverId => {
+                            const option = document.createElement('option');
+                            option.value = driverId;
+                            option.textContent = installedDriverMap.get(driverId); // Show driver name
+                            unusedDriversSelect.appendChild(option);
+                        });
+
+                        // Display current drivers on hub
+                        const currentDriversPre = document.getElementById('currentDrivers');
+                        currentDriversPre.textContent = JSON.stringify(installedDrivers, null, 2);
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error loading unused drivers: ' + error.message;
+                    }
+                }
+
+                async function deleteUnusedDriver() {
+                    const patToken = document.getElementById('patToken').value;
+                    const hubId = document.getElementById('hubId').value;
+                    const unusedDriversSelect = document.getElementById('unusedDrivers');
+                    const driverId = unusedDriversSelect.value;
+
+                    if (!driverId) {
+                        alert("Please select a driver to delete.");
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`https://api.smartthings.com/hubdevices/${hubId}/drivers/${driverId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(`${response.status} - ` + JSON.stringify(errorData, null, 2));
+                        }
+
+                        document.getElementById('result').textContent = `Driver ${driverId} deleted successfully.`;
+                        listUnusedDrivers();
+                    } catch (error) {
+                        document.getElementById('result').textContent = 'Error deleting unused driver: ' + error.message;
+                    }
+                }
+
+                async function listDrivers() {
+                    const patToken = document.getElementById("patToken").value;
+                    fetch(`https://api.smartthings.com/v1/drivers`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            const driverDropdown = document.getElementById("driverDropdown");
+                            driverDropdown.innerHTML = '<option value="">Select a driver</option>';
+                            data.items.forEach(driver => {
+                                const option = document.createElement("option");
+                                option.value = driver.driverId;
+                                option.text = `${driver.name} version: ${driver.version}`;
+                                option.setAttribute('data-version', driver.version);
+                                driverDropdown.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error fetching drivers: ${error}`;
+                        });
+                }
+
+                function showDriverDetails(driverId) {
+                    const patToken = document.getElementById("patToken").value;
+                    fetch(`https://api.smartthings.com/v1/drivers/${driverId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            document.getElementById("driverDetails").textContent = JSON.stringify(data, null, 2);
+                            document.getElementById("deleteDriverBtn").style.display = 'inline';
+                            document.getElementById("deleteDriverBtn").setAttribute('data-driver-id', driverId);
+                            document.getElementById("assignDriverBtn").style.display = 'inline';
+                        })
+                        .catch(error => {
+                            document.getElementById("driverDetails").textContent = `Error fetching driver details: ${error}`;
+                        });
+                }
+
+                function deleteDriver() {
+                    const patToken = document.getElementById("patToken").value;
+                    const driverId = document.getElementById("deleteDriverBtn").getAttribute('data-driver-id');
+                    fetch(`https://api.smartthings.com/v1/drivers/${driverId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => {
+                            if (response.ok) {
+                                document.getElementById("result").textContent = `Driver ${driverId} deleted successfully.`;
+                                document.getElementById("driverDetails").textContent = '';
+                                document.getElementById("deleteDriverBtn").style.display = 'none';
+                                listDrivers();
+                            } else {
+                                return response.json().then(data => {
+                                    throw new Error(JSON.stringify(data));
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error deleting driver: ${error}`;
+                        });
+                }
+
+                function uploadDriverPackage() {
+                    const patToken = document.getElementById("patToken").value;
+                    const fileInput = document.getElementById("driverPackage");
+                    const file = fileInput.files[0];
+
+                    if (!file) {
+                        alert("Please select a zip file to upload.");
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (event) {
+                        const arrayBuffer = event.target.result;
+
+                        fetch(`https://api.smartthings.com/v1/drivers/package`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${patToken}`,
+                                'Content-Type': 'application/zip'
+                            },
+                            body: arrayBuffer
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+                                listDrivers();
+                            })
+                            .catch(error => {
+                                document.getElementById("result").textContent = `Error uploading driver package: ${error}`;
+                            });
+                    };
+
+                    reader.onerror = function () {
+                        alert("Failed to read file.");
+                    };
+
+                    reader.readAsArrayBuffer(file);
+                }
+
+                function listChannels() {
+                    const patToken = document.getElementById("patToken").value;
+                    fetch(`https://api.smartthings.com/v1/distchannels`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            const channelDropdown = document.getElementById("channelDropdown");
+                            channelDropdown.innerHTML = '<option value="">Select a channel</option>';
+                            data.items.forEach(channel => {
+                                const option = document.createElement("option");
+                                option.value = channel.channelId;
+                                option.text = channel.name;
+                                channelDropdown.appendChild(option);
+                            });
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error fetching channels: ${error}`;
+                        });
+                }
+
+                function assignDriverToChannel() {
+                    const patToken = document.getElementById("patToken").value;
+                    const channelId = document.getElementById("channelDropdown").value;
+                    const driverDropdown = document.getElementById("driverDropdown");
+                    const selectedDriver = driverDropdown.options[driverDropdown.selectedIndex];
+                    const driverId = selectedDriver.value;
+                    const version = selectedDriver.getAttribute('data-version');
+
+                    const payload = {
+                        "driverId": driverId,
+                        "version": version
+                    };
+
+                    fetch(`https://api.smartthings.com/v1/distchannels/${channelId}/drivers`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${patToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Network response was not ok: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+                        })
+                        .catch(error => {
+                            document.getElementById("result").textContent = `Error assigning driver to channel: ${error.message}`;
+                        });
+                }
+
+                window.onload = function () {
+                    loadData();
+                }
+            </script>
+        </main>
+    </div>
+    <footer>
+        <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver
+                cafe</a></p>
+    </footer>
+</body>
+
+</html>
