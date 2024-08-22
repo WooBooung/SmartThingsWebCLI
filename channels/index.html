@@ -380,7 +380,7 @@
                     const patToken = document.getElementById("patToken").value;
                     const channelId = document.getElementById("updateChannelBtn").getAttribute('data-channel-id');
                     const params = `resource=st1:developer::channel/${channelId}`
-                    const url = `https://api.weekendproject.net/invites?${params}`
+                    const url = `https://api.smartthings.com/invites?${params}`
                     fetch(url, {
                         method: 'GET',
                         headers: {
@@ -415,7 +415,7 @@
 
                 function showInviteDetails(inviteId) {
                     const patToken = document.getElementById("patToken").value;
-                    fetch(`https://api.weekendproject.net/invites/${inviteId}`, {
+                    fetch(`https://api.smartthings.com/invites/${inviteId}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${patToken}`
@@ -440,7 +440,7 @@
                 function deleteInvite() {
                     const patToken = document.getElementById("patToken").value;
                     const inviteId = document.getElementById("deleteInviteBtn").getAttribute('data-invite-id');
-                    fetch(`https://api.weekendproject.net/invites/${inviteId}`, {
+                    fetch(`https://api.smartthings.com/invites/${inviteId}`, {
                         method: 'DELETE',
                         headers: {
                             'Authorization': `Bearer ${patToken}`
@@ -496,7 +496,7 @@
                         }
                     };
 
-                    fetch(`https://api.weekendproject.net/invites`, {
+                    fetch(`https://api.smartthings.com/invites`, {
                         method: 'POST',
                         headers: {
                             'Authorization': `Bearer ${patToken}`,
