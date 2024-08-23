@@ -1,469 +1,113 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="../style.css">
-    <meta charset="UTF-8">
-    <title>Custom Capability Creator</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
-    <style>
-        #capabilitiesList,
-        #standardCapabilitiesList {
-            width: auto;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-gap: 10px;
-            overflow-y: auto;
-            max-height: 500px;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-
-        .capability-item {
-            text-align: center;
-            cursor: pointer;
-        }
-    </style>
-</head>
-
-<body>
-    <header>
-        <h1>Custom Capability Creator</h1>
-    </header>
-    <div class="container">
-        <a href="./../virtual">Virtual Device Creator</a> | <a href="./../events">Virtual Device send event</a><br>
-        <a href="./../capability">Capability Creator</a> | <a href="./../capabilityPresentation">Capability
-            Presentation</a><br>
-        <a href="./../profile">Device Profile</a> | <a href="./../configuration">Device Configuration</a> | <a
-            href="./../presentation">Device Presentation</a><br>
-        <a href="./../edge">Edge drivers</a> | <a href="./../channels">Edge channels</a><br>
-
-        <main>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Custom Capability Creator</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
+        <style>
+            #capabilitiesList,
+            #standardCapabilitiesList {
+                display: block;
+                max-height: 500px;
+                overflow-y: auto;
+            }
+        </style>
+        <!--Common Style Load -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+        <link href="../subpage.css" rel="stylesheet">
+    </head>
+    <body>
+        <!--Header & Side Menu Load Area -->
+        <div id="header"></div>
+        <div id="sidebar"></div>
+        
+        <!-- Main Area -->
+        <div class="content">
+            <h1>Custom Capability Creator</h1>
+            <!-- PAT TOKEN DELETE 
             <form id="capabilityForm">
-                <a href="https://account.smartthings.com/tokens" target="_blank">Create PAT</a>
-                <label for="patToken">PAT Token:<input type="password" size=30 id="patToken" name="patToken" required
-                        oninput="listCapabilities()"><input type="checkbox" id="togglePassword"
-                        onclick="togglePasswordVisibility()">Show<br></label>
-                <button type="button" onclick="saveData()">Save</button>
-                <button type="button" onclick="loadData()">Load</button>
-                <button type="button" onclick="clearData()">Clear</button></br>
-                This information is stored on your local PC, not on a server</br></br>
+                <div class="form-group">
+                    <a href="https://account.smartthings.com/tokens" target="_blank" class="btn btn-link">Create PAT</a>
+                    <label for="patToken">PAT Token:</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="patToken" name="patToken" required oninput="listCapabilities()">
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <input type="checkbox" id="togglePassword" onclick="togglePasswordVisibility()"> Show
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                <h3>My Capabilities:</h3>
-                <select id="capabilitiesList" onchange="selectCapability()"></select>
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary" onclick="saveData()">Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadData()">Load</button>
+                    <button type="button" class="btn btn-danger" onclick="clearData()">Clear</button>
+                    <small class="form-text text-muted">This information is stored on your local PC, not on a server.</small>
+                </div>
+                -->
+                <div class="form-group">
+                    <h3>My Capabilities:</h3>
+                    <select id="capabilitiesList" class="form-control" onchange="selectCapability()"></select>
+                </div>
 
-                <h3>Standard Capabilities:</h3>
-                <select id="standardCapabilitiesList" onchange="selectStandardCapability()"></select>
+                <div class="form-group">
+                    <h3>Standard Capabilities:</h3>
+                    <select id="standardCapabilitiesList" class="form-control" onchange="selectStandardCapability()"></select>
+                </div>
 
-                <label for="capabilityId">Capability ID: <input type="text" id="capabilityId"
-                        name="capabilityId"><button type="button" onclick="getCapability()">Retrieve</button></label>
-                <label for="capabilityBody">Capability Body (YAML or JSON):</label><br>
-                <textarea id="capabilityBody" name="capabilityBody" rows="20" cols="50" required></textarea></br>
-                <button type="button" onclick="createCapability()">Create</button>
-                <button type="button" onclick="updateCapability()">Update</button>
-                <button type="button" onclick="deleteCapability()">Delete</button>
+                <div class="form-group">
+                    <label for="capabilityId">Capability ID:</label>
+                    <div class="input-group">
+                        <input type="text" id="capabilityId" class="form-control">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-primary" onclick="getCapability()">Retrieve</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="capabilityBody">Capability Body (YAML or JSON):</label>
+                    <textarea id="capabilityBody" name="capabilityBody" class="form-control" rows="10" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <button type="button" class="btn btn-success" onclick="createCapability()">Create</button>
+                    <button type="button" class="btn btn-warning" onclick="updateCapability()">Update</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteCapability()">Delete</button>
+                </div>
+
+                <h3>Result:</h3>
+                <pre id="result" class="border p-3"></pre>
+
+                <div class="form-group mt-4">
+                    <h3>Translations:</h3>
+                    <label for="localesList">My Locales:</label>
+                    <select id="localesList" class="form-control" onchange="selectLocale()"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="locale">Locale:</label>
+                    <input type="text" id="locale" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="localeBody">Locale Body (YAML or JSON):</label>
+                    <textarea id="localeBody" name="localeBody" class="form-control" rows="10" required></textarea>
+                </div>
+
+                <button type="button" class="btn btn-primary" onclick="upsertLocale()">Create or Update</button>
+                <pre id="localeResult" class="border p-3 mt-3"></pre>
             </form>
-            <h3>Result:</h3>
-            <pre id="result"></pre>
-
-            <h3>Translations:</h3>
-            <label for="localesList">My Locales:</label>
-            <select id="localesList" onchange="selectLocale()"></select><br>
-            <label for="locale">Locale: <input type="text" id="locale" name="locale"></label><br>
-            <textarea id="localeBody" name="localeBody" rows="20" cols="50" required></textarea><br>
-            <button type="button" onclick="upsertLocale()">Create or Update</button>
-            <pre id="localeResult"></pre>
-
-            <script>
-                function togglePasswordVisibility() {
-                    var passwordField = document.getElementById('patToken');
-                    var toggleCheckbox = document.getElementById('togglePassword');
-                    if (toggleCheckbox.checked) {
-                        passwordField.type = 'text';
-                    } else {
-                        passwordField.type = 'password';
-                    }
-                }
-                function saveData() {
-                    var patData = document.getElementById('patToken').value;
-                    localStorage.setItem('patData', patData);
-                    alert('Data saved!');
-                }
-                function loadData() {
-                    var patData = localStorage.getItem('patData');
-                    if (patData !== null) {
-                        document.getElementById('patToken').value = patData;
-                        listCapabilities();
-                    }
-                }
-                function clearData() {
-                    localStorage.removeItem('patData');
-                    document.getElementById('patToken').value = '';
-                    alert('Data cleared!');
-                }
-                function isJsonString(str) {
-                    try {
-                        JSON.parse(str);
-                    } catch (e) {
-                        return false;
-                    }
-                    return true;
-                }
-                function createCapability() {
-                    const patToken = document.getElementById("patToken").value;
-                    const capabilityBody = document.getElementById("capabilityBody").value;
-                    let bodyData;
-                    let contentType = 'application/json';
-                    if (isJsonString(capabilityBody)) {
-                        bodyData = JSON.stringify(JSON.parse(capabilityBody), null, 2);
-                    } else {
-                        try {
-                            const yamlObject = jsyaml.load(capabilityBody);
-                            bodyData = JSON.stringify(yamlObject, null, 2);
-                        } catch (e) {
-                            document.getElementById("result").textContent = `YAML 파싱 오류: ${e}`;
-                            return;
-                        }
-                    }
-                    fetch('https://api.smartthings.com/v1/capabilities', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`,
-                            'Content-Type': contentType
-                        },
-                        body: bodyData
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-                            listCapabilities();
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-                }
-                function updateCapability() {
-                    const patToken = document.getElementById("patToken").value;
-                    const capabilityId = document.getElementById("capabilityId").value;
-                    const capabilityBody = document.getElementById("capabilityBody").value;
-                    let bodyData;
-                    let contentType = 'application/json';
-                    if (isJsonString(capabilityBody)) {
-                        bodyData = JSON.stringify(JSON.parse(capabilityBody), null, 2);
-                    } else {
-                        try {
-                            const yamlObject = jsyaml.load(capabilityBody);
-                            bodyData = JSON.stringify(yamlObject, null, 2);
-                        } catch (e) {
-                            document.getElementById("result").textContent = `YAML 파싱 오류: ${e}`;
-                            return;
-                        }
-                    }
-                    fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/1`, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`,
-                            'Content-Type': contentType
-                        },
-                        body: bodyData
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-                            listCapabilities();
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-                }
-                function deleteCapability() {
-                    const patToken = document.getElementById("patToken").value;
-                    const capabilityId = document.getElementById("capabilityId").value;
-                    if (!capabilityId) {
-                        document.getElementById("result").textContent = 'Capability ID를 입력하세요.';
-                        return;
-                    }
-                    fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/1`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => {
-                            if (response.ok) {
-                                document.getElementById("result").textContent = 'Capability 삭제 성공';
-                                listCapabilities();
-                            } else {
-                                return response.json().then(data => {
-                                    throw new Error(JSON.stringify(data));
-                                });
-                            }
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-                }
-                function getCapability() {
-                    const patToken = document.getElementById("patToken").value;
-                    const capabilityId = document.getElementById("capabilityId").value;
-                    if (!capabilityId) {
-                        document.getElementById("result").textContent = 'Capability ID를 입력하세요.';
-                        return;
-                    }
-                    fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/1`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => {
-                            if (response.ok) {
-                                return response.json();
-                            } else {
-                                return response.json().then(data => {
-                                    throw new Error(JSON.stringify(data));
-                                });
-                            }
-                        })
-                        .then(data => {
-                            const jsonData = JSON.stringify(data, null, 2);
-                            document.getElementById("capabilityBody").value = jsonData;
-                            listLocales();
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-                }
-                function listCapabilities() {
-                    const patToken = document.getElementById("patToken").value;
-                    if (!patToken) return;
-                    fetch('https://api.smartthings.com/v1/capabilities/namespaces', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!data) {
-                                throw new Error('Invalid response structure: ' + JSON.stringify(data));
-                            }
-                            const namespaces = data.filter(item => item.ownerType === "organization").map(item => item.name);
-                            return Promise.all(namespaces.map(namespace => {
-                                return fetch(`https://api.smartthings.com/v1/capabilities/namespaces/${namespace}`, {
-                                    method: 'GET',
-                                    headers: {
-                                        'Authorization': `Bearer ${patToken}`
-                                    }
-                                }).then(response => response.json());
-                            }));
-                        })
-                        .then(results => {
-                            const capabilities = [];
-                            results.forEach(namespaceData => {
-                                if (namespaceData && namespaceData.items) {
-                                    namespaceData.items.forEach(capability => {
-                                        capabilities.push(capability.id);
-                                    });
-                                }
-                            });
-                            capabilities.sort();
-                            const capabilitiesList = document.getElementById("capabilitiesList");
-                            capabilitiesList.innerHTML = '<option value="">Select a capability</option>';
-                            capabilities.forEach(capabilityId => {
-                                const option = document.createElement("option");
-                                option.value = capabilityId;
-                                option.textContent = capabilityId;
-                                capabilitiesList.appendChild(option);
-                            });
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-
-                    // Fetch standard capabilities
-                    fetch('https://api.smartthings.com/v1/capabilities', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!data) {
-                                throw new Error('Invalid response structure: ' + JSON.stringify(data));
-                            }
-                            const standardCapabilities = data.items.map(capability => capability.id).sort();
-                            const standardCapabilitiesList = document.getElementById("standardCapabilitiesList");
-                            standardCapabilitiesList.innerHTML = '<option value="">Select a capability</option>';
-                            standardCapabilities.forEach(capabilityId => {
-                                const option = document.createElement("option");
-                                option.value = capabilityId;
-                                option.textContent = capabilityId;
-                                standardCapabilitiesList.appendChild(option);
-                            });
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-                }
-                function selectCapability() {
-                    const capabilityId = document.getElementById("capabilitiesList").value;
-                    if (capabilityId) {
-                        document.getElementById("capabilityId").value = capabilityId;
-                        getCapability();
-                    }
-                }
-                function selectStandardCapability() {
-                    const capabilityId = document.getElementById("standardCapabilitiesList").value;
-                    if (capabilityId) {
-                        document.getElementById("capabilityId").value = capabilityId;
-                        getCapability();
-                    }
-                }
-                function listLocales() {
-                    const patToken = document.getElementById("patToken").value;
-                    const capabilityId = document.getElementById("capabilityId").value;
-                    fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/1/i18n`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => {
-                            if (response.ok) {
-                                return response.json();
-                            } else {
-                                return response.json().then(data => {
-                                    throw new Error(JSON.stringify(data));
-                                });
-                            }
-                        })
-                        .then(data => {
-                            const localesList = document.getElementById("localesList");
-                            localesList.innerHTML = '<option value="">Select a locale</option>';
-                            if (data && data.items) {
-                                data.items.forEach(locale => {
-                                    const option = document.createElement("option");
-                                    option.value = locale.tag;
-                                    option.textContent = locale.tag;
-                                    localesList.appendChild(option);
-                                });
-                            }
-                        })
-                        .catch(error => {
-                            document.getElementById("localeResult").textContent = `Error: ${error}`;
-                        });
-                }
-                function selectLocale() {
-                    const patToken = document.getElementById("patToken").value;
-                    const capabilityId = document.getElementById("capabilityId").value;
-                    const localeTag = document.getElementById("localesList").value;
-                    fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/1/i18n/${localeTag}`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => {
-                            if (response.ok) {
-                                return response.json();
-                            } else {
-                                return response.json().then(data => {
-                                    throw new Error(JSON.stringify(data));
-                                });
-                            }
-                        })
-                        .then(data => {
-                            const jsonData = JSON.stringify(data, null, 2);
-                            document.getElementById("localeBody").value = jsonData;
-                            document.getElementById("locale").value = localeTag;
-                        })
-                        .catch(error => {
-                            document.getElementById("localeResult").textContent = `Error: ${error}`;
-                        });
-                }
-                function upsertLocale() {
-                    const patToken = document.getElementById("patToken").value;
-                    const capabilityId = document.getElementById("capabilityId").value;
-                    const localeBody = document.getElementById("localeBody").value;
-                    const localeTag = document.getElementById("locale").value;
-                    let bodyData;
-                    if (isJsonString(localeBody)) {
-                        bodyData = JSON.stringify(JSON.parse(localeBody), null, 2);
-                    } else {
-                        try {
-                            const yamlObject = jsyaml.load(localeBody);
-                            bodyData = JSON.stringify(yamlObject, null, 2);
-                        } catch (e) {
-                            document.getElementById("localeResult").textContent = `YAML 파싱 오류: ${e}`;
-                            return;
-                        }
-                    }
-                    fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/1/i18n`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: bodyData
-                    })
-                        .then(response => {
-                            if (response.ok) {
-                                listLocales();
-                                return response.json();
-                            } else {
-                                return response.json().then(data => {
-                                    throw new Error(JSON.stringify(data));
-                                });
-                            }
-                        })
-                        .then(data => {
-                            document.getElementById("localeResult").textContent = JSON.stringify(data, null, 2);
-                        })
-                        .catch(error => {
-                            if (error.message.includes('Localization already exists')) {
-                                fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/1/i18n/${localeTag}`, {
-                                    method: 'PUT',
-                                    headers: {
-                                        'Authorization': `Bearer ${patToken}`,
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: bodyData
-                                })
-                                    .then(response => {
-                                        if (response.ok) {
-                                            listLocales();
-                                            return response.json();
-                                        } else {
-                                            return response.json().then(data => {
-                                                throw new Error(JSON.stringify(data));
-                                            });
-                                        }
-                                    })
-                                    .then(data => {
-                                        document.getElementById("localeResult").textContent = JSON.stringify(data, null, 2);
-                                    })
-                                    .catch(postError => {
-                                        document.getElementById("localeResult").textContent = `Error: ${postError}`;
-                                    });
-                            } else {
-                                document.getElementById("localeResult").textContent = `Error: ${error}`;
-                            }
-                        });
-                }
-
-                window.onload = function () {
-                    loadData();
-                }
-            </script>
-        </main>
-    </div>
-    <footer>
-        <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver
-                cafe</a></p>
-    </footer>
-</body>
-
+        </div>
+        <footer class="text-center mt-5">
+            <hr class="my-4">
+            <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver cafe</a></p>
+        </footer>
+        
+         <!-- Javascript Load -->
+         <script src="../menu.js"></script>
+         <script src="capability.js"></script>
+    </body>
 </html>

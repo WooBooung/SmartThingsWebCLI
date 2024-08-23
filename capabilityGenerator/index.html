@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SmartThings WEB CLI</title>
+        <style>
+            .hidden {
+                display: none;
+            }
+        </style>
+        <!--Common Style Load -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+        <link href="../subpage.css" rel="stylesheet">
+    </head>
+    <body>
+        <!--Header & Side Menu Load Area -->
+        <div id="header"></div>
+        <div id="sidebar"></div>
+        
+        <!-- Main Area -->
+        <div class="content">
+            <h1 class="mb-4">Sample Generator</h1>
+            
+            <div class="form-group">
+                <label for="capa_name">Capability Name:</label>
+                <input type="text" class="form-control" id="capa_name" maxlength="50">
+            </div>
+
+            <div class="form-group">
+                <label for="capa_type">Capability Type:</label>
+                <select class="form-control" id="capa_type">
+                    <option value="select">==Select==</option>
+                    <option value="string">string</option>
+                    <option value="integer">integer</option>
+                    <option value="number">number</option>
+                    <option value="boolean">boolean</option>
+                    <option value="array">array</option>
+                </select>
+            </div>
+
+            <div id="attr_id_container" class="form-group hidden">
+                <label for="capa_attr_name">Attributes ID:</label>
+                <input type="text" class="form-control" id="capa_attr_name">
+            </div>
+
+            <div id="options_container" class="hidden">
+                <div id="string_options" class="form-group hidden">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="maxLength_option">
+                        <label class="form-check-label" for="maxLength_option">maxLength</label>
+                        <input type="number" class="form-control mt-2 hidden" id="maxLength_value">
+                    </div>
+                </div>
+
+                <div id="number_options" class="form-group hidden">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="minimum_option">
+                        <label class="form-check-label" for="minimum_option">minimum</label>
+                        <input type="number" class="form-control mt-2 hidden" id="minimum_value">
+                    </div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="maximum_option">
+                        <label class="form-check-label" for="maximum_option">maximum</label>
+                        <input type="number" class="form-control mt-2 hidden" id="maximum_value">
+                    </div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="unit_option">
+                        <label class="form-check-label" for="unit_option">add unit</label>
+                        <input type="text" class="form-control mt-2 hidden" id="unit_value">
+                    </div>
+                </div>
+            </div>
+
+            <button id="generate_btn" class="btn btn-primary mt-4 hidden">Generate</button>
+
+            <div class="form-group mt-4 hidden" id="result_format_container">
+                <label for="result_format">Result Format:</label>
+                <select class="form-control" id="result_format">
+                    <option value="json">JSON</option>
+                    <option value="yaml">YAML</option>
+                </select>
+            </div>
+
+            <pre id="result" class="mt-4 p-3 bg-light border rounded hidden"></pre>
+        </div>
+    
+        <footer class="text-center mt-5">
+            <hr class="my-4">
+            <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver cafe</a></p>
+        </footer>
+        <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="../menu.js"></script>
+        <script src="capabilityGenerator.js"></script>
+    </body>
+</html>

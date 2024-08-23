@@ -1,544 +1,185 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Channels</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
+        <style>
+            h1 {
+                margin-bottom: 30px!important;
+            }
+            
+            #channelDetails,
+            #invitesDetails {
+                min-height: 180px;
+                width: 100%;
+                overflow-y: scroll;
+                /*border: 1px solid #495057;*/
+                padding: 10px;
+                box-sizing: border-box;
+            }
 
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="../style.css">
-    <meta charset="UTF-8">
-    <title>Channels</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
-    <style>
-        #channelDetails,
-        #invitesDetails {
-            height: 180px;
-            width: 80%;
-            overflow-y: scroll;
-            border: 1px solid #000;
-            padding: 10px;
-            box-sizing: border-box;
-        }
+            #newChannelDetails {
+                height: 120px;
+                width: 80%;
+                overflow-y: scroll;
+                border: 1px solid #000;
+                padding: 10px;
+                box-sizing: border-box;
+            }
 
-        #newChannelDetails {
-            height: 120px;
-            width: 80%;
-            overflow-y: scroll;
-            border: 1px solid #000;
-            padding: 10px;
-            box-sizing: border-box;
-        }
+            #channelList,
+            #inviteList {
+                height: 150px;
+                width: 100%;
+                overflow-y: scroll;
+                /*border: 1px solid #000;*/
+                padding: 10px;
+                box-sizing: border-box;
+            }
 
-        #channelList,
-        #inviteList {
-            height: 150px;
-            width: 80%;
-            overflow-y: scroll;
-            border: 1px solid #000;
-            padding: 10px;
-            box-sizing: border-box;
-        }
+            .channel-item,
+            .invite-item,
+            .driver-item {
+                border: 1px solid #ccc;
+                padding: 5px;
+                margin-bottom: 5px;
+                cursor: pointer;
+            }
 
-        .channel-item,
-        .invite-item,
-        .driver-item {
-            border: 1px solid #ccc;
-            padding: 5px;
-            margin-bottom: 5px;
-            cursor: pointer;
-        }
+            .channel-item:hover,
+            .invite-item:hover,
+            .driver-item:hover {
+                background-color: #f0f0f0;
+            }
+            
+            .tab-container {
+            	width: 250px !important;
+            }
+        </style>
+        
+        <!--Common Style Load -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+        <link href="../subpage.css" rel="stylesheet">
+        
 
-        .channel-item:hover,
-        .invite-item:hover,
-        .driver-item:hover {
-            background-color: #f0f0f0;
-        }
-    </style>
-</head>
+    </head>
 
-<body>
-    <header>
-        <h1>Channels</h1>
-    </header>
-    <div class="container">
-        <a href="./../virtual">Virtual Device Creator</a> | <a href="./../events">Virtual Device send event</a><br>
-        <a href="./../capability">Capability Creator</a> | <a href="./../capabilityPresentation">Capability
-            Presentation</a><br>
-        <a href="./../profile">Device Profile</a> | <a href="./../configuration">Device Configuration</a> | <a
-            href="./../presentation">Device Presentation</a><br>
-        <a href="./../edge">Edge drivers</a> | <a href="./../channels">Edge channels</a><br>
-        <main>
-            <form id="configurationForm">
-                <a href="https://account.smartthings.com/tokens" target="_blank">Create PAT</a>
-                <label for="patToken">PAT Token:<input type="password" size=30 id="patToken" name="patToken" required
-                        onchange="loadData()"><input type="checkbox" id="togglePassword"
-                        onclick="togglePasswordVisibility()">Show<br></label>
-                <button type="button" onclick="saveData()">Save</button>
-                <button type="button" onclick="loadData()">Load</button>
-                <button type="button" onclick="clearData()">Clear</button></br>
-                This information is stored on your local PC, not on a server</br></br>
-            </form>
+    <body>
+        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+        <!--Header & Side Menu Load Area -->
+        <div id="header"></div>
+        <div id="sidebar"></div>
 
-            <h3>Channels</h3>
+        <!-- Main Area -->
+        <div class="content">
+            <h1>Edge Channel Management</h1>
+            <!-- Tab Selector for PC view -->
+            <div class="tab-container">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="channel-tab" data-toggle="tab" role="tab" aria-controls="channel" aria-selected="true">Channel</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="invite-tab" data-toggle="tab" role="tab" aria-controls="invite" aria-selected="false">Invite</a>
+                    </li>
+                </ul>
+                                    
+            </div>
 
-            <h4>Create Channel</h4>
-            <label for="newChannelName">Name:</label>
-            <input type="text" id="newChannelName" name="newChannelName"><br>
-            <label for="newChannelDescription">Description:</label>
-            <input type="text" id="newChannelDescription" name="newChannelDescription"><br>
-            <label for="newChannelTermsOfServiceUrl">Terms of Service URL:</label>
-            <input type="text" id="newChannelTermsOfServiceUrl" value="email.com"
-                name="newChannelTermsOfServiceUrl"><br>
-            <button type="button" onclick="createChannel()">Create Channel</button>
 
-            <br><br><button type="button" onclick="listChannels()">List Channels</button>
-            <select id="channelDropdown" onchange="showChannelDetails(this.value)">
-                <option value="">Select a channel</option>
-            </select><br><br>
+            <!-- Tab Selector for mobile view -->
+            <a class="tab-button btn btn-primary" id="m-channel-tab" data-toggle="tab">Channel</a>
+            <a class="tab-button btn btn-primary" id="m-invite-tab" data-toggle="tab">Invite</a>
 
-            <label>Selected channel:</label><br>
-            <textarea id="channelDetails"></textarea><br>
-            <button type="button" id="updateChannelBtn" style="display:none" onclick="updateChannel()">Update
-                Channel</button>
-            <button type="button" id="deleteChannelBtn" style="display:none" onclick="deleteChannel()">Delete
-                Channel</button>
+            <!-- Tab Contents -->
+        
 
-            <h4>Assign Driver to Selected Channel</h4>
-            <label for="driverId">Driver ID:</label>
-            <select id="driverList"></select><br><br>
-            <button type="button" id="assignDriverBtn" style="display:none" onclick="assignDriverToChannel()">Assign
-                Driver to Channel</button>
+            <div class="tab-content">
+                <!-- 1. Channel -->
+                <div class="tab-pane fade show active" id="channeldiv" role="tabpanel" aria-labelledby="channel-tab">
+                    <div class="form-group">
+                        <h4>Channel</h4>
+                        <div class="form-group">
+                            <!-- <label for="newChannelName">Name:</label> -->
+                            <input type="text" class="form-control" id="newChannelName" name="newChannelName" placeholder="Channel Name"><br>
+                            <!-- <label for="newChannelDescription">Description:</label> -->
+                            <input type="text" class="form-control" id="newChannelDescription" name="newChannelDescription" placeholder="Channel Description"><br>
+                            <!-- <label for="newChannelTermsOfServiceUrl">Terms of Service URL:</label> -->
+                            <input type="text" class="form-control" id="newChannelTermsOfServiceUrl" name="newChannelTermsOfServiceUrl" placeholder="Email Address"><br>
+                            <button type="button" id="createChannel" class="btn btn-primary" onclick="createChannel()">Create Channel</button><br><br>
+                            <!-- <button type="button" id="listChannel" class="btn btn-primary" onclick="listChannels()"">List Channel</button><br><br> -->
+                            <!-- <select id="channelDropdown" class="form-control dropdown" onchange="showChannelDetails(this.value)"> -->
+                                <!-- <option value="">Select a channel</option> -->
+                            <!-- </select> -->
+                        </div>
+                    </div>
+                </div>
+              <!-- 2. Invite -->
+                <div class="form-group">
+                    <div class="d-flex align-items-center mb-3">
+                        
+                        <select id="channelDropdown" class="form-control dropdown">
+                            <option value="">Select a channel</option>
+                        </select>
+                        <button type="button" id="listChannel" class="btn btn-primary me-2" onclick="listChannels()" style="margin-left: 5px; min-width: 150px">List Channel</button>
+                    </div>
+                    <textarea id="channelDetails" class="form-control"></textarea><br>
+                    <button type="button" id="updateChannelBtn" style="display:none" onclick="updateChannel()" class="btn btn-warning" >Update
+                        Channel</button>
+                    <button type="button" id="deleteChannelBtn" style="display:none" onclick="deleteChannel()" class="btn btn-danger">Delete
+                        Channel</button>
+                </div>         
+                    <div class="form-group" id="assigndiv">
+                        <h4 id="assignTitle">Assign Driver to Selected Channel</h4>
+                            <!-- TOBE: Separate assign and unassign into different tabs
+                                       Add the list of drivers assigned to the channel -->
+                            <select id="driverList" class="form-control dropdown"></select><br>
+                            <button type="button" id="assignDriverBtn" onclick="assignDriverToChannel()" class="btn btn-primary">Assign Driver to Channel</button>
+                    </div>
 
-            <br>
-            <hr>
+                <div class="tab-pane fade show active" id="invitediv" role="tabpanel" aria-labelledby="invite-tab"> 
+                    <div class="form-group">
+                        <h4>Create Invite</h4>
+                        <label>must select one of the channels generated above to see the Create Invitation button</label><br>
+                    </div>
+                    <div class="form-group">
+                    <!-- <label for="inviteName">Name:</label> -->
+	                    <input type="text" id="inviteName" name="inviteName"  class="form-control" placeholder="Name"><br>
+	                    <!-- <label for="inviteDescription">Description:</label> -->
+	                    <input type="text" id="inviteDescription" name="inviteDescription " class="form-control" placeholder="Description"><br>
+	                    <!-- <label for="inviteOwner">Owner:</label> -->
+	                    <input type="text" id="inviteOwner" name="inviteOwner" class="form-control" placeholder="Owner"><br>
+	                    <!-- <label for="inviteTermsUrl">Terms URL:</label> -->
+	                    <input type="text" id="inviteTermsUrl" value="https://smartthings.com" name="inviteTermsUrl"  class="form-control"><br>
+	                    <button type="button" id="createInviteBtn" style="display:none" onclick="createInvite()" class="btn btn-primary">Create Invitation</button>
+	                    <button type="button" id="listInviteBtn" style="display:none" onclick="listInvites()" class="btn btn-secondary">List Invites</button>
+	                </div>
+                    <div class="form-group">
+                        <h4>invite:<h4>
+                    	<div id="inviteList" class="form-control" readonly style="display:none"></div>
+                    </div>
+                    <div class="form-group" id="selectInviteTab" style="display:none">
+                    	<h4>Selected invite:<h4>
+                    	<textarea id="invitesDetails" class="form-control" readonly></textarea><br>
+                		<button type="button" id="deleteInviteBtn" style="display:none" onclick="deleteInvite()" class="btn btn-danger">Delete Invitation</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <h3>Result:</h3>
+                    <pre id="result"></pre>
+                </div>
 
-            <h3>Invites</h3>
-
-            <h4>Create Invitation</h4>
-            <label>must select one of the channels generated above to see the Create Invitation button</label><br>
-            <label for="inviteName">Name:</label>
-            <input type="text" id="inviteName" name="inviteName"><br>
-            <label for="inviteDescription">Description:</label>
-            <input type="text" id="inviteDescription" name="inviteDescription"><br>
-            <label for="inviteOwner">Owner:</label>
-            <input type="text" id="inviteOwner" name="inviteOwner"><br>
-            <label for="inviteTermsUrl">Terms URL:</label>
-            <input type="text" id="inviteTermsUrl" value="https://smartthings.com" name="inviteTermsUrl"><br>
-            <button type="button" id="createInviteBtn" style="display:none" onclick="createInvite()">Create
-                Invitation</button>
-            <br><br><button type="button" id="listInviteBtn" style="display:none" onclick="listInvites()">List
-                Invites</button>
-            <div id="inviteList"></div><br>
-
-            <label>Selected invite:</label><br>
-            <textarea id="invitesDetails"></textarea><br>
-            <button type="button" id="deleteInviteBtn" style="display:none" onclick="deleteInvite()">Delete
-                Invitation</button>
-
-            <h3>Result:</h3>
-            <pre id="result"></pre>
-
-            <script>
-                function togglePasswordVisibility() {
-                    var passwordField = document.getElementById('patToken');
-                    var toggleCheckbox = document.getElementById('togglePassword');
-                    if (toggleCheckbox.checked) {
-                        passwordField.type = 'text';
-                    } else {
-                        passwordField.type = 'password';
-                    }
-                }
-
-                function saveData() {
-                    var patData = document.getElementById('patToken').value;
-                    localStorage.setItem('patData', patData);
-                    alert('Data saved!');
-                }
-
-                function loadData() {
-                    var patData = localStorage.getItem('patData');
-                    if (patData !== null) {
-                        document.getElementById('patToken').value = patData;
-                        listChannels();
-                        listDrivers();
-                    } else if (document.getElementById("patToken").value !== null) {
-                        listChannels();
-                        listDrivers();
-                    }
-                }
-
-                function clearData() {
-                    localStorage.removeItem('patData');
-                    document.getElementById('patToken').value = '';
-                    alert('Data cleared!');
-                }
-
-                function listChannels() {
-                    const patToken = document.getElementById("patToken").value;
-                    fetch(`https://api.smartthings.com/v1/distchannels`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            const channelDropdown = document.getElementById("channelDropdown");
-                            channelDropdown.innerHTML = '<option value="">Select a channel</option>';
-                            data.items.forEach(channel => {
-                                const option = document.createElement("option");
-                                option.value = channel.channelId;
-                                option.text = `${channel.name}`;
-                                channelDropdown.appendChild(option);
-                            });
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error fetching channels: ${error}`;
-                        });
-                }
-
-                function showChannelDetails(channelId) {
-                    const patToken = document.getElementById("patToken").value;
-
-                    fetch(`https://api.smartthings.com/v1/distchannels/${channelId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById("channelDetails").value = JSON.stringify(data, null, 2);
-                            document.getElementById("updateChannelBtn").style.display = 'inline';
-                            document.getElementById("deleteChannelBtn").style.display = 'inline';
-                            document.getElementById("assignDriverBtn").style.display = 'inline';
-                            document.getElementById("createInviteBtn").style.display = 'inline';
-                            document.getElementById("listInviteBtn").style.display = 'inline';
-                            document.getElementById("updateChannelBtn").setAttribute('data-channel-id', channelId);
-                            document.getElementById("deleteChannelBtn").setAttribute('data-channel-id', channelId);
-                            document.getElementById("assignDriverBtn").setAttribute('data-channel-id', channelId);
-                            document.getElementById("createInviteBtn").setAttribute('data-channel-id', channelId);
-                        })
-                        .catch(error => {
-                            document.getElementById("channelDetails").value = `Error fetching channel details: ${error}`;
-                        });
-                }
-
-                function updateChannel() {
-                    const patToken = document.getElementById("patToken").value;
-                    const channelId = document.getElementById("updateChannelBtn").getAttribute('data-channel-id');
-                    const channelDetails = document.getElementById("channelDetails").value;
-
-                    if (!isJsonString(channelDetails)) {
-                        document.getElementById("result").textContent = 'Invalid JSON payload';
-                        return;
-                    }
-
-                    fetch(`https://api.smartthings.com/v1/distchannels/${channelId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: channelDetails
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                return response.json().then(data => {
-                                    throw new Error(JSON.stringify(data));
-                                });
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error updating channel ${channelId}: ${error}`;
-                        });
-                }
-
-                function deleteChannel() {
-                    const patToken = document.getElementById("patToken").value;
-                    const channelId = document.getElementById("deleteChannelBtn").getAttribute('data-channel-id');
-                    fetch(`https://api.smartthings.com/v1/distchannels/${channelId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => {
-                            if (response.ok) {
-                                document.getElementById("result").textContent = `Channel ${channelId} deleted successfully.`;
-                                listChannels();
-                            } else {
-                                return response.json().then(data => {
-                                    throw new Error(JSON.stringify(data));
-                                });
-                            }
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error deleting channel: ${error}`;
-                        });
-                }
-
-                function createChannel() {
-                    const patToken = document.getElementById("patToken").value;
-                    const name = document.getElementById("newChannelName").value;
-                    const description = document.getElementById("newChannelDescription").value;
-                    const termsOfServiceUrl = document.getElementById("newChannelTermsOfServiceUrl").value;
-
-                    if (!name || !description || !termsOfServiceUrl) {
-                        document.getElementById("result").textContent = 'Error: Name, description, and terms of service URL are required fields.';
-                        return;
-                    }
-
-                    const payload = {
-                        "name": name,
-                        "description": description,
-                        "type": "DRIVER",
-                        "termsOfServiceUrl": termsOfServiceUrl
-                    };
-
-                    fetch(`https://api.smartthings.com/v1/distchannels`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-                            listChannels();
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error creating channel: ${error}`;
-                        });
-                }
-
-                function listDrivers() {
-                    const patToken = document.getElementById("patToken").value;
-                    fetch(`https://api.smartthings.com/v1/drivers`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            const driverList = document.getElementById("driverList");
-                            driverList.innerHTML = '<option value="">Select a driver</option>';
-                            data.items.forEach(driver => {
-                                const option = document.createElement("option");
-                                option.value = driver.driverId;
-                                option.text = `${driver.name} version: ${driver.version}`;
-                                option.setAttribute('data-version', driver.version);
-                                driverList.appendChild(option);
-                            });
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error fetching drivers: ${error}`;
-                        });
-                }
-
-                function assignDriverToChannel() {
-                    const patToken = document.getElementById("patToken").value;
-                    const channelId = document.getElementById("assignDriverBtn").getAttribute('data-channel-id');
-                    const driverList = document.getElementById("driverList");
-                    const selectedDriver = driverList.options[driverList.selectedIndex];
-                    const driverId = selectedDriver.value;
-                    const version = selectedDriver.getAttribute('data-version');
-
-                    const payload = {
-                        "driverId": driverId,
-                        "version": version
-                    };
-
-                    fetch(`https://api.smartthings.com/v1/distchannels/${channelId}/drivers`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`Network response was not ok: ${response.statusText}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error assigning driver to channel: ${error.message}`;
-                        });
-                }
-
-                function listInvites() {
-                    const patToken = document.getElementById("patToken").value;
-                    const channelId = document.getElementById("updateChannelBtn").getAttribute('data-channel-id');
-                    const params = `resource=st1:developer::channel/${channelId}`
-                    const url = `https://api.smartthings.com/invites?${params}`
-                    fetch(url, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`Network response was not ok: ${response.statusText}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            const inviteList = document.getElementById("inviteList");
-                            inviteList.innerHTML = '';
-                            data.items.forEach(invite => {
-                                const div = document.createElement("div");
-                                div.className = "invite-item";
-                                div.textContent = `id: ${invite.id} AcceptUrl: ${invite.acceptUrl}`;
-                                div.onclick = () => showInviteDetails(invite.id);
-                                inviteList.appendChild(div);
-                            });
-                        })
-                        .catch(error => {
-                            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
-                                document.getElementById('result').textContent = 'Fetch error: Failed to fetch. Possible CORS issue or network problem.';
-                            } else {
-                                document.getElementById('result').textContent = `Fetch error: ${error.message}`;
-                            }
-                        });
-                }
-
-                function showInviteDetails(inviteId) {
-                    const patToken = document.getElementById("patToken").value;
-                    fetch(`https://api.smartthings.com/invites/${inviteId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`Network response was not ok: ${response.statusText}`);
-                            }
-                            document.getElementById("deleteInviteBtn").style.display = 'inline';
-                            document.getElementById("deleteInviteBtn").setAttribute('data-invite-id', inviteId);
-                            return response.json();
-                        })
-                        .then(data => {
-                            document.getElementById("invitesDetails").value = JSON.stringify(data, null, 2);
-                        })
-                        .catch(error => {
-                            document.getElementById("invitesDetails").value = `Error fetching invite details: ${error.message}`;
-                        });
-                }
-
-                function deleteInvite() {
-                    const patToken = document.getElementById("patToken").value;
-                    const inviteId = document.getElementById("deleteInviteBtn").getAttribute('data-invite-id');
-                    fetch(`https://api.smartthings.com/invites/${inviteId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => {
-                            document.getElementById("invitesDetails").value = "";
-                            if (response.status === 202) {
-                                document.getElementById("result").textContent = `Invite ${inviteId} deleted successfully.`;
-                                listInvites();
-                                return null;
-                            } else {
-                                throw new Error(`Network response was not ok: ${response.statusText}`);
-                            }
-                            return response.json();
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error deleting invite: ${error.message}`;
-                        });
-                }
-
-                function createInvite() {
-                    const patToken = document.getElementById("patToken").value;
-                    const channelId = document.getElementById("createInviteBtn").getAttribute('data-channel-id');
-                    const inviteName = document.getElementById("inviteName").value;
-                    const inviteDescription = document.getElementById("inviteDescription").value;
-                    const inviteOwner = document.getElementById("inviteOwner").value;
-                    const inviteTermsUrl = document.getElementById("inviteTermsUrl").value;
-
-                    if (!channelId || !inviteName || !inviteDescription || !inviteOwner || !inviteTermsUrl) {
-                        document.getElementById("result").textContent = 'Error: All fields (channelId, inviteName, inviteDescription, inviteOwner, inviteTermsUrl) are required.';
-                        return;
-                    }
-
-                    const payload = {
-                        "resource": {
-                            "root": {
-                                "service": "developer"
-                            },
-                            "components": [
-                                {
-                                    "id": channelId,
-                                    "kind": "channel"
-                                }
-                            ]
-                        },
-                        "profileId": "61a79569-e8fd-4a4d-9b9c-a4a55ccdd15e",
-                        "metadata": {
-                            "name": inviteName,
-                            "description": inviteDescription,
-                            "owner": inviteOwner,
-                            "termsUrl": inviteTermsUrl
-                        }
-                    };
-
-                    fetch(`https://api.smartthings.com/invites`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`Network response was not ok: ${response.statusText}`);
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-                            listInvites();
-                            showInviteDetails(data.invitationId);
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error creating invite: ${error.message}`;
-                        });
-                }
-
-                function isJsonString(str) {
-                    try {
-                        JSON.parse(str);
-                    } catch (e) {
-                        return false;
-                    }
-                    return true;
-                }
-
-                window.onload = function () {
-                    loadData();
-                }
-            </script>
-        </main>
-    </div>
-    <footer>
-        <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver
-                cafe</a></p>
-    </footer>
-</body>
+                           
+            </div>   
+        </div>
+        <footer>
+            <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver cafe</a></p>
+        </footer>
+        <script src="../menu.js"></script>
+        <script src="channels.js"></script>
+    </body>
 
 </html>
