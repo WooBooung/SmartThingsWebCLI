@@ -1,343 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Virtual Device Send Event</title>
+        <style>
+            #capabilityDetails,
+            #currentStatus {
+                height: 400px;
+                width: 100%;
+                overflow-y: scroll;
+                border: 1px solid #
+                padding: 10px;
+                box-sizing: border-box;
+            }
+        </style>
+        <!--Common Style Load -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+        <link href="../subpage.css" rel="stylesheet">
+    </head>
+        
+    <body>
+        <!--Header & Side Menu Load Area -->
+        <div id="header"></div>
+        <div id="sidebar"></div>
 
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="../style.css">
-    <meta charset="UTF-8">
-    <title>Virtual device send event</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
-    <style>
-        #capabilityDetails,
-        #currentStatus {
-            height: 400px;
-            width: 50%;
-            overflow-y: scroll;
-            border: 1px solid #000;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-    </style>
-</head>
-
-<body>
-    <header>
-        <h1>Virtual device send event</h1>
-    </header>
-    <div class="container">
-        <a href="./../virtual">Virtual Device Creator</a> | <a href="./../events">Virtual Device send event</a><br>
-        <a href="./../capability">Capability Creator</a> | <a href="./../capabilityPresentation">Capability
-            Presentation</a><br>
-        <a href="./../profile">Device Profile</a> | <a href="./../configuration">Device Configuration</a> | <a
-            href="./../presentation">Device Presentation</a><br>
-        <a href="./../edge">Edge drivers</a> | <a href="./../channels">Edge channels</a><br>
-        <main>
+        <!-- Main Area -->
+        <div class="content">
+            
+            <h1>Virtual Device Send Event</h1>
+            <!-- PAT TOKEN DELETE 
             <form id="configurationForm">
-                <a href="https://account.smartthings.com/tokens" target="_blank">Create PAT</a>
-                <label for="patToken">PAT Token: <input type="password" size=30 id="patToken" name="patToken"
-                        required><input type="checkbox" id="togglePassword"
-                        onclick="togglePasswordVisibility()">Show</label>
-                <button type="button" onclick="saveData()">Save</button>
-                <button type="button" onclick="loadData()">Load</button>
-                <button type="button" onclick="clearData()">Clear</button></br>
-                This information is stored on your local PC, not on a server</br></br>
+                <div class="form-group">
+                    <label for="patToken">PAT Token:</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="patToken" name="patToken" required>
+                        <div class="input-group-append">
+                            <span class="input-group-text">
+                                <input type="checkbox" id="togglePassword" onclick="togglePasswordVisibility()"> Show
+                            </span>
+                        </div>
+                    </div>
+                    <small class="form-text text-muted">This information is stored on your local PC, not on a server</small>
+                </div>
+            
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary" onclick="saveData()">Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadData()">Load</button>
+                    <button type="button" class="btn btn-danger" onclick="clearData()">Clear</button>
+                </div>
+                -->
+                <div class="form-group">
+                    <label for="deviceList">Virtual Device List:</label>
+                    <select id="deviceList" class="form-control" onchange="showCapabilities(); fetchCurrentStatus()"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="capabilityList">Capability List:</label>
+                    <select id="capabilityList" class="form-control" onchange="showCapabilityDetails()"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="capabilityDetails">Selected Capability Schema:</label>
+                    <pre id="capabilityDetails" class="border"></pre>
+                </div>
+
+                <div class="form-group">
+                    <label for="component">Component:</label>
+                    <input type="text" id="component" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="capability">Capability:</label>
+                    <input type="text" id="capability" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="attribute">Attribute:</label>
+                    <select id="attribute" class="form-control" onchange="updateAttributeFields()"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="value">Value:</label>
+                    <textarea id="value" class="form-control" rows="3" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="unit">Unit (default null):</label>
+                    <input type="text" id="unit" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="data">Data (default null):</label>
+                    <textarea id="data" class="form-control" rows="3"></textarea>
+                </div>
+
+                <button type="button" class="btn btn-primary" onclick="sendEvent()">Send Event</button>
+
+                <div class="mt-4">
+                    <h3>Result:</h3>
+                    <pre id="result" class="border"></pre>
+                </div>
+
+                <div class="mt-4">
+                    <h3>Current Status:</h3>
+                    <pre id="currentStatus" class="border"></pre>
+                </div>
             </form>
+        </div>
 
-            <label>Virtual device list:</label>
-            <select id="deviceList" onchange="showCapabilities(); fetchCurrentStatus()"></select><br><br>
+        <footer class="text-center mt-5">
+            <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver cafe</a></p>
+        </footer>
 
-            <label>Capability list:</label>
-            <select id="capabilityList" onchange="showCapabilityDetails()"></select><br><br>
-            <label>Selected capability schema:</label>
-            <pre id="capabilityDetails"></pre>
+        <script src="../menu.js"></script>
+        <script src="events.js"></script>
 
-            <label>Component:</label>
-            <input type="text" id="component"><br><br>
-
-            <label>Capability:</label>
-            <input type="text" id="capability"><br><br>
-
-            <label>Attribute:</label>
-            <select id="attribute" onchange="updateAttributeFields()"></select><br><br>
-
-            <label>Value:<br><textarea id="value" name="valueBody" rows="10" cols="50" required></textarea></label></br>
-
-            <label>Unit(default null):</label>
-            <input type="text" id="unit"><br><br>
-
-            <label>Data(default null):<br><textarea id="data" name="dataBody" rows="10"
-                    cols="50"></textarea></label></br>
-
-            <button type="button" onclick="sendEvent()">Send Event</button>
-
-            <h3>Result:</h3>
-            <pre id="result"></pre>
-
-            <h3>Current Status:</h3>
-            <pre id="currentStatus"></pre>
-
-            <script>
-                function togglePasswordVisibility() {
-                    var passwordField = document.getElementById('patToken');
-                    var toggleCheckbox = document.getElementById('togglePassword');
-                    if (toggleCheckbox.checked) {
-                        passwordField.type = 'text';
-                    } else {
-                        passwordField.type = 'password';
-                    }
-                }
-
-                function saveData() {
-                    var patData = document.getElementById('patToken').value;
-                    localStorage.setItem('patData', patData);
-                    alert('Data saved!');
-                }
-
-                function loadData() {
-                    var patData = localStorage.getItem('patData');
-                    if (patData !== null) {
-                        document.getElementById('patToken').value = patData;
-                        listDevices();
-                    }
-                }
-
-                function clearData() {
-                    localStorage.removeItem('patData');
-                    document.getElementById('patToken').value = '';
-                    alert('Data cleared!');
-                }
-
-                function isJsonString(str) {
-                    try {
-                        JSON.parse(str);
-                    } catch (e) {
-                        return false;
-                    }
-                    return true;
-                }
-
-                async function fetchLocations(patToken) {
-                    const response = await fetch(`https://api.smartthings.com/v1/locations`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    });
-                    const data = await response.json();
-                    const locationMap = {};
-                    data.items.forEach(location => {
-                        locationMap[location.locationId] = location.name;
-                    });
-                    return locationMap;
-                }
-
-                function listDevices() {
-                    const patToken = document.getElementById("patToken").value;
-                    fetchLocations(patToken)
-                        .then(locationMap => {
-                            return fetch(`https://api.smartthings.com/v1/virtualdevices`, {
-                                method: 'GET',
-                                headers: {
-                                    'Authorization': `Bearer ${patToken}`
-                                }
-                            })
-                                .then(response => response.json())
-                                .then(data => {
-                                    const deviceList = document.getElementById("deviceList");
-                                    deviceList.innerHTML = '';
-
-                                    const devicesByLocation = {};
-                                    data.items.forEach(device => {
-                                        if (!devicesByLocation[device.locationId]) {
-                                            devicesByLocation[device.locationId] = [];
-                                        }
-                                        devicesByLocation[device.locationId].push(device);
-                                    });
-
-                                    Object.keys(devicesByLocation).sort().forEach(locationId => {
-                                        const group = devicesByLocation[locationId];
-                                        const locationName = locationMap[locationId] || locationId; // locationName이 없으면 locationId 사용
-                                        group.forEach(device => {
-                                            const option = document.createElement("option");
-                                            option.value = device.deviceId;
-                                            option.text = `[${locationName}] ${device.label}`;
-                                            deviceList.appendChild(option);
-                                        });
-                                    });
-
-                                    // 자동으로 첫 번째 디바이스의 capabilities를 로드
-                                    if (data.items.length > 0) {
-                                        fetchCurrentStatus();
-                                        showCapabilities();
-                                    }
-                                });
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error fetching devices: ${error}`;
-                        });
-                }
-
-                function showCapabilities() {
-                    const patToken = document.getElementById("patToken").value;
-                    const deviceId = document.getElementById("deviceList").value;
-                    fetch(`https://api.smartthings.com/v1/devices/${deviceId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            const capabilityList = document.getElementById("capabilityList");
-                            capabilityList.innerHTML = '';
-                            data.components.forEach(component => {
-                                component.capabilities.forEach(capability => {
-                                    const option = document.createElement("option");
-                                    option.value = `${component.id}:${capability.id}`;
-                                    option.text = `componentId: ${component.id} capabilityId: ${capability.id}`;
-                                    capabilityList.appendChild(option);
-                                });
-                            });
-                            showCapabilityDetails();
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error fetching capabilities: ${error}`;
-                        });
-                }
-
-                function showCapabilityDetails() {
-                    const patToken = document.getElementById("patToken").value;
-                    const selectedCapability = document.getElementById("capabilityList").value;
-                    const [componentId, capabilityId] = selectedCapability.split(':');
-                    fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/1`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById("capabilityDetails").textContent = JSON.stringify(data, null, 2);
-                            const attributes = data.attributes;
-                            fillEventPayload(componentId, capabilityId, attributes);
-                        })
-                        .catch(error => {
-                            document.getElementById("capabilityDetails").textContent = `Error fetching capability details: ${error}`;
-                        });
-                }
-
-                function fillEventPayload(componentId, capabilityId, attributes) {
-                    // Check if attributes object is not empty
-                    const attributeNames = Object.keys(attributes);
-                    const attributeDropdown = document.getElementById("attribute");
-                    attributeDropdown.innerHTML = ''; // clear previous options
-
-                    attributeNames.forEach(attributeName => {
-                        const option = document.createElement("option");
-                        option.value = attributeName;
-                        option.text = attributeName;
-                        attributeDropdown.appendChild(option);
-                    });
-
-                    // Set the first attribute as selected by default
-                    if (attributeNames.length > 0) {
-                        attributeDropdown.value = attributeNames[0];
-                    }
-
-                    document.getElementById("component").value = componentId;
-                    document.getElementById("capability").value = capabilityId;
-                }
-
-                function sendEvent() {
-                    const patToken = document.getElementById("patToken").value;
-                    const deviceId = document.getElementById("deviceList").value;
-                    const componentId = document.getElementById("component").value;
-                    const capabilityId = document.getElementById("capability").value;
-                    const attribute = document.getElementById("attribute").value;
-                    let value = document.getElementById("value").value;
-                    const unit = document.getElementById("unit").value;
-                    let data = document.getElementById("data").value;
-
-                    if (!componentId || !capabilityId || !attribute || !value) {
-                        document.getElementById("result").textContent = 'All fields must be filled out';
-                        return;
-                    }
-
-                    // Attempt to parse value and data as JSON
-                    try {
-                        value = JSON.parse(value);
-                    } catch (e) {
-                        // If parsing fails, use the value as a string
-                    }
-                    try {
-                        data = JSON.parse(data);
-                    } catch (e) {
-                        // If parsing fails, use the data as a string
-                    }
-
-                    const eventPayload = {
-                        "deviceEvents": [
-                            {
-                                "value": value,
-                                "component": componentId,
-                                "capability": capabilityId,
-                                "attribute": attribute,
-                                "unit": unit ? unit : null, // include only if unit is not empty
-                                "data": data ? data : null  // include only if data is not empty
-                            }
-                        ]
-                    };
-
-                    // Show request payload in result
-                    document.getElementById("result").textContent = `Request payload: ${JSON.stringify(eventPayload, null, 2)}`;
-
-                    fetch(`https://api.smartthings.com/v1/virtualdevices/${deviceId}/events`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(eventPayload)
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById("result").textContent += `\n\nResponse: ${JSON.stringify(data, null, 2)}`;
-                            return fetchCurrentStatus(deviceId, patToken); // Fetch the current status after sending the event
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error sending event: ${error}`;
-                        });
-                }
-
-                function fetchCurrentStatus() {
-                    const deviceId = document.getElementById("deviceList").value;
-                    const patToken = document.getElementById("patToken").value;
-
-                    fetch(`https://api.smartthings.com/v1/devices/${deviceId}/status`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById("currentStatus").textContent = JSON.stringify(data, null, 2);
-                        })
-                        .catch(error => {
-                            document.getElementById("currentStatus").textContent = `Error fetching current status: ${error}`;
-                        });
-                }
-
-                window.onload = function () {
-                    loadData();
-                }
-            </script>
-        </main>
-    </div>
-    <footer>
-        <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver
-                cafe</a></p>
-    </footer>
-</body>
+    </body>
 
 </html>

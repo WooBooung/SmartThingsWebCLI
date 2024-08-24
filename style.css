@@ -1,120 +1,111 @@
-
 /* Reset some basic elements */
 body, h1, h2, h3, h4, h5, h6, p, ul, ol {
-    list-style: none;
-}
-
-/* Basic styling for body */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
-    line-height: 1.6;
     margin: 0;
     padding: 0;
 }
 
-/* Container */
-.container {
-    width: 80%;
-    margin: auto;
-    overflow: hidden;
-    padding: 20px;
+/* Layout Styles */
+a {
+	color: #000;
+	text-decoration: none !important;
 }
-
-/* Header and Footer */
-header, footer {
-    background: #333;
-    color: #fff;
-    padding: 10px 0;
+ 
+header {
+    background-color: #007bff;
+    color: #ffffff;
+    padding: 20px 0;
     text-align: center;
 }
 
-header h1, footer p {
-    margin: 0;
+footer {
+    background: #333;
+    padding: 10px 0;
+}
+
+.page-title {
+    margin: 0 auto;
+    width: auto;
+    max-width: 90%;
 }
 
 /* Main content area */
-main {
-    background: #fff;
+
+.container {
     padding: 20px;
-    margin: 20px 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Form styling */
-form {
-    margin: 20px 0;
-}
-
-form label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-form input {
-    margin: 20px 20px;
-    
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-form select, form textarea {
-    width: auto;
-    
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-/* Button styling */
-button {
-    display: inline-block;
-    background: #333;
-    color: #fff;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
+.menu-item {
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    transition: background-color 0.5s ease, box-shadow 0.5s ease;
     cursor: pointer;
-    text-align: center;
+    border: 1px solid #ddd;
 }
 
-button:hover {
-    background: #555;
+.menu-item.active {
+    background-color: #007bff;
+    color: #ffffff;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
 }
 
-/* Responsive Design */
+.menu-item h4 {
+    margin-bottom: 10px;
+}
+
+.menu-item p {
+    margin-bottom: 0;
+}
+
+
+/* Intro Text and Menu Fade-in Animation */
+.intro-text {
+    display: inline-block;
+    animation: fadeInUp 1s ease-out forwards;
+    opacity: 0;
+    font-size: 1.5rem;
+}
+
+.intro-text h2 {
+    font-size: 2rem;
+}
+
+.fade-in {
+    opacity: 0;
+    animation: fadeInUp 1.5s ease-in-out forwards;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments (Mobile) */
 @media (max-width: 768px) {
-    .container {
-        width: 100%;
+    .menu-item {
+        margin-bottom: 20px;
+        transition: background-color 1s  ease-in-out, box-shadow 1s  ease-in-out ;
     }
 
-    header, footer {
-        text-align: center;
+    .intro-text h2 {
+        font-size: 2.5rem;
     }
 
-    main {
-        padding: 10px;
-        margin: 10px 0;
+    .intro-text p {
+        font-size: 1.5rem;
     }
 
-    button {
-        padding: 10px 30px;
+    .page-title {
+        font-size: 1.5rem;
+        margin-left: 20px;
+        margin-right: 20px;
     }
-}
-
-/* Desktop Design */
-@media (min-width: 769px) {
-    .container {
-        width: 60%;
-    }
-
-    main {
-        padding: 30px;
-        margin: 30px 0;
-    }
-
-    button {
-        padding: 10px 30px;
-    }
+    
 }

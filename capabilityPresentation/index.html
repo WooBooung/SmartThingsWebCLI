@@ -1,319 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Custom Capability Presentation</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
+        <!--Common Style Load -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+        <link href="../subpage.css" rel="stylesheet">
+    </head>
+    <body>
+        <!--Header & Side Menu Load Area -->
+        <div id="header"></div>
+        <div id="sidebar"></div>
 
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="../style.css">
-    <meta charset="UTF-8">
-    <title>Custom Capability Presentation</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
-    <style>
-        #capabilitiesList,
-        #standardCapabilitiesList {
-            width: auto;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-gap: 10px;
-            overflow-y: auto;
-            max-height: 500px;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-
-        .capability-item {
-            text-align: center;
-            cursor: pointer;
-        }
-    </style>
-</head>
-
-<body>
-    <header>
-        <h1>Custom Capability Presentation</h1>
-    </header>
-    <div class="container">
-        <a href="./../virtual">Virtual Device Creator</a> | <a href="./../events">Virtual Device send event</a><br>
-        <a href="./../capability">Capability Creator</a> | <a href="./../capabilityPresentation">Capability
-            Presentation</a><br>
-        <a href="./../profile">Device Profile</a> | <a href="./../configuration">Device Configuration</a> | <a
-            href="./../presentation">Device Presentation</a><br>
-        <a href="./../edge">Edge drivers</a> | <a href="./../channels">Edge channels</a><br>
-        <br>Reference link: <a
-            href="https://developer.smartthings.com/docs/devices/capabilities/capability-presentations"
-            target="_blank">Capability presentation documents</a><br>
-        <main>
+        <!-- Main Area -->
+        <div class="content">
+            <h1>Custom Capability Presentation</h1>
+            <p class="mb-4">Reference link: 
+                <a href="https://developer.smartthings.com/docs/devices/capabilities/capability-presentations" target="_blank" class="btn btn-link">
+                    Capability presentation documents
+                </a>
+            </p>
+            <!-- PAT TOKEN DELETE 
             <form id="presentationForm">
-                <a href="https://account.smartthings.com/tokens" target="_blank">Create PAT</a>
-                <label for="patToken">PAT Token:<input type="password" size=30 id="patToken" name="patToken" required
-                        oninput="listPresentations()"><input type="checkbox" id="togglePassword"
-                        onclick="togglePasswordVisibility()">Show<br></label>
+                <div class="form-group">
+                    <a href="https://account.smartthings.com/tokens" target="_blank" class="btn btn-link">Create PAT</a>
+                    <label for="patToken">PAT Token:</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="patToken" name="patToken" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <input type="checkbox" id="togglePassword" onclick="togglePasswordVisibility()"> Show
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                <button type="button" onclick="saveData()">Save</button>
-                <button type="button" onclick="loadData()">Load</button>
-                <button type="button" onclick="clearData()">Clear</button></br>
-                This information is stored on your local PC, not on a server</br></br>
-
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary" onclick="saveData()">Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="loadData()">Load</button>
+                    <button type="button" class="btn btn-danger" onclick="clearData()">Clear</button>
+                    <small class="form-text text-muted">This information is stored on your local PC, not on a server.</small>
+                </div>
+                -->
                 <h3>My Capabilities:</h3>
-                <select id="capabilitiesList" onchange="selectCapability()"></select>
+                <div class="form-group">
+                    <select id="capabilitiesList" class="form-control" onchange="selectCapability()"></select>
+                </div>
 
                 <h3>Standard Capabilities:</h3>
-                <select id="standardCapabilitiesList" onchange="selectStandardCapability()"></select>
+                <div class="form-group">
+                    <select id="standardCapabilitiesList" class="form-control" onchange="selectStandardCapability()"></select>
+                </div>
 
-                <label for="capabilityId">Capability ID: <input type="text" id="capabilityId"
-                        name="capabilityId"></label>
-                <label for="capabilityVersion">Capability Version: <input type="text" id="capabilityVersion" value="1"
-                        name="capabilityVersion"></label>
-                <button type="button" onclick="getPresentation()">Retrieve</button><br><br>
-                <label for="presentationBody">Presentation Body (YAML or JSON):</label>
-                <textarea id="presentationBody" name="presentationBody" rows="20" cols="50" required></textarea></br>
-                <button type="button" onclick="createPresentation()">Create</button>
-                <button type="button" onclick="updatePresentation()">Update</button>
+                <div class="form-group">
+                    <label for="capabilityId">Capability ID:</label>
+                    <input type="text" id="capabilityId" name="capabilityId" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="capabilityVersion">Capability Version:</label>
+                    <input type="text" id="capabilityVersion" name="capabilityVersion" class="form-control" value="1">
+                </div>
+
+                <button type="button" class="btn btn-primary" onclick="getPresentation()">Retrieve</button>
+
+                <div class="form-group mt-4">
+                    <label for="presentationBody">Presentation Body (YAML or JSON):</label>
+                    <textarea id="presentationBody" name="presentationBody" class="form-control" rows="10" required></textarea>
+                </div>
+
+                <button type="button" class="btn btn-primary" onclick="createPresentation()">Create</button>
+                <button type="button" class="btn btn-warning" onclick="updatePresentation()">Update</button>
             </form>
-            <h3>Result:</h3>
-            <pre id="result"></pre>
 
-            <script>
-                function togglePasswordVisibility() {
-                    var passwordField = document.getElementById('patToken');
-                    var toggleCheckbox = document.getElementById('togglePassword');
-                    if (toggleCheckbox.checked) {
-                        passwordField.type = 'text';
-                    } else {
-                        passwordField.type = 'password';
-                    }
-                }
-                function saveData() {
-                    var patData = document.getElementById('patToken').value;
-                    localStorage.setItem('patData', patData);
-                    alert('Data saved!');
-                }
-                function loadData() {
-                    var patData = localStorage.getItem('patData');
-                    if (patData !== null) {
-                        document.getElementById('patToken').value = patData;
-                        listPresentations();
-                    }
-                }
-                function clearData() {
-                    localStorage.removeItem('patData');
-                    document.getElementById('patToken').value = '';
-                    alert('Data cleared!');
-                }
-                function isJsonString(str) {
-                    try {
-                        JSON.parse(str);
-                    } catch (e) {
-                        return false;
-                    }
-                    return true;
-                }
-                function validatePresentationBody(presentationBody, capabilityId, capabilityVersion) {
-                    let bodyData;
-                    if (isJsonString(presentationBody)) {
-                        bodyData = JSON.parse(presentationBody);
-                    } else {
-                        try {
-                            bodyData = jsyaml.load(presentationBody);
-                        } catch (e) {
-                            document.getElementById("result").textContent = `YAML 파싱 오류: ${e}`;
-                            return false;
-                        }
-                    }
-                    if (bodyData.id !== capabilityId || bodyData.version != capabilityVersion) {
-                        alert('Capability ID 및 Version이 일치하지 않습니다. 확인 후 다시 시도하세요.');
-                        return false;
-                    }
-                    return true;
-                }
-                function createPresentation() {
-                    const patToken = document.getElementById("patToken").value;
-                    const capabilityId = document.getElementById("capabilityId").value;
-                    const capabilityVersion = document.getElementById("capabilityVersion").value;
-                    const presentationBody = document.getElementById("presentationBody").value;
+            <h3 class="mt-4">Result:</h3>
+            <pre id="result" class="border p-3" style="max-height: 400px; overflow-y: scroll;"></pre>
+        </div>
 
-                    if (!validatePresentationBody(presentationBody, capabilityId, capabilityVersion)) {
-                        return;
-                    }
-
-                    let bodyData = JSON.stringify(JSON.parse(presentationBody), null, 2);
-                    let contentType = 'application/json';
-
-                    fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/${capabilityVersion}/presentation`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`,
-                            'Content-Type': contentType
-                        },
-                        body: bodyData
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-                            listPresentations();
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-                }
-                function updatePresentation() {
-                    const patToken = document.getElementById("patToken").value;
-                    const capabilityId = document.getElementById("capabilityId").value;
-                    const capabilityVersion = document.getElementById("capabilityVersion").value;
-                    const presentationBody = document.getElementById("presentationBody").value;
-
-                    if (!validatePresentationBody(presentationBody, capabilityId, capabilityVersion)) {
-                        return;
-                    }
-
-                    let bodyData = JSON.stringify(JSON.parse(presentationBody), null, 2);
-                    let contentType = 'application/json';
-
-                    fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/${capabilityVersion}/presentation`, {
-                        method: 'PUT',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`,
-                            'Content-Type': contentType
-                        },
-                        body: bodyData
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            document.getElementById("result").textContent = JSON.stringify(data, null, 2);
-                            listPresentations();
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-                }
-                function getPresentation() {
-                    const patToken = document.getElementById("patToken").value;
-                    const capabilityId = document.getElementById("capabilityId").value;
-                    const capabilityVersion = document.getElementById("capabilityVersion").value;
-                    if (!capabilityId || !capabilityVersion) {
-                        document.getElementById("result").textContent = 'Capability ID와 Version을 입력하세요.';
-                        return;
-                    }
-                    fetch(`https://api.smartthings.com/v1/capabilities/${capabilityId}/${capabilityVersion}/presentation`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => {
-                            if (response.ok) {
-                                return response.json();
-                            } else {
-                                return response.json().then(data => {
-                                    throw new Error(JSON.stringify(data));
-                                });
-                            }
-                        })
-                        .then(data => {
-                            const jsonData = JSON.stringify(data, null, 2);
-                            document.getElementById("presentationBody").value = jsonData;
-                            document.getElementById("result").textContent = 'Presentation 조회 성공';
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-                }
-                function listPresentations() {
-                    const patToken = document.getElementById("patToken").value;
-                    if (!patToken) return;
-                    fetch('https://api.smartthings.com/v1/capabilities/namespaces', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!data) {
-                                throw new Error('Invalid response structure: ' + JSON.stringify(data));
-                            }
-                            const namespaces = data.filter(item => item.ownerType === "organization").map(item => item.name);
-                            return Promise.all(namespaces.map(namespace => {
-                                return fetch(`https://api.smartthings.com/v1/capabilities/namespaces/${namespace}`, {
-                                    method: 'GET',
-                                    headers: {
-                                        'Authorization': `Bearer ${patToken}`
-                                    }
-                                }).then(response => response.json());
-                            }));
-                        })
-                        .then(results => {
-                            const capabilities = [];
-                            results.forEach(namespaceData => {
-                                if (namespaceData && namespaceData.items) {
-                                    namespaceData.items.forEach(capability => {
-                                        capabilities.push(capability.id);
-                                    });
-                                }
-                            });
-                            capabilities.sort();
-                            const capabilitiesList = document.getElementById("capabilitiesList");
-                            capabilitiesList.innerHTML = '<option value="">Select a capability</option>';
-                            capabilities.forEach(capabilityId => {
-                                const option = document.createElement("option");
-                                option.value = capabilityId;
-                                option.textContent = capabilityId;
-                                capabilitiesList.appendChild(option);
-                            });
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-
-                    // Fetch standard capabilities
-                    fetch('https://api.smartthings.com/v1/capabilities', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${patToken}`
-                        }
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (!data) {
-                                throw new Error('Invalid response structure: ' + JSON.stringify(data));
-                            }
-                            const standardCapabilitiesList = document.getElementById("standardCapabilitiesList");
-                            standardCapabilitiesList.innerHTML = '<option value="">Select a capability</option>';
-                            const standardCapabilities = data.items.map(capability => capability.id).sort();
-                            standardCapabilities.forEach(capabilityId => {
-                                const option = document.createElement("option");
-                                option.value = capabilityId;
-                                option.textContent = capabilityId;
-                                standardCapabilitiesList.appendChild(option);
-                            });
-                        })
-                        .catch(error => {
-                            document.getElementById("result").textContent = `Error: ${error}`;
-                        });
-                }
-                function selectCapability() {
-                    const capabilityId = document.getElementById("capabilitiesList").value;
-                    if (capabilityId) {
-                        document.getElementById("capabilityId").value = capabilityId;
-                        getPresentation();
-                    }
-                }
-                function selectStandardCapability() {
-                    const capabilityId = document.getElementById("standardCapabilitiesList").value;
-                    if (capabilityId) {
-                        document.getElementById("capabilityId").value = capabilityId;
-                        getPresentation();
-                    }
-                }
-                window.onload = function () {
-                    loadData();
-                }
-            </script>
-        </main>
-    </div>
-    <footer>
-        <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver
-                cafe</a></p>
-    </footer>
-</body>
+        <footer class="text-center mt-5">
+            <p>by Booung &copy; 2024 
+                <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver cafe</a>
+            </p>
+        </footer>
+        <script src="../menu.js"></script>
+        <script src="capabilityPresentation.js"></script>
+    </body>
 
 </html>
