@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Device Info</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
+        <!--Common Style Load -->
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+        <link href="../subpage.css" rel="stylesheet">
+    </head>
+    <body>
+        <!--Header & Side Menu Load Area -->
+        <div id="header"></div>
+        <div id="sidebar"></div>
+
+        <!-- Main Area -->
+        <div class="content">
+            <h1>Device Info</h1>
+                <div class="form-group">
+                    <label for="deviceList">Device List:</label>
+                    <select id="deviceList" class="form-control" onchange="selectDevice()"></select>
+                </div>
+
+                <div class="form-group">
+                    <label for="deviceId">Device ID:</label>
+                    <input type="text" id="deviceId" name="deviceId" class="form-control">
+                </div>
+
+                <button type="button" class="btn btn-primary" onclick="getDevice()">Retrieve</button>
+            </form>
+
+			<div class="form-group">
+				<h3>Device details:</h3>
+				<textarea id="result" class="form-control mt-4" style="display:none;" rows="1" readonly></textarea>
+			</div>
+			
+			<div class="form-group">
+				<h3>Device Status:</h3>
+				<textarea id="currentStatus" class="form-control mt-4" style="display:none;" rows="1" readonly></textarea>
+			</div>
+        </div>
+
+        <footer class="text-center mt-5">
+            <p>by Booung &copy; 2024 
+                <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver cafe</a>
+            </p>
+        </footer>
+        <script src="../menu.js"></script>
+        <script src="device.js"></script>
+    </body>
+
+</html>

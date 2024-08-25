@@ -1,256 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Virtual Device Creator</title>
-        <style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Device Creator</title>
+    <style>
+        .capability-container {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .capability-container div {
+            display: flex;
+            align-items: center;
+        }
+
+        @media (max-width: 1450px) {
             .capability-container {
-                width: 100%;
-                display: grid;
-                grid-template-columns: repeat(4, minmax(0, 1fr)); 
-                gap: 10px; 
-                word-wrap: break-word;
-                overflow-wrap: break-word; 
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                overflow-wrap: break-word;
             }
-            
-            .capability-container div {
-                display: flex;
-                align-items: center;
-            }
-            
-            @media (max-width: 1450px) {
-                .capability-container {
-                    grid-template-columns: repeat(3, minmax(0, 1fr)); 
-                    overflow-wrap: break-word; 
-                }
-            }
-            
-            @media (max-width: 1000px) {
-                .capability-container {
-                    grid-template-columns: repeat(2, minmax(0, 1fr)); 
-                    overflow-wrap: break-word; 
-                }
-            }
-            @media (max-width: 600px) {
-                .capability-container {
-                    grid-template-columns: repeat(1, 1fr); 
-                    overflow-wrap: break-word; 
-                }
-            }
-        </style>
-        <!--Common Style Load -->
-        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-        <link href="../subpage.css" rel="stylesheet">
-    </head>
+        }
 
-    <body>
-        <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-        <!--Header & Side Menu Load Area -->
-        <div id="header"></div>
-        <div id="sidebar"></div>
+        @media (max-width: 1000px) {
+            .capability-container {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                overflow-wrap: break-word;
+            }
+        }
 
-        <!-- Main Area -->
-        <div class="content">
-            <h1>Virtual Device Creator</h1>
-            <form id="deviceForm">
-                <!-- Token Input Delete --
+        @media (max-width: 600px) {
+            .capability-container {
+                grid-template-columns: repeat(1, 1fr);
+                overflow-wrap: break-word;
+            }
+        }
+    </style>
+    <!--Common Style Load -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../subpage.css" rel="stylesheet">
+</head>
+
+<body>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!--Header & Side Menu Load Area -->
+    <div id="header"></div>
+    <div id="sidebar"></div>
+
+    <!-- Main Area -->
+    <div class="content">
+        <h1>Virtual Device Creator</h1>
+        <form id="deviceForm">
+            <!-- Token Input Delete -->
+            <div class="form-group">
+                <label for="locationId">Location:</label>
+                <select id="locationId" name="locationId" class="form-control" required>
+                    <option value="">Select Location</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="roomId">Room:</label>
+                <select id="roomId" name="roomId" class="form-control" required>
+                    <option value="">Select Room</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="executionTarget">Execution Target:</label>
+                <select id="executionTarget" name="executionTarget" class="form-control" required>
+                    <option value="CLOUD" selected>Cloud</option>
+                    <option value="LOCAL">Local</option>
+                </select>
+            </div>
+            <div id="localOptions" style="display:none;">
                 <div class="form-group">
-                    <a href="https://account.smartthings.com/tokens" target="_blank" class="btn btn-link">Create PAT</a>
-                    <label for="patToken">PAT Token:</label>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="patToken" name="patToken" required>
-                        <div class="input-group-append">
-                            <div class="input-group-text">
-                                <input type="checkbox" id="togglePassword"> Show
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <button type="button" id="saveDataButton" class="btn btn-primary">Save</button>
-                    <button type="button" id="loadDataButton" class="btn btn-secondary">Load</button>
-                    <button type="button" id="clearDataButton" class="btn btn-danger">Clear</button>
-                    <small class="form-text text-muted">This information is stored on your local PC, not on a server.</small>
-                </div>
-                -->
-                
-                <div class="form-group">
-                    <label for="locationId">Location:</label>
-                    <select id="locationId" name="locationId" class="form-control" required>
-                        <option value="">Select Location</option>
+                    <label for="hubId">Hub ID:</label>
+                    <select id="hubId" name="hubId" class="form-control">
+                        <option value="">Select Hub</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="roomId">Room:</label>
-                    <select id="roomId" name="roomId" class="form-control" required>
-                        <option value="">Select Room</option>
+                    <label for="driverId">Installed Driver:</label>
+                    <select id="driverId" name="driverId" class="form-control">
+                        <option value="">Select a installed driver</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="executionTarget">Execution Target:</label>
-                    <select id="executionTarget" name="executionTarget" class="form-control" required>
-                        <option value="CLOUD" selected>Cloud</option>
-                        <option value="LOCAL">Local</option>
-                    </select>
-                </div>
-                <div id="localOptions" style="display:none;">
+            </div>
+            <div class="form-group">
+                <label for="deviceName">Device Label:</label>
+                <input type="text" id="deviceName" name="deviceName" class="form-control" required>
+            </div>
+
+            <!-- Tab Selector for PC view -->
+            <div class="tab-container">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="pc-prototype-tab" data-toggle="tab" href="#prototype" role="tab" aria-controls="prototype" aria-selected="true">Create by Prototype</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="pc-profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Create by my profiles</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="pc-customProfile-tab" data-toggle="tab" href="#customProfile" role="tab" aria-controls="customProfile" aria-selected="false">Create by custom Profile</a>
+                    </li>
+                </ul>
+
+            </div>
+
+
+            <!-- Tab Selector for mobile view -->
+            <a href="#prototype" class="tab-button btn btn-primary" id="prototype-tab" data-toggle="tab">Create by Prototype</a>
+            <a href="#profile" class="tab-button btn btn-primary" id="profile-tab" data-toggle="tab">Create by my profiles</a>
+            <a href="#customProfile" class="tab-button btn btn-primary" id="customProfile-tab" data-toggle="tab">Create by custom Profile</a>
+
+            <!-- Tab Contents -->
+
+
+            <div class="tab-content">
+                <!-- 1. prototype -->
+                <div class="tab-pane fade show active" id="prototype" role="tabpanel" aria-labelledby="prototype-tab">
                     <div class="form-group">
-                        <label for="hubId">Hub ID:</label>
-                        <select id="hubId" name="hubId" class="form-control">
-                            <option value="">Select Hub</option>
+                        <label for="prototypeList">Prototype:</label>
+                        <select id="prototypeList" name="prototype" class="form-control">
+                        </select>
+                    </div>
+                    <button type="button" id="createByPrototypeButton" class="btn btn-primary">Create by Prototype</button>
+                    <pre id="result3" class="mt-3"></pre>
+                </div>
+
+                <!-- 2. my profiles -->
+                <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                    <h3>Create by my profiles</h3>
+                    <div class="form-group">
+                        <label for="profilesList">Profiles:</label>
+                        <select id="profilesList" class="form-control">
+                            <option value="">Select Profile</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="driverId">Installed Driver:</label>
-                        <select id="driverId" name="driverId" class="form-control">
-                            <option value="">Select a installed driver</option>
+                        <label for="profileId">Profile ID:</label>
+                        <input type="text" id="profileId" name="profileId" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="profileBody">Profile Body (YAML or JSON):</label>
+                        <textarea id="profileBody" name="profileBody" class="form-control" rows="20"></textarea>
+                    </div>
+                    <button type="button" id="createByProfileIdButton" class="btn btn-primary">Create by selected profileId</button>
+                    <pre id="result2" class="mt-3"></pre>
+                    <hr>
+                </div>
+                <!-- 3. custom profiles -->
+                <div class="tab-pane fade" id="customProfile" role="tabpanel" aria-labelledby="customProfile-tab">
+                    <h3>Create by custom Profile</h3>
+                    <div class="form-group">
+                        <label for="deviceCategory">Device Category:</label>
+                        <a href="https://developer.smartthings.com/docs/devices/device-profiles#categories" target="_blank" class="btn btn-link">(Reference)</a>
+                        <select id="deviceCategory" name="deviceCategory" class="form-control">
                         </select>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="deviceName">Device Label:</label>
-                    <input type="text" id="deviceName" name="deviceName" class="form-control" required>
-                </div>
 
-                <!-- Tab Selector for PC view -->
-                <div class="tab-container">
-                    <ul class="nav nav-tabs" id="myTab" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" id="pc-prototype-tab" data-toggle="tab" href="#prototype" role="tab" aria-controls="prototype" aria-selected="true">Create by Prototype</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="pc-profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Create by my profiles</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="pc-customProfile-tab" data-toggle="tab" href="#customProfile" role="tab" aria-controls="customProfile" aria-selected="false">Create by custom Profile</a>
-                        </li>
-                    </ul>
-                                        
-                </div>
-
-
-                <!-- Tab Selector for mobile view -->
-                <a href="#prototype" class="tab-button btn btn-primary" id="prototype-tab" data-toggle="tab">Create by Prototype</a>
-                <a href="#profile" class="tab-button btn btn-primary" id="profile-tab" data-toggle="tab">Create by my profiles</a>
-                <a href="#customProfile" class="tab-button btn btn-primary" id="customProfile-tab" data-toggle="tab">Create by custom Profile</a>
-
-                <!-- Tab Contents -->
-                
-
-                <div class="tab-content">
-                    <!-- 1. prototype -->
-                    <div class="tab-pane fade show active" id="prototype" role="tabpanel" aria-labelledby="prototype-tab">
-                        <div class="form-group">
-                            <label for="prototypeList">Prototype:</label>
-                            <select id="prototypeList" name="prototype" class="form-control">
-                            </select>
-                        </div>
-                        <button type="button" id="createByPrototypeButton" class="btn btn-primary">Create by Prototype</button>
-                        <pre id="result3" class="mt-3"></pre>
-                    </div>
-
-                    <!-- 2. my profiles -->
-                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
-                        <h3>Create by my profiles</h3>
-                        <div class="form-group">
-                            <label for="profilesList">Profiles:</label>
-                            <select id="profilesList" class="form-control">
-                                <option value="">Select Profile</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="profileId">Profile ID:</label>
-                            <input type="text" id="profileId" name="profileId" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label for="profileBody">Profile Body (YAML or JSON):</label>
-                            <textarea id="profileBody" name="profileBody" class="form-control" rows="20"></textarea>
-                        </div>
-                        <button type="button" id="createByProfileIdButton" class="btn btn-primary">Create by selected profileId</button>
-                        <pre id="result2" class="mt-3"></pre>
-                        <hr>
-                    </div>
-                    <!-- 3. custom profiles -->
-                    <div class="tab-pane fade" id="customProfile" role="tabpanel" aria-labelledby="customProfile-tab">
-                        <h3>Create by custom Profile</h3>
-                        <div class="form-group">
-                            <label for="deviceCategory">Device Category:</label>
-                            <a href="https://developer.smartthings.com/docs/devices/device-profiles#categories" target="_blank" class="btn btn-link">(Reference)</a>
-                            <select id="deviceCategory" name="deviceCategory" class="form-control">
-                            </select>
-                        </div>
-                        
-                        <!--Add Search Function 24.08.20 -->
-                        <div class="form-group">
-                            <label for="capabilitySearch">Search Capabilities:</label>
-                            <div class="input-group">
-                                <input type="text" id="capabilitySearch" class="form-control" placeholder="Type to search...">
-                                <div class="input-group-append">
-                                    <button type="button" id="searchButton" class="btn btn-primary">Search</button>
-                                    <button type="button" id="searchCancelButton" class="btn btn-primary" style="background-color:grey; border: none;">Show All</button>
-                                </div>
+                    <!--Add Search Function 24.08.20 -->
+                    <div class="form-group">
+                        <label for="capabilitySearch">Search Capabilities:</label>
+                        <div class="input-group">
+                            <input type="text" id="capabilitySearch" class="form-control" placeholder="Type to search...">
+                            <div class="input-group-append">
+                                <button type="button" id="searchButton" class="btn btn-primary">Search</button>
+                                <button type="button" id="searchCancelButton" class="btn btn-primary" style="background-color:grey; border: none;">Show All</button>
                             </div>
                         </div>
-
-                        <!-- Standard capabilities Section -->
-                        <div class="form-group">
-                            <span>Capabilities:</span>
-                            <a href="https://developer.smartthings.com/docs/devices/capabilities/capabilities-reference" target="_blank" class="btn btn-link">(Reference)</a>
-                            <button type="button" id="uncheckAllButton" class="btn btn-warning">All Uncheck</button>
-                            
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <div id="capabilities" class="capability-container"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group mt-4">
-                            <label for="customCapabilityList">My custom capability list:</label>
-                        
-                            <!-- Custom capabilities (made by user) Section -->
-                            <div class="card mt-3">
-                                <div class="card-body">
-                                    <div id="customCapabilityList" class="capability-container"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- View Select capabilities -->
-                        <div class="form-group mt-4">
-                            <label for="customCapabilities">Selected Capabilities (separator: next line):</label>
-                            <textarea id="customCapabilities" name="customCapabilities" class="form-control" rows="10"></textarea>
-                        </div>
-                        
-                        <button type="button" id="createByProfileButton" class="btn btn-primary">Virtual device create</button>
-                        <pre id="result" class="mt-3"></pre>
-
                     </div>
+
+                    <!-- Standard capabilities Section -->
+                    <div class="form-group">
+                        <span>Capabilities:</span>
+                        <a href="https://developer.smartthings.com/docs/devices/capabilities/capabilities-reference" target="_blank" class="btn btn-link">(Reference)</a>
+                        <button type="button" id="uncheckAllButton" class="btn btn-warning">All Uncheck</button>
+                        <button type="button" id="toggleCapabilitiesButton" class="btn btn-secondary">Fold / Unfold</button>
+
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <div id="capabilities" class="capability-container"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <label for="customCapabilityList">My custom capability list:</label>
+                        <button type="button" id="toggleCustomCapabilitiesButton" class="btn btn-secondary">Fold / Unfold</button>
+
+                        <!-- Custom capabilities (made by user) Section -->
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <div id="customCapabilityList" class="capability-container"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- View Select capabilities -->
+                    <div class="form-group mt-4">
+                        <label for="customCapabilities">Selected Capabilities (separator: next line):</label>
+                        <textarea id="customCapabilities" name="customCapabilities" class="form-control" rows="10"></textarea>
+                    </div>
+
+                    <button type="button" id="createByProfileButton" class="btn btn-primary">Virtual device create</button>
+                    <pre id="result" class="mt-3"></pre>
+
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
+    </div>
 
-        <footer class="text-center mt-5">
-            <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver cafe</a></p>
-        </footer>
+    <footer class="text-center mt-5">
+        <p>by Booung &copy; 2024 <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver cafe</a></p>
+    </footer>
 
-        <script>
+    <script>
         document.addEventListener("DOMContentLoaded", function() {
             loadData();
             createPrototype()
-            createdeviceCategory();		
+            createdeviceCategory();
+
+            // Toggle Capabilities section
+            document.getElementById("toggleCapabilitiesButton").addEventListener("click", function() {
+                var capabilitiesSection = document.getElementById("capabilities").parentElement.parentElement;
+                if (capabilitiesSection.style.display === "none") {
+                    capabilitiesSection.style.display = "block";
+                } else {
+                    capabilitiesSection.style.display = "none";
+                }
+            });
+
+            // Toggle Custom Capabilities section
+            document.getElementById("toggleCustomCapabilitiesButton").addEventListener("click", function() {
+                var customCapabilitiesSection = document.getElementById("customCapabilityList").parentElement.parentElement;
+                if (customCapabilitiesSection.style.display === "none") {
+                    customCapabilitiesSection.style.display = "block";
+                } else {
+                    customCapabilitiesSection.style.display = "none";
+                }
+            });
+
+            // Ensure sections are unfolded when search or show all is clicked
+            document.getElementById("searchButton").addEventListener("click", function() {
+                unfoldAllSections();
+            });
+
+            document.getElementById("searchCancelButton").addEventListener("click", function() {
+                unfoldAllSections();
+            });
+
+            function unfoldAllSections() {
+                document.getElementById("capabilities").parentElement.parentElement.style.display = "block";
+                document.getElementById("customCapabilityList").parentElement.parentElement.style.display = "block";
+            }
         });
-                    
-        </script>
-        
-        
-        <script src="storage.js"></script>
-        <script src="capabilitiesHandler.js"></script>
-        <script src="virtualDeviceCreation.js"></script>
-        <script src="../menu.js"></script>
-    </body>
+    </script>
+
+    <script src="storage.js"></script>
+    <script src="capabilitiesHandler.js"></script>
+    <script src="virtualDeviceCreation.js"></script>
+    <script src="../menu.js"></script>
+</body>
 
 </html>

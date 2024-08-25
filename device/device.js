@@ -1,19 +1,12 @@
 const patToken = localStorage.getItem('patData');
 
-function getPresentation() {
-	const presentationId = document.getElementById("presentationId").value;
-	const manufacturerName = document.getElementById("manufacturerName").value;
+function getDevice() {
 	const deviceId = document.getElementById("deviceId").value;
 
-	let url = `https://api.smartthings.com/v1/presentation?`;
-	if (presentationId) {
-		url += `&presentationId=${presentationId}`;
-	}
-	if (manufacturerName) {
-		url += `&manufacturerName=${manufacturerName}`;
-	}
+	let url = `https://api.smartthings.com/v1/devices?`;
+
 	if (deviceId) {
-		url += `&deviceId=${deviceId}`;
+		url += `deviceId=${deviceId}`;
 	}
 
 	fetch(url, {
@@ -32,7 +25,15 @@ function getPresentation() {
 		}
 	})
 	.then(data => {
-		const jsonData = JSON.stringify(data, null, 2);
+		let jsonData;
+		if (data.items && data.items.length > 0) {
+			// items 배열의 첫 번째 항목만 가져옴
+			jsonData = JSON.stringify(data.items[0], null, 2);
+		} else {
+			// items 배열이 없거나 빈 경우
+			jsonData = JSON.stringify({ message: "No items found" }, null, 2);
+		}
+
 		const resultTextarea = document.getElementById("result");
 		resultTextarea.style.display = 'block';
 		resultTextarea.value = jsonData;
@@ -44,6 +45,31 @@ function getPresentation() {
 		resultTextarea.value = `Error: ${error}`;
 		resultTextarea.rows = Math.min(50, resultTextarea.value.split('\n').length);
 	});
+}
+
+function fetchCurrentStatus() {
+	const deviceId = document.getElementById("deviceId").value;
+
+    fetch(`https://api.smartthings.com/v1/devices/${deviceId}/status`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${patToken}`
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+			const currentStatus = document.getElementById("currentStatus");
+			currentStatus.style.display = 'block';
+			let jsonData = JSON.stringify(data, null, 2);
+            currentStatus.textContent = jsonData;
+			currentStatus.rows = Math.min(50, jsonData.split('\n').length);
+        })
+        .catch(error => {
+			const currentStatus = document.getElementById("currentStatus");
+			currentStatus.style.display = 'block';
+            currentStatus.textContent = `Error fetching current status: ${error}`;
+			currentStatus.rows = Math.min(50, currentStatus.textContent.split('\n').length);
+        });
 }
 
 async function fetchLocations(patToken) {
@@ -94,7 +120,6 @@ function listDevices() {
 							deviceList.appendChild(option);
 						});
 					});
-					
 					selectDevice();
 				});
 		})
@@ -106,10 +131,9 @@ function listDevices() {
 
 function selectDevice() {
 	const device = JSON.parse(document.getElementById("deviceList").value);
-	document.getElementById("presentationId").value = device.presentationId || '';
-	document.getElementById("manufacturerName").value = device.manufacturerName || '';
 	document.getElementById("deviceId").value = device.deviceId;
-	getPresentation();
+	getDevice();
+	fetchCurrentStatus();
 }
 
 window.onload = function () {
