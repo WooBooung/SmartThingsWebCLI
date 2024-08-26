@@ -9,15 +9,12 @@
 	    <!-- The title at the top of the web browser -->
 	    <title>SmartThings Web CLI</title>
 	</head>
-
 	<body>
 		<!-- the title at the top of the page. -->
 		<header class="bg-primary text-white text-center py-3">
 			<h1 class="page-title">SmartThings Web CLI</h1>
 		</header>
-		
 		<!-- content -->
-		
 		<!-- welcome message -->
 		<div class="text-center my-5">
 		    <div class="intro-text">
@@ -27,7 +24,6 @@
 		        <p class="fade-in" style="animation-delay: 0.4s;">원하는 메뉴를 선택하세요.</p>
 		    </div>
 		</div>
-		
 		<!-- Menu 
 		     Each menu description is commented out -->
 		<div class="container my-5">
@@ -57,7 +53,6 @@
 		            </a>
 		        </div>
 		    </div>
-		    
 		    <div class="row fade-in" style="animation-delay: 0.8s;">
 		        <div class="col-md-4 mb-4">
 		        	<a href="./capabilityPresentation/">
@@ -84,7 +79,6 @@
 		            </a>
 		        </div>
 		    </div>
-		
 		    <div class="row fade-in" style="animation-delay: 0.8s;">
 		        <div class="col-md-4 mb-4">
 		        	<a href="./presentation/">
@@ -111,7 +105,6 @@
 		            </a>
 		        </div>
 		    </div>
-			
 			<div class="row fade-in" style="animation-delay: 0.8s;">
 		        <div class="col-md-4 mb-4">
 		        	<a href="./channels/">
@@ -121,31 +114,30 @@
 		                </div>
 		            </a>
 		        </div>
+		        <div class="col-md-4 mb-4">
+		        	<a href="./tts/">
+		                <div class="menu-item text-center p-4">
+		                    <h4>Send Message</h4>
+		                </div>
+		            </a>
+		        </div>
 		    </div>
-		    
 		</div>
-		
 		<footer class="bg-dark text-white text-center py-3">
 		    <p>by Booung &copy; 2024</p>
 		</footer>
-		
 		<script>
 	        const items = document.querySelectorAll('.menu-item');
 	        let maxHeight = 0;
-	
-	        
 	        items.forEach(item => {
 	            const itemHeight = item.offsetHeight;
 	            if (itemHeight > maxHeight) {
 	                maxHeight = itemHeight;
 	            }
 	        });
-	
-	        
 	        items.forEach(item => {
 	            item.style.height = `${maxHeight}px`;
 	        });
-	
 	        document.querySelectorAll('.menu-item').forEach(item => {
 	            item.addEventListener('mouseover', function() {
 	                item.style.backgroundColor = '#007bff';
@@ -157,7 +149,5 @@
 	            });
 	        });
 		</script>
-	
 	</body>
-
 </html>
