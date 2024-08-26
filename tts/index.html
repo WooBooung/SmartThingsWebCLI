@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Message</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.0.0/js-yaml.min.js"></script>
+    <!--Common Style Load -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../subpage.css" rel="stylesheet">
+</head>
+<body>
+    <!--Header & Side Menu Load Area -->
+    <div id="header"></div>
+    <div id="sidebar"></div>
+
+    <!-- Main Area -->
+    <div class="content">
+        <h1>Send Message to TTS Device</h1>
+        <div class="form-group">
+            <label for="deviceListContainer">Device List:</label>
+            <div id="deviceListContainer">
+                <!-- Initially, only one device select will be shown -->
+                <div class="input-group mb-2">
+                    <select id="deviceList1" class="form-control" onchange="selectDevice(this)"></select>
+                    <div class="input-group-append">
+                        <button class="btn btn-secondary" type="button" onclick="addDevice()">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <input type="text" id="message" name="message" class="form-control" placeholder="Enter your message to send">
+        </div>
+
+        <!-- Buttons Row -->
+        <div class="form-group">
+            <div class="d-flex">
+                <button type="button" class="btn btn-primary mr-2" onclick="sendMsg()">Send</button>
+                <button type="button" class="btn btn-secondary" onclick="initializeDeviceList()">Load Devices</button>
+            </div>
+        </div>
+        <div class="mt-4">
+            <h3>Result:</h3>
+            <pre id="result" class="border"></pre>
+        </div>
+
+        <footer class="text-center mt-5">
+            <p>by Booung &copy; 2024 
+                <a href="https://cafe.naver.com/dothesmartthings" target="_blank">SmartThings naver cafe</a>
+            </p>
+        </footer>
+        <script src="../menu.js"></script>
+        <script src="tts.js"></script>
+        <script></script>
+    </body>
+</html>
