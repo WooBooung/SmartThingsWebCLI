@@ -1,16 +1,13 @@
 let deviceCount = 1;
-let devicesMap = {}; // Stores the deviceId by device name
+let devicesMap = {}; 
 const patToken = localStorage.getItem('patData');
 
-// Add placeholder option
 const placeholderOption = document.createElement('option');
 placeholderOption.value = "";
 placeholderOption.text = "Select a speaker to receive the message";
 placeholderOption.disabled = true;
 placeholderOption.selected = true;
 
-
-// Initialize the device list with API data
 async function initializeDeviceList() {
     try {
         const response = await fetch("https://api.smartthings.com/v1/devices?capability=audioNotification", {
@@ -27,12 +24,11 @@ async function initializeDeviceList() {
         const data = await response.json();
         devicesMap = {};
 
-        // Clear existing options
+
         const selectElements = document.querySelectorAll('select');
         selectElements.forEach(select => {
             select.innerHTML = '';
             select.add(placeholderOption);
-            // Populate devicesMap and add options to the select element
             data.items.forEach(item => {
                 devicesMap[item.name] = item.deviceId;
                 const option = document.createElement('option');
@@ -66,7 +62,6 @@ function addDevice() {
     deviceDiv.appendChild(appendDiv);
     deviceListContainer.appendChild(deviceDiv);
 
-    // Add default options to the new select element
     const newSelect = deviceDiv.querySelector('select');
     addDefaultOptions(newSelect);
 }
@@ -78,10 +73,8 @@ function removeDevice(button) {
 }
 
 function addDefaultOptions(selectElement) {
-    // Clear existing options
     selectElement.innerHTML = '';
     selectElement.add(placeholderOption);
-    // Add new options from the devicesMap
     for (const [name, id] of Object.entries(devicesMap)) {
         const option = document.createElement('option');
         option.text = name;
@@ -104,10 +97,10 @@ async function sendMsg() {
             });
           
             const response = await fetch("https://api.smartthings.com/v1/devices/" + selectElement.value + "/commands", {
-                    method: "POST",  // 메서드를 GET에서 POST로 변경
+                    method: "POST", 
                     headers: {
                         "Authorization": "Bearer " + patToken,
-                        "Content-Type": "application/json"  // 본문이 JSON임을 명시
+                        "Content-Type": "application/json"  
                     },
                     body: JSON.stringify({
                         "commands":[
@@ -134,5 +127,4 @@ async function sendMsg() {
     console.log('Message:', message);
 }
 
-// Initialize with one device select and populate the list
 initializeDeviceList();
