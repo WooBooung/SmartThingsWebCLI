@@ -90,11 +90,6 @@ function addDefaultOptions(selectElement) {
     }
 }
 
-
-function selectDevice(selectElement) {
-    // Your existing code for handling device selection
-}
-
 async function sendMsg() {
     const devices = [];
     const sendText = document.getElementById('message');
