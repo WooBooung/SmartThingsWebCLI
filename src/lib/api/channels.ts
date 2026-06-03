@@ -3,6 +3,19 @@ import { ApiError } from '@/lib/stClient'
 import { useTokenStore } from '@/stores/token'
 import type { ListResponse } from '@/lib/types'
 
+/** 한 위치의 HUB 타입 디바이스(표시용) */
+export interface Hub {
+  deviceId: string
+  name?: string
+  label?: string
+}
+
+/** 위치의 HUB 타입 디바이스 목록 */
+export const listHubs = (locationId: string) =>
+  apiFetch<ListResponse<Hub>>(
+    `/devices?locationId=${encodeURIComponent(locationId)}&type=HUB`,
+  )
+
 // --- 타입 (이 도구 전용) ---
 
 export interface Channel {
@@ -95,6 +108,60 @@ export const assignDriver = (channelId: string, driverId: string, version: strin
 
 export const unassignDriver = (channelId: string, driverId: string) =>
   apiFetch<null>(`/distchannels/${channelId}/drivers/${driverId}`, { method: 'DELETE' })
+
+/**
+ * 채널에 할당된 드라이버의 메타정보(편집기/패키지 정보 등).
+ * core-sdk: GET distchannels/{channelId}/drivers/{driverId}/meta
+ */
+export const getDriverChannelMetaInfo = (channelId: string, driverId: string) =>
+  apiFetch<Record<string, unknown>>(`/distchannels/${channelId}/drivers/${driverId}/meta`)
+
+// ----------------------------------------------------------------------------
+// 허브 enroll / unenroll / enrollments — core-sdk channels.ts & hubdevices.ts 검증
+// ----------------------------------------------------------------------------
+
+/** 한 채널에 enroll 된 허브 목록(표시용, 느슨하게) */
+export interface EnrolledHub {
+  hubId?: string
+  deviceId?: string
+  name?: string
+  label?: string
+  [key: string]: unknown
+}
+
+/** 허브가 enroll 된 채널 항목(GET /hubdevices/{hubId}/channels) */
+export interface HubEnrolledChannel {
+  channelId: string
+  name?: string
+  [key: string]: unknown
+}
+
+/**
+ * 허브를 채널에 등록(enroll).
+ * core-sdk: POST distchannels/{channelId}/hubs/{hubId}
+ * 이미 등록되어 있으면 409 가 떨어지므로 호출부에서 허용.
+ */
+export const enrollHub = (channelId: string, hubId: string) =>
+  apiFetch<Record<string, unknown> | null>(`/distchannels/${channelId}/hubs/${hubId}`, {
+    method: 'POST',
+  })
+
+/**
+ * 허브를 채널에서 등록 해제(unenroll).
+ * core-sdk: DELETE distchannels/{channelId}/hubs/{hubId}
+ */
+export const unenrollHub = (channelId: string, hubId: string) =>
+  apiFetch<null>(`/distchannels/${channelId}/hubs/${hubId}`, { method: 'DELETE' })
+
+/**
+ * 허브가 enroll 된 (DRIVER) 채널 목록.
+ * core-sdk hubdevices.enrolledChannels: GET hubdevices/{hubId}/channels?channelType=DRIVERS
+ * (배열 또는 {items} 형태 모두 대응)
+ */
+export const listHubEnrollments = (hubId: string) =>
+  apiFetch<HubEnrolledChannel[] | ListResponse<HubEnrolledChannel>>(
+    `/hubdevices/${hubId}/channels?channelType=DRIVERS`,
+  )
 
 // ----------------------------------------------------------------------------
 // Invites — invitation-service 는 /v1 이 아닌 호스트 루트에 위치하므로

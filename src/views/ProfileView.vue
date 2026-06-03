@@ -9,6 +9,9 @@ import {
   updateProfile,
   publishProfile,
   deleteProfile,
+  getProfileDeviceConfig,
+  getProfilePresentation,
+  extractPresentationRef,
   type DeviceProfileSummary,
 } from '@/lib/api/profile'
 import { parseJsonOrYaml } from '@/lib/yaml'
@@ -54,6 +57,81 @@ async function doRetrieve(id?: string) {
     const data = await getProfile(pid)
     editor.value = JSON.stringify(data, null, 2)
     result.value = data
+  } catch (e) {
+    toastError(e instanceof Error ? e.message : String(e))
+  } finally {
+    busy.value = false
+  }
+}
+
+// metadata.vid/mnmn 를 통해 presentation 계열을 조회한다 (CLI 와 동일한 합성 방식).
+async function withPresentationRef(action: string): Promise<ReturnType<typeof extractPresentationRef>> {
+  const pid = profileId.value.trim()
+  if (!pid) {
+    toastError('Profile ID 를 입력하세요.')
+    return null
+  }
+  const profile = await getProfile(pid)
+  const ref = extractPresentationRef(profile)
+  if (!ref) {
+    toastError(`이 프로파일에는 ${action} 에 필요한 metadata.vid 가 없습니다. (게시 전이거나 presentation 미연결)`)
+    return null
+  }
+  return ref
+}
+
+async function doView() {
+  const pid = profileId.value.trim()
+  if (!pid) return toastError('Profile ID 를 입력하세요.')
+  busy.value = true
+  result.value = null
+  try {
+    const profile = await getProfile(pid)
+    editor.value = JSON.stringify(profile, null, 2)
+    const ref = extractPresentationRef(profile)
+    if (!ref) {
+      result.value = profile
+      toastError('metadata.vid 가 없어 presentation 을 합칠 수 없습니다. 프로파일만 표시합니다.')
+      return
+    }
+    try {
+      const view = await getProfilePresentation(ref)
+      result.value = { ...profile, view }
+    } catch {
+      result.value = profile
+      toastError('presentation 조회에 실패하여 프로파일만 표시합니다.')
+    }
+    toastSuccess('프로파일 + presentation 통합 보기를 불러왔습니다.')
+  } catch (e) {
+    toastError(e instanceof Error ? e.message : String(e))
+  } finally {
+    busy.value = false
+  }
+}
+
+async function doDeviceConfig() {
+  busy.value = true
+  result.value = null
+  try {
+    const ref = await withPresentationRef('device-config')
+    if (!ref) return
+    result.value = await getProfileDeviceConfig(ref)
+    toastSuccess('프로파일의 device configuration 을 불러왔습니다.')
+  } catch (e) {
+    toastError(e instanceof Error ? e.message : String(e))
+  } finally {
+    busy.value = false
+  }
+}
+
+async function doPresentation() {
+  busy.value = true
+  result.value = null
+  try {
+    const ref = await withPresentationRef('presentation')
+    if (!ref) return
+    result.value = await getProfilePresentation(ref)
+    toastSuccess('프로파일의 presentation 을 불러왔습니다.')
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -142,7 +220,22 @@ onMounted(loadList)
     <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Device Profile</h1>
     <p class="mt-1 text-sm text-muted">디바이스 프로파일을 조회·생성·수정·게시·삭제합니다.</p>
   </header>
-  <CliRef :commands="['deviceprofiles [id]', 'deviceprofiles:create', 'deviceprofiles:update [id]', 'deviceprofiles:delete [id]', 'deviceprofiles:publish [id]']" />
+  <CliRef
+    :commands="[
+      'deviceprofiles [id]',
+      'deviceprofiles:create',
+      'deviceprofiles:update [id]',
+      'deviceprofiles:delete [id]',
+      'deviceprofiles:publish [id]',
+      'deviceprofiles:view [id]',
+      'deviceprofiles:device-config [id]',
+      'deviceprofiles:presentation [id]',
+    ]"
+    :docs="[
+      { label: 'Device Profiles', url: 'https://developer.smartthings.com/docs/api/public/#tag/Device-Profiles' },
+      { label: 'Presentation', url: 'https://developer.smartthings.com/docs/api/public/#tag/Presentation' },
+    ]"
+  />
 
   <div
     v-if="!hasToken"
@@ -211,6 +304,36 @@ onMounted(loadList)
           조회
         </button>
       </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button
+          class="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
+          :disabled="busy"
+          title="프로파일 + presentation 통합 보기 (deviceprofiles:view)"
+          @click="doView"
+        >
+          통합 보기 (view)
+        </button>
+        <button
+          class="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
+          :disabled="busy"
+          title="metadata.vid/mnmn 로 device configuration 조회 (deviceprofiles:device-config)"
+          @click="doDeviceConfig"
+        >
+          device-config
+        </button>
+        <button
+          class="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
+          :disabled="busy"
+          title="metadata.vid/mnmn 로 presentation 조회 (deviceprofiles:presentation)"
+          @click="doPresentation"
+        >
+          presentation
+        </button>
+      </div>
+      <p class="mt-2 text-xs text-muted">
+        통합 보기·device-config·presentation 은 프로파일의 <code class="font-mono">metadata.vid</code> /
+        <code class="font-mono">metadata.mnmn</code> 으로 presentation 을 조회합니다 (CLI 와 동일).
+      </p>
     </section>
 
     <!-- 에디터 -->

@@ -75,6 +75,17 @@ export const getDevice = (deviceId: string) => apiFetch<Device>(`/devices/${devi
 export const getDeviceStatus = (deviceId: string) =>
   apiFetch<Record<string, unknown>>(`/devices/${deviceId}/status`)
 
+export const getDeviceHealth = (deviceId: string) =>
+  apiFetch<{ deviceId: string; state?: string; lastUpdatedDate?: string }>(
+    `/devices/${deviceId}/health`,
+  )
+
+// devices:history — locationId 필수
+export const getDeviceHistory = (locationId: string, deviceId: string, limit = 20) =>
+  apiFetch<{ items: Record<string, unknown>[] }>(
+    `/history/devices?${new URLSearchParams({ locationId, deviceId, limit: String(limit) }).toString()}`,
+  )
+
 export const listRooms = (locationId: string) =>
   apiFetch<ListResponse<Room>>(`/locations/${locationId}/rooms`)
 

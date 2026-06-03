@@ -110,6 +110,7 @@ onMounted(loadList)
   <CliRef
     :commands="['installedschema [id]', 'installedschema:delete [id]']"
     note="REST 는 location 단위(/schema/installedapps/location/{locationId})라 전체 목록은 모든 location 을 합칩니다."
+    :docs="[{ label: 'ST Schema', url: 'https://developer.smartthings.com/docs/devices/cloud-connected/st-schema' }]"
   />
 
   <div

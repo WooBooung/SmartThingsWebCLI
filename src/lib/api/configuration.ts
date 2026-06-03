@@ -26,3 +26,15 @@ export function getDeviceConfig(query: DeviceConfigQuery): Promise<Record<string
 export function createDeviceConfig(body: string): Promise<Record<string, unknown>> {
   return apiFetch<Record<string, unknown>>('/presentation/deviceconfig', { method: 'POST', body })
 }
+
+/**
+ * deviceProfileId 로 device configuration 을 자동 생성(미리보기)한다.
+ * CLI: presentation:device-config:generate <profileId>
+ * GET /presentation/types/{profileId}/deviceconfig
+ * (core-sdk PresentationEndpoint.generate: basePath 'presentation' + 'types/{id}/deviceconfig')
+ */
+export function generateDeviceConfig(profileId: string): Promise<Record<string, unknown>> {
+  return apiFetch<Record<string, unknown>>(
+    `/presentation/types/${encodeURIComponent(profileId)}/deviceconfig`,
+  )
+}

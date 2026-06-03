@@ -7,6 +7,7 @@ import { toastError, toastSuccess } from '@/lib/toast'
 import JsonView from '@/components/JsonView.vue'
 import {
   listDrivers,
+  listDefaultDrivers,
   getDriver,
   deleteDriver,
   listChannels,
@@ -113,6 +114,21 @@ async function refreshDrivers() {
     drivers.value = (drv.items ?? []).sort((a, b) => a.name.localeCompare(b.name))
   } catch (e) {
     toastError(msg(e))
+  }
+}
+
+// --- 기본(default) 드라이버 조회 (edge:drivers:default) ---
+const defaultLoading = ref(false)
+async function loadDefaultDrivers() {
+  defaultLoading.value = true
+  result.value = null
+  try {
+    const drv = await listDefaultDrivers()
+    result.value = drv.items ?? drv
+  } catch (e) {
+    toastError(msg(e))
+  } finally {
+    defaultLoading.value = false
   }
 }
 
@@ -290,7 +306,14 @@ onMounted(refreshAll)
       Edge 드라이버를 업로드·조회·삭제하고, 채널 배정·허브 설치·미사용 드라이버 정리를 합니다.
     </p>
   </header>
-  <CliRef :commands="['edge:drivers [id]', 'edge:drivers:package [dir]', 'edge:drivers:delete [id]', 'edge:drivers:install [driver]', 'edge:drivers:installed', 'edge:drivers:prune', 'edge:channels:assign [driver] [version]']" />
+  <CliRef
+    :commands="['edge:drivers [id]', 'edge:drivers:package [dir]', 'edge:drivers:delete [id]', 'edge:drivers:install [driver]', 'edge:drivers:installed', 'edge:drivers:default', 'edge:drivers:prune', 'edge:channels:assign [driver] [version]']"
+    :docs="[
+      { label: 'Build a Custom Edge Driver', url: 'https://developer.smartthings.com/docs/devices/hub-connected/edge-architecture' },
+      { label: 'Hub-Connected 시작하기', url: 'https://developer.smartthings.com/docs/devices/hub-connected/get-started' },
+      { label: 'SmartThings CLI', url: 'https://github.com/SmartThingsCommunity/smartthings-cli' },
+    ]"
+  />
 
   <div
     v-if="!hasToken"
@@ -338,13 +361,23 @@ onMounted(refreshAll)
             드라이버 목록 / 상세
           </span>
         </div>
-        <button
-          class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
-          :disabled="listLoading"
-          @click="refreshAll"
-        >
-          {{ listLoading ? '불러오는 중…' : '↻ 새로고침' }}
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
+            :disabled="defaultLoading"
+            title="SmartThings 기본 드라이버 목록 조회 (edge:drivers:default)"
+            @click="loadDefaultDrivers"
+          >
+            {{ defaultLoading ? '조회 중…' : '기본 드라이버' }}
+          </button>
+          <button
+            class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
+            :disabled="listLoading"
+            @click="refreshAll"
+          >
+            {{ listLoading ? '불러오는 중…' : '↻ 새로고침' }}
+          </button>
+        </div>
       </div>
       <div class="mt-3 flex flex-wrap gap-2">
         <select

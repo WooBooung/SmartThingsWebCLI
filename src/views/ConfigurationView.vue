@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/stores/token'
-import { getDeviceConfig, createDeviceConfig } from '@/lib/api/configuration'
+import { getDeviceConfig, createDeviceConfig, generateDeviceConfig } from '@/lib/api/configuration'
 import { parseJsonOrYaml } from '@/lib/yaml'
 import { toastError, toastSuccess } from '@/lib/toast'
 import JsonView from '@/components/JsonView.vue'
@@ -12,6 +12,7 @@ const { hasToken } = storeToRefs(useTokenStore())
 
 const presentationId = ref('')
 const manufacturerName = ref('')
+const profileId = ref('')
 const editor = ref('')
 const result = ref<unknown>(null)
 const busy = ref(false)
@@ -32,6 +33,30 @@ async function doGet() {
     editor.value = JSON.stringify(data, null, 2)
     result.value = { message: 'Configuration 을 불러왔습니다.' }
     toastSuccess('Configuration 을 불러왔습니다.')
+  } catch (e) {
+    toastError(e instanceof Error ? e.message : String(e))
+  } finally {
+    busy.value = false
+  }
+}
+
+async function doGenerate() {
+  const pid = profileId.value.trim()
+  if (!pid) {
+    toastError('Device Profile ID 를 입력하세요.')
+    return
+  }
+  busy.value = true
+  result.value = null
+  try {
+    const data = await generateDeviceConfig(pid)
+    editor.value = JSON.stringify(data, null, 2)
+    result.value = data
+    const vid = (data as { presentationId?: unknown }).presentationId
+    if (typeof vid === 'string') presentationId.value = vid
+    const mnmn = (data as { manufacturerName?: unknown }).manufacturerName
+    if (typeof mnmn === 'string') manufacturerName.value = mnmn
+    toastSuccess('Profile 로부터 device configuration 을 생성(미리보기)했습니다.')
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -71,7 +96,17 @@ async function doCreate() {
       presentationId 로 device configuration 을 조회하거나, JSON/YAML 로 새로 생성합니다.
     </p>
   </header>
-  <CliRef :commands="['presentation:device-config <presentationId>', 'presentation:device-config:create', 'presentation:device-config:generate <id>']" />
+  <CliRef
+    :commands="[
+      'presentation:device-config <presentationId>',
+      'presentation:device-config:create',
+      'presentation:device-config:generate <profileId>',
+    ]"
+    :docs="[
+      { label: 'Presentation', url: 'https://developer.smartthings.com/docs/api/public/#tag/Presentation' },
+      { label: 'Device Profiles', url: 'https://developer.smartthings.com/docs/api/public/#tag/Device-Profiles' },
+    ]"
+  />
 
   <div
     v-if="!hasToken"
@@ -120,6 +155,36 @@ async function doCreate() {
           @click="doGet"
         >
           {{ busy ? '불러오는 중…' : '조회' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- 생성(generate) -->
+    <section class="mt-4 rounded-xl border border-line bg-card p-4">
+      <div class="flex items-center gap-2">
+        <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
+        <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
+          Profile 로부터 생성 (generate)
+        </span>
+      </div>
+      <p class="mt-2 text-xs text-muted">
+        Device Profile ID 로 기본 device configuration 을 자동 생성해 아래 에디터에 채웁니다.
+        (<code class="font-mono">presentation:device-config:generate &lt;profileId&gt;</code>)
+      </p>
+      <div class="mt-3 flex gap-2">
+        <input
+          v-model="profileId"
+          spellcheck="false"
+          placeholder="deviceProfileId"
+          class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-sm text-text outline-none focus:border-brand-2"
+          @keyup.enter="doGenerate"
+        />
+        <button
+          class="shrink-0 rounded-lg border border-line px-4 py-2 text-sm font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
+          :disabled="busy"
+          @click="doGenerate"
+        >
+          {{ busy ? '생성 중…' : 'generate' }}
         </button>
       </div>
     </section>

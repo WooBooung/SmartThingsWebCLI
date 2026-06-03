@@ -64,6 +64,22 @@ export interface CreateByPrototypeArgs extends VirtualDeviceBase {
   prototype: string
 }
 
+/** 가상 디바이스 목록/관리용 요약 (GET /virtualdevices 응답 항목) */
+export interface VirtualDeviceSummary {
+  deviceId: string
+  label?: string
+  name?: string
+  locationId?: string
+  roomId?: string
+  [key: string]: unknown
+}
+
+/** virtualdevices:update 가 보낼 수 있는 필드 (CLI 는 client.devices.update 사용) */
+export interface VirtualDeviceUpdate {
+  label?: string
+  roomId?: string
+}
+
 // ---------------------------------------------------------------------------
 // 드롭다운 데이터 조회 헬퍼
 // ---------------------------------------------------------------------------
@@ -100,6 +116,33 @@ export async function listCustomCapabilities(): Promise<CapabilitySummary[]> {
   )
   return per.flatMap((r) => r.items ?? [])
 }
+
+// ---------------------------------------------------------------------------
+// 가상 디바이스 관리 (목록 / 수정 / 삭제)
+// ---------------------------------------------------------------------------
+
+/** 가상 디바이스 목록 (GET /virtualdevices) — 관리 섹션의 선택 드롭다운용 */
+export const listVirtualDevices = () =>
+  apiFetch<ListResponse<VirtualDeviceSummary>>('/virtualdevices')
+
+/**
+ * 가상 디바이스의 라벨/방 변경 — virtualdevices:update.
+ * CLI 는 client.devices.update(id, data) 즉 PUT /devices/{id} (DeviceUpdate) 를 호출한다.
+ * (검증: smartthings-cli src/commands/virtualdevices/update.ts, core-sdk endpoint/devices.ts)
+ */
+export const updateVirtualDevice = (deviceId: string, data: VirtualDeviceUpdate) =>
+  apiFetch<Record<string, unknown>>(`/devices/${deviceId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+
+/**
+ * 가상 디바이스 삭제 — virtualdevices:delete.
+ * CLI 는 client.devices.delete(id) 즉 DELETE /devices/{id} 를 호출한다.
+ * (검증: smartthings-cli src/commands/virtualdevices/delete.ts, core-sdk endpoint/devices.ts)
+ */
+export const deleteVirtualDevice = (deviceId: string) =>
+  apiFetch<null>(`/devices/${deviceId}`, { method: 'DELETE' })
 
 // ---------------------------------------------------------------------------
 // 가상 디바이스 생성 (3가지 모드)

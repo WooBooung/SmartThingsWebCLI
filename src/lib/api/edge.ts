@@ -48,6 +48,12 @@ interface DeviceNode {
 /** 계정에 업로드된 Edge 드라이버 목록 */
 export const listDrivers = () => apiFetch<ListResponse<EdgeDriver>>('/drivers')
 
+/**
+ * SmartThings 기본(default) Edge 드라이버 목록 — `edge:drivers:default`.
+ * core-sdk drivers.listDefault: GET drivers/default
+ */
+export const listDefaultDrivers = () => apiFetch<ListResponse<EdgeDriver>>('/drivers/default')
+
 /** 단일 드라이버 상세 */
 export const getDriver = (driverId: string) => apiFetch<EdgeDriver>(`/drivers/${driverId}`)
 

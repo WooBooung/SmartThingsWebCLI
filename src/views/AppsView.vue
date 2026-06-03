@@ -302,6 +302,7 @@ onMounted(loadList)
       'apps:settings:update [id]',
       'apps:register [id]',
     ]"
+    :docs="[{ label: 'Apps', url: 'https://developer.smartthings.com/docs/api/public/#tag/Apps' }]"
   />
 
   <div

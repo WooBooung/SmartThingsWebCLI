@@ -80,7 +80,12 @@ onMounted(() => {
       </a>
     </p>
   </header>
-  <CliRef :commands="['presentation <presentationId>', 'devices:presentation [id]']" />
+  <CliRef
+    :commands="['presentation <presentationId>', 'devices:presentation [id]']"
+    :docs="[
+      { label: 'Presentation', url: 'https://developer.smartthings.com/docs/api/public/#tag/Presentation' },
+    ]"
+  />
 
   <div
     v-if="!hasToken"

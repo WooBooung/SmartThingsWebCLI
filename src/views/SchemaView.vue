@@ -182,6 +182,7 @@ onMounted(loadList)
       'schema:regenerate [id]',
     ]"
     note="ST Schema REST 는 /v1 이 아닌 호스트 루트의 /schema 경로를 사용합니다."
+    :docs="[{ label: 'ST Schema', url: 'https://developer.smartthings.com/docs/devices/cloud-connected/st-schema' }]"
   />
 
   <div

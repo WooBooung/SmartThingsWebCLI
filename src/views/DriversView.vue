@@ -166,7 +166,14 @@ onMounted(() => {
       허브에 설치된 Edge 드라이버를 채널의 최신 버전으로 강제 설치하거나 삭제합니다.
     </p>
   </header>
-  <CliRef :commands="['edge:drivers:installed [hub]', 'edge:drivers:install [driver]', 'edge:drivers:switch [device]', 'edge:drivers:uninstall [driver]']" />
+  <CliRef
+    :commands="['edge:drivers:installed [hub]', 'edge:drivers:install [driver]', 'edge:drivers:switch [device]', 'edge:drivers:uninstall [driver]']"
+    :docs="[
+      { label: 'Build a Custom Edge Driver', url: 'https://developer.smartthings.com/docs/devices/hub-connected/edge-architecture' },
+      { label: 'Hub-Connected 시작하기', url: 'https://developer.smartthings.com/docs/devices/hub-connected/get-started' },
+      { label: 'SmartThings CLI', url: 'https://github.com/SmartThingsCommunity/smartthings-cli' },
+    ]"
+  />
 
   <div
     v-if="!hasToken"

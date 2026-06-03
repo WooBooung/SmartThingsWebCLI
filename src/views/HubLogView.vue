@@ -153,7 +153,14 @@ watch(hasToken, (v) => {
       생성합니다. 복사해서 같은 네트워크의 터미널에서 실행하세요.
     </p>
   </header>
-  <CliRef :commands="['edge:drivers:logcat [driver-id]']" />
+  <CliRef
+    :commands="['edge:drivers:logcat [driver-id]']"
+    :docs="[
+      { label: 'SmartThings CLI 시작하기', url: 'https://developer.smartthings.com/docs/sdks/cli' },
+      { label: 'Build a Custom Edge Driver', url: 'https://developer.smartthings.com/docs/devices/hub-connected/edge-architecture' },
+      { label: 'SmartThings CLI', url: 'https://github.com/SmartThingsCommunity/smartthings-cli' },
+    ]"
+  />
 
   <div
     v-if="!hasToken"

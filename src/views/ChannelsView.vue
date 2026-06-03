@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/stores/token'
+import { ApiError, listLocations } from '@/lib/stClient'
 import {
   listChannels,
   getChannel,
@@ -12,6 +13,11 @@ import {
   listAssignedDrivers,
   assignDriver,
   unassignDriver,
+  getDriverChannelMetaInfo,
+  enrollHub,
+  unenrollHub,
+  listHubEnrollments,
+  listHubs,
   listInvites,
   getInvite,
   createInvite,
@@ -20,7 +26,10 @@ import {
   type Driver,
   type AssignedDriver,
   type Invite,
+  type Hub,
+  type HubEnrolledChannel,
 } from '@/lib/api/channels'
+import type { Location } from '@/lib/types'
 import { parseJsonOrYaml } from '@/lib/yaml'
 import { toastError, toastSuccess } from '@/lib/toast'
 import JsonView from '@/components/JsonView.vue'
@@ -53,6 +62,13 @@ const driverToUnassign = ref('')
 
 const driverName = (driverId: string) =>
   drivers.value.find((d) => d.driverId === driverId)?.name ?? driverId
+
+// --- 허브 enroll / unenroll / enrollments ---
+const locations = ref<Location[]>([])
+const enrollLocationId = ref('')
+const enrollHubs = ref<Hub[]>([])
+const enrollHubId = ref('')
+const hubEnrollments = ref<HubEnrolledChannel[] | null>(null)
 
 // --- 초대 ---
 const invites = ref<Invite[]>([])
@@ -237,6 +253,108 @@ async function doUnassignDriver() {
   }
 }
 
+/** 선택한 (할당된) 드라이버의 채널 메타정보 조회 — edge:channels:metainfo */
+async function doDriverMetaInfo(driverId: string) {
+  const id = selectedChannelId.value
+  if (!id) return toastError('채널을 선택하세요.')
+  if (!driverId) return toastError('드라이버를 선택하세요.')
+  busy.value = true
+  try {
+    result.value = await getDriverChannelMetaInfo(id, driverId)
+    toastSuccess(`드라이버 "${driverName(driverId)}" 메타정보를 조회했습니다.`)
+  } catch (e) {
+    reportError(e)
+  } finally {
+    busy.value = false
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 허브 enroll / unenroll / enrollments
+// ---------------------------------------------------------------------------
+async function loadLocationsForEnroll() {
+  if (!hasToken.value || locations.value.length) return
+  try {
+    const data = await listLocations()
+    locations.value = data.items ?? []
+  } catch (e) {
+    reportError(e)
+  }
+}
+
+async function onEnrollLocationChange() {
+  enrollHubId.value = ''
+  enrollHubs.value = []
+  hubEnrollments.value = null
+  if (!enrollLocationId.value) return
+  try {
+    const data = await listHubs(enrollLocationId.value)
+    enrollHubs.value = data.items ?? []
+  } catch (e) {
+    reportError(e)
+  }
+}
+
+async function doEnrollHub() {
+  const id = selectedChannelId.value
+  if (!id) return toastError('채널을 선택하세요.')
+  if (!enrollHubId.value) return toastError('허브를 선택하세요.')
+  busy.value = true
+  try {
+    const res = await enrollHub(id, enrollHubId.value)
+    result.value = res ?? { message: '허브를 채널에 등록(enroll)했습니다.' }
+    toastSuccess('허브를 채널에 등록했습니다.')
+    await loadHubEnrollments()
+  } catch (e) {
+    // 이미 등록된 경우 409
+    if (e instanceof ApiError && e.status === 409) {
+      toastSuccess('이미 채널에 등록된 허브입니다.')
+      await loadHubEnrollments()
+    } else {
+      reportError(e)
+    }
+  } finally {
+    busy.value = false
+  }
+}
+
+async function doUnenrollHub() {
+  const id = selectedChannelId.value
+  if (!id) return toastError('채널을 선택하세요.')
+  if (!enrollHubId.value) return toastError('허브를 선택하세요.')
+  const hubLabel =
+    enrollHubs.value.find((h) => h.deviceId === enrollHubId.value)?.label ?? enrollHubId.value
+  if (!window.confirm(`허브 "${hubLabel}" 를 이 채널에서 등록 해제할까요?`)) return
+  busy.value = true
+  try {
+    await unenrollHub(id, enrollHubId.value)
+    result.value = { message: `허브 "${hubLabel}" 등록 해제 성공` }
+    toastSuccess('허브를 채널에서 등록 해제했습니다.')
+    await loadHubEnrollments()
+  } catch (e) {
+    reportError(e)
+  } finally {
+    busy.value = false
+  }
+}
+
+/** 선택한 허브가 enroll 된 채널 목록 — edge:channels:enrollments [hub] */
+async function loadHubEnrollments() {
+  if (!enrollHubId.value) {
+    hubEnrollments.value = null
+    return
+  }
+  busy.value = true
+  try {
+    const data = await listHubEnrollments(enrollHubId.value)
+    hubEnrollments.value = Array.isArray(data) ? data : (data.items ?? [])
+  } catch (e) {
+    reportError(e)
+  } finally {
+    busy.value = false
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 초대
 // ---------------------------------------------------------------------------
@@ -319,6 +437,7 @@ async function doDeleteInvite() {
 onMounted(() => {
   loadChannels()
   loadDrivers()
+  loadLocationsForEnroll()
 })
 </script>
 
@@ -329,7 +448,29 @@ onMounted(() => {
       Edge 채널 생성·수정·삭제, 드라이버 할당/해제, 초대(Invite) 관리.
     </p>
   </header>
-  <CliRef :commands="['edge:channels [id]', 'edge:channels:create', 'edge:channels:update [id]', 'edge:channels:delete [id]', 'edge:channels:drivers [id]', 'edge:channels:invites', 'edge:channels:invites:create', 'edge:channels:invites:delete [id]']" />
+  <CliRef
+    :commands="[
+      'edge:channels [id]',
+      'edge:channels:create',
+      'edge:channels:update [id]',
+      'edge:channels:delete [id]',
+      'edge:channels:drivers [id]',
+      'edge:channels:assign [channel] [driver] [version]',
+      'edge:channels:unassign [channel] [driver]',
+      'edge:channels:metainfo [id]',
+      'edge:channels:enroll [hub]',
+      'edge:channels:unenroll [hub]',
+      'edge:channels:enrollments [hub]',
+      'edge:channels:invites',
+      'edge:channels:invites:create',
+      'edge:channels:invites:delete [id]',
+    ]"
+    :docs="[
+      { label: 'Build a Custom Edge Driver', url: 'https://developer.smartthings.com/docs/devices/hub-connected/edge-architecture' },
+      { label: 'Hub-Connected 시작하기', url: 'https://developer.smartthings.com/docs/devices/hub-connected/get-started' },
+      { label: 'SmartThings CLI', url: 'https://github.com/SmartThingsCommunity/smartthings-cli' },
+    ]"
+  />
 
   <div
     v-if="!hasToken"
@@ -486,13 +627,91 @@ onMounted(() => {
               {{ driverName(d.driverId) }} (v{{ d.version }})
             </option>
           </select>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button
+              class="rounded-lg border border-warn/50 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn transition hover:-translate-y-px hover:border-warn disabled:opacity-50"
+              :disabled="busy"
+              @click="doUnassignDriver"
+            >
+              할당 해제
+            </button>
+            <button
+              class="rounded-lg border border-line px-4 py-2 text-sm font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
+              :disabled="busy || !driverToUnassign"
+              title="채널 내 드라이버 메타정보 조회 (edge:channels:metainfo)"
+              @click="doDriverMetaInfo(driverToUnassign)"
+            >
+              메타정보 조회
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 허브 등록 (enroll / unenroll / enrollments) -->
+      <section v-if="hasSelectedChannel" class="mt-4 rounded-xl border border-line bg-card p-4">
+        <div class="flex items-center gap-2">
+          <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
+          <h3 class="text-sm font-bold">허브 등록 (Enroll)</h3>
+        </div>
+        <p class="mt-2 text-sm text-muted">
+          허브를 이 채널에 등록(enroll)하면 채널에 할당된 드라이버를 해당 허브에 설치할 수 있습니다.
+        </p>
+        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+          <label class="block">
+            <span class="mb-1 block text-xs text-muted">위치(Location)</span>
+            <select
+              v-model="enrollLocationId"
+              class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
+              @change="onEnrollLocationChange"
+            >
+              <option value="">위치 선택 ({{ locations.length }})</option>
+              <option v-for="l in locations" :key="l.locationId" :value="l.locationId">
+                {{ l.name }}
+              </option>
+            </select>
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-xs text-muted">허브</span>
+            <select
+              v-model="enrollHubId"
+              class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
+              @change="loadHubEnrollments"
+            >
+              <option value="">허브 선택 ({{ enrollHubs.length }})</option>
+              <option v-for="h in enrollHubs" :key="h.deviceId" :value="h.deviceId">
+                {{ h.label ?? h.name ?? h.deviceId }}
+              </option>
+            </select>
+          </label>
+        </div>
+        <div class="mt-3 flex flex-wrap gap-2">
           <button
-            class="mt-3 rounded-lg border border-warn/50 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn transition hover:-translate-y-px hover:border-warn disabled:opacity-50"
-            :disabled="busy"
-            @click="doUnassignDriver"
+            class="rounded-lg border border-transparent bg-gradient-to-br from-brand to-brand-2 px-4 py-2 text-sm font-semibold text-[#061026] transition hover:-translate-y-px disabled:opacity-50"
+            :disabled="busy || !enrollHubId"
+            @click="doEnrollHub"
           >
-            할당 해제
+            채널에 등록 (enroll)
           </button>
+          <button
+            class="rounded-lg border border-line px-4 py-2 text-sm font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
+            :disabled="busy || !enrollHubId"
+            @click="loadHubEnrollments"
+          >
+            등록된 채널 조회 (enrollments)
+          </button>
+          <button
+            class="rounded-lg border border-warn/50 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn transition hover:-translate-y-px hover:border-warn disabled:opacity-50"
+            :disabled="busy || !enrollHubId"
+            @click="doUnenrollHub"
+          >
+            등록 해제 (unenroll)
+          </button>
+        </div>
+        <div v-if="hubEnrollments" class="mt-3">
+          <p v-if="!hubEnrollments.length" class="text-sm text-muted">
+            이 허브가 등록된 (DRIVER) 채널이 없습니다.
+          </p>
+          <JsonView v-else :value="hubEnrollments" label="이 허브가 등록된 채널" :default-open="true" />
         </div>
       </section>
     </template>

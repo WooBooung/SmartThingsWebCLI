@@ -130,7 +130,15 @@ onMounted(loadSpeakers)
       speechSynthesis 를 지원하는 스피커를 골라 메시지를 음성으로 재생합니다.
     </p>
   </header>
-  <CliRef :commands="['devices:commands [id]']" />
+  <CliRef
+    :commands="['devices:commands [id]']"
+    :docs="[
+      {
+        label: 'Devices · executeDeviceCommands',
+        url: 'https://developer.smartthings.com/docs/api/public/#tag/Devices/operation/executeDeviceCommands',
+      },
+    ]"
+  />
 
   <div
     v-if="!hasToken"

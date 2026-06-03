@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import CopyButton from '@/components/CopyButton.vue'
 
-// 이 페이지가 대응하는 SmartThings CLI 명령을 보여준다.
+// 이 페이지가 대응하는 SmartThings CLI 명령과 공식 API 문서 링크를 보여준다.
 // commands 는 'smartthings' 접두어 없이 전달한다. (예: 'devices:status [id]')
-defineProps<{ commands: string[]; note?: string }>()
+defineProps<{
+  commands: string[]
+  note?: string
+  docs?: { label: string; url: string }[]
+}>()
 </script>
 
 <template>
@@ -24,5 +28,22 @@ defineProps<{ commands: string[]; note?: string }>()
       </li>
     </ul>
     <p v-if="note" class="mt-2 text-xs text-muted">{{ note }}</p>
+
+    <div v-if="docs && docs.length" class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-2">
+      <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">API 문서</span>
+      <a
+        v-for="d in docs"
+        :key="d.url"
+        :href="d.url"
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-1 text-xs text-brand-2 underline-offset-2 hover:underline"
+      >
+        {{ d.label }}
+        <svg viewBox="0 0 24 24" class="size-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 17 17 7M7 7h10v10" />
+        </svg>
+      </a>
+    </div>
   </section>
 </template>

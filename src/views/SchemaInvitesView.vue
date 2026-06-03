@@ -170,6 +170,7 @@ onMounted(loadApps)
   <CliRef
     :commands="['invites:schema [id]', 'invites:schema:create', 'invites:schema:delete [id]']"
     note="REST 는 /invites/schemaApp (호스트 루트). 목록은 schemaAppId 쿼리가 필요합니다."
+    :docs="[{ label: 'ST Schema', url: 'https://developer.smartthings.com/docs/devices/cloud-connected/st-schema' }]"
   />
 
   <div

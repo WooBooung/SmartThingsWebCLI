@@ -16,6 +16,9 @@ import {
   createByCustomProfile,
   createByProfileId,
   createByPrototype,
+  listVirtualDevices,
+  updateVirtualDevice,
+  deleteVirtualDevice,
   CLOUD_PROTOTYPES,
   LOCAL_PROTOTYPES,
   DEVICE_CATEGORIES,
@@ -23,6 +26,7 @@ import {
   type HubDriver,
   type ProfileSummary,
   type PrototypeOption,
+  type VirtualDeviceSummary,
 } from '@/lib/api/virtual'
 import CliRef from '@/components/CliRef.vue'
 
@@ -235,7 +239,104 @@ function createCustomDevice() {
   )
 }
 
-onMounted(loadInitial)
+// ---------------------------------------------------------------------------
+// 가상 디바이스 관리 (virtualdevices:update / virtualdevices:delete)
+// ---------------------------------------------------------------------------
+const vDevices = ref<VirtualDeviceSummary[]>([])
+const vDevicesLoading = ref(false)
+const manageSelectedId = ref('')
+const manageLabel = ref('')
+const manageRoomId = ref('')
+const manageRooms = ref<Room[]>([])
+const manageBusy = ref(false)
+
+const manageSelected = computed<VirtualDeviceSummary | null>(
+  () => vDevices.value.find((d) => d.deviceId === manageSelectedId.value) ?? null,
+)
+const locationNameById = computed(() => new Map(locations.value.map((l) => [l.locationId, l.name])))
+
+async function loadVirtualDevices() {
+  if (!hasToken.value) return
+  vDevicesLoading.value = true
+  try {
+    const res = await listVirtualDevices()
+    vDevices.value = (res.items ?? []).slice().sort((a, b) => {
+      const la = a.label || a.name || a.deviceId
+      const lb = b.label || b.name || b.deviceId
+      return la.localeCompare(lb)
+    })
+  } catch (e) {
+    toastError(e instanceof Error ? e.message : String(e))
+  } finally {
+    vDevicesLoading.value = false
+  }
+}
+
+async function onManageSelect() {
+  const d = manageSelected.value
+  manageRooms.value = []
+  manageRoomId.value = ''
+  if (!d) {
+    manageLabel.value = ''
+    return
+  }
+  manageLabel.value = d.label || d.name || ''
+  if (d.locationId) {
+    try {
+      const res = await listRooms(d.locationId)
+      manageRooms.value = res.items
+      manageRoomId.value = res.items.some((r) => r.roomId === d.roomId) ? (d.roomId ?? '') : ''
+    } catch (e) {
+      toastError(e instanceof Error ? e.message : String(e))
+    }
+  }
+}
+
+async function saveManage() {
+  const d = manageSelected.value
+  if (!d) return
+  const label = manageLabel.value.trim()
+  if (!label) {
+    toastError('Device Label 을 입력하세요.')
+    return
+  }
+  manageBusy.value = true
+  try {
+    await updateVirtualDevice(d.deviceId, { label, roomId: manageRoomId.value || undefined })
+    toastSuccess('가상 디바이스를 수정했습니다.')
+    await loadVirtualDevices()
+  } catch (e) {
+    toastError(e instanceof Error ? e.message : String(e))
+  } finally {
+    manageBusy.value = false
+  }
+}
+
+async function removeManage() {
+  const d = manageSelected.value
+  if (!d) return
+  const label = d.label || d.name || d.deviceId
+  if (!window.confirm(`가상 디바이스 "${label}" 를 삭제할까요? 되돌릴 수 없습니다.`)) return
+  manageBusy.value = true
+  try {
+    await deleteVirtualDevice(d.deviceId)
+    toastSuccess('가상 디바이스를 삭제했습니다.')
+    manageSelectedId.value = ''
+    manageLabel.value = ''
+    manageRoomId.value = ''
+    manageRooms.value = []
+    await loadVirtualDevices()
+  } catch (e) {
+    toastError(e instanceof Error ? e.message : String(e))
+  } finally {
+    manageBusy.value = false
+  }
+}
+
+onMounted(() => {
+  loadInitial()
+  loadVirtualDevices()
+})
 
 const TABS: { key: Mode; label: string }[] = [
   { key: 'prototype', label: 'Prototype 으로 생성' },
@@ -251,7 +352,17 @@ const TABS: { key: Mode; label: string }[] = [
       프로토타입 / 내 device profile / 커스텀 capability 조합 중 한 방식으로 가상 디바이스를 만듭니다.
     </p>
   </header>
-  <CliRef :commands="['virtualdevices:create', 'virtualdevices:create-standard']" />
+  <CliRef
+    :commands="[
+      'virtualdevices:create',
+      'virtualdevices:create-standard',
+      'virtualdevices:update [id]',
+      'virtualdevices:delete [id]',
+    ]"
+    :docs="[
+      { label: 'Virtual Devices', url: 'https://developer.smartthings.com/docs/api/public/#tag/Virtual-Devices' },
+    ]"
+  />
 
   <div
     v-if="!hasToken"
@@ -557,5 +668,91 @@ const TABS: { key: Mode; label: string }[] = [
     <div v-if="result" class="mt-4">
       <JsonView :value="result" label="생성 결과" :default-open="true" />
     </div>
+
+    <!-- 가상 디바이스 관리 (update / delete) -->
+    <section class="mt-8 rounded-xl border border-line bg-card p-4">
+      <div class="flex items-center gap-2">
+        <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
+        <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
+          가상 디바이스 관리
+        </span>
+        <button
+          class="ml-auto rounded-md border border-line px-3 py-1 text-xs font-semibold text-muted transition hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
+          :disabled="vDevicesLoading"
+          title="목록 새로고침"
+          @click="loadVirtualDevices"
+        >
+          {{ vDevicesLoading ? '불러오는 중…' : '↻ 새로고침' }}
+        </button>
+      </div>
+
+      <p class="mt-2 text-xs text-muted">기존 가상 디바이스의 라벨/방을 변경하거나 삭제합니다.</p>
+
+      <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <label class="flex flex-col gap-1 sm:col-span-2">
+          <span class="text-xs font-semibold text-muted">가상 디바이스 선택</span>
+          <select
+            v-model="manageSelectedId"
+            :disabled="vDevicesLoading"
+            class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2 disabled:opacity-50"
+            @change="onManageSelect"
+          >
+            <option value="">
+              {{ vDevicesLoading ? '불러오는 중…' : `가상 디바이스 선택 (${vDevices.length})` }}
+            </option>
+            <option v-for="d in vDevices" :key="d.deviceId" :value="d.deviceId">
+              [{{ (d.locationId && locationNameById.get(d.locationId)) || '위치 없음' }}]
+              {{ d.label || d.name || d.deviceId }}
+            </option>
+          </select>
+        </label>
+
+        <template v-if="manageSelected">
+          <label class="flex flex-col gap-1">
+            <span class="text-xs font-semibold text-muted">Device Label</span>
+            <input
+              v-model="manageLabel"
+              spellcheck="false"
+              placeholder="라벨"
+              class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
+            />
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-xs font-semibold text-muted">방 (선택)</span>
+            <select
+              v-model="manageRoomId"
+              class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
+            >
+              <option value="">방 선택 안 함</option>
+              <option v-for="r in manageRooms" :key="r.roomId" :value="r.roomId">{{ r.name }}</option>
+            </select>
+          </label>
+        </template>
+      </div>
+
+      <div v-if="manageSelected" class="mt-3 flex flex-wrap items-center gap-2">
+        <code class="rounded bg-black/30 px-2 py-1 font-mono text-[12px] text-muted">
+          {{ manageSelected.deviceId }}
+        </code>
+        <button
+          class="ml-auto rounded-lg border border-line px-4 py-2 text-sm font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
+          :disabled="manageBusy"
+          @click="saveManage"
+        >
+          {{ manageBusy ? '처리 중…' : '변경 저장' }}
+        </button>
+        <button
+          class="rounded-lg border border-warn/50 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn transition hover:border-warn disabled:opacity-50"
+          :disabled="manageBusy"
+          @click="removeManage"
+        >
+          삭제
+        </button>
+      </div>
+
+      <p v-else-if="!vDevicesLoading && !vDevices.length" class="mt-3 text-xs text-muted">
+        가상 디바이스가 없습니다.
+      </p>
+    </section>
   </template>
 </template>

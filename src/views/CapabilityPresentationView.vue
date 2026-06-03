@@ -174,7 +174,20 @@ onMounted(loadLists)
       </a>
     </p>
   </header>
-  <CliRef :commands="['capabilities:presentation [id]', 'capabilities:presentation:create [id]', 'capabilities:presentation:update [id]']" />
+  <CliRef
+    :commands="[
+      'capabilities:presentation [id]',
+      'capabilities:presentation:create [id]',
+      'capabilities:presentation:update [id]',
+    ]"
+    :docs="[
+      { label: 'Capabilities', url: 'https://developer.smartthings.com/docs/api/public/#tag/Capabilities' },
+      {
+        label: 'Capability Presentations',
+        url: 'https://developer.smartthings.com/docs/devices/capabilities/capability-presentations',
+      },
+    ]"
+  />
 
   <div
     v-if="!hasToken"

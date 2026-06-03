@@ -349,7 +349,12 @@ onMounted(loadDevices)
       가상 디바이스의 capability attribute 에 이벤트(상태 값)를 전송합니다.
     </p>
   </header>
-  <CliRef :commands="['virtualdevices:events [device-id] [name] [value] [unit]']" />
+  <CliRef
+    :commands="['virtualdevices:events [device-id] [name] [value] [unit]']"
+    :docs="[
+      { label: 'Virtual Devices', url: 'https://developer.smartthings.com/docs/api/public/#tag/Virtual-Devices' },
+    ]"
+  />
 
   <div
     v-if="!hasToken"

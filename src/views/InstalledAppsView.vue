@@ -163,6 +163,7 @@ if (hasToken.value) void ensureLocations()
 
   <CliRef
     :commands="['installedapps [id]', 'installedapps:rename [id] [new-name]', 'installedapps:delete [id]']"
+    :docs="[{ label: 'InstalledApps', url: 'https://developer.smartthings.com/docs/api/public/#tag/InstalledApps' }]"
   />
 
   <div

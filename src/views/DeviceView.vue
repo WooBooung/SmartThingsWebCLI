@@ -2,7 +2,15 @@
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/stores/token'
-import { getDevice, getDeviceStatus, listDevices, listLocations, listRooms } from '@/lib/stClient'
+import {
+  getDevice,
+  getDeviceStatus,
+  getDeviceHealth,
+  getDeviceHistory,
+  listDevices,
+  listLocations,
+  listRooms,
+} from '@/lib/stClient'
 import type { Device } from '@/lib/types'
 import { toastError } from '@/lib/toast'
 import DeviceSelect, { type DeviceSelection } from '@/components/DeviceSelect.vue'
@@ -16,6 +24,9 @@ const { hasToken } = storeToRefs(useTokenStore())
 const deviceIdInput = ref('')
 const detail = ref<Device | null>(null)
 const status = ref<Record<string, unknown> | null>(null)
+const health = ref<{ state?: string; lastUpdatedDate?: string } | null>(null)
+const history = ref<Record<string, unknown>[] | null>(null)
+const historyLoading = ref(false)
 const locationName = ref('')
 const roomName = ref('')
 const loading = ref(false)
@@ -96,14 +107,40 @@ async function loadFor(id: string) {
   loading.value = true
   detail.value = null
   status.value = null
+  health.value = null
+  history.value = null
   try {
     const [d, s] = await Promise.all([getDevice(id), getDeviceStatus(id)])
     detail.value = d
     status.value = s
+    // health 는 일부 디바이스에서 없을 수 있어 실패해도 무시
+    try {
+      health.value = await getDeviceHealth(id)
+    } catch {
+      health.value = null
+    }
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
     loading.value = false
+  }
+}
+
+async function loadHistory() {
+  const d = detail.value
+  if (!d) return
+  if (!d.locationId) {
+    toastError('이 디바이스는 locationId 가 없어 이력을 조회할 수 없습니다.')
+    return
+  }
+  historyLoading.value = true
+  try {
+    const res = await getDeviceHistory(String(d.locationId), String(d.deviceId), 20)
+    history.value = res.items ?? []
+  } catch (e) {
+    toastError(e instanceof Error ? e.message : String(e))
+  } finally {
+    historyLoading.value = false
   }
 }
 
@@ -152,7 +189,13 @@ async function lookupById() {
     <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Device 조회</h1>
     <p class="mt-1 text-sm text-muted">위치 → 디바이스를 선택하거나 deviceId 로 조회합니다.</p>
   </header>
-  <CliRef :commands="['devices [id]', 'devices:status [id]', 'devices:health [id]', 'devices:history [id]']" />
+  <CliRef
+    :commands="['devices [id]', 'devices:status [id]', 'devices:health [id]', 'devices:history [id]']"
+    :docs="[
+      { label: 'Devices', url: 'https://developer.smartthings.com/docs/api/public/#tag/Devices' },
+      { label: 'History', url: 'https://developer.smartthings.com/docs/api/public/#tag/History' },
+    ]"
+  />
 
   <div
     v-if="!hasToken"
@@ -206,12 +249,26 @@ async function lookupById() {
             <h2 class="truncate text-xl font-extrabold tracking-tight">{{ heroTitle }}</h2>
             <p v-if="heroPlace" class="mt-1 text-sm text-muted">{{ heroPlace }}</p>
           </div>
-          <span
-            v-if="heroType"
-            class="shrink-0 rounded-full border border-brand-2/40 bg-brand-2/10 px-3 py-1 text-xs font-semibold text-brand-2"
-          >
-            {{ heroType }}
-          </span>
+          <div class="flex shrink-0 flex-col items-end gap-1.5">
+            <span
+              v-if="health?.state"
+              class="rounded-full border px-3 py-1 text-xs font-semibold"
+              :class="
+                health.state === 'ONLINE'
+                  ? 'border-success/40 bg-success/10 text-success'
+                  : 'border-warn/40 bg-warn/10 text-warn'
+              "
+              :title="health.lastUpdatedDate ? `최종 갱신: ${health.lastUpdatedDate}` : ''"
+            >
+              ● {{ health.state }}
+            </span>
+            <span
+              v-if="heroType"
+              class="rounded-full border border-brand-2/40 bg-brand-2/10 px-3 py-1 text-xs font-semibold text-brand-2"
+            >
+              {{ heroType }}
+            </span>
+          </div>
         </div>
         <div class="mt-3 flex items-center gap-2">
           <code class="truncate rounded-md bg-black/25 px-2 py-1 font-mono text-[12.5px] text-muted">
@@ -241,6 +298,28 @@ async function lookupById() {
 
       <!-- 상세 정보 -->
       <InfoGrid title="디바이스 정보" :items="deviceInfo" />
+
+      <!-- 이력 (history) -->
+      <section class="overflow-hidden rounded-xl border border-line bg-card">
+        <header class="flex items-center gap-2 border-b border-line px-4 py-3">
+          <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
+          <h3 class="text-sm font-bold">이력 (history)</h3>
+          <button
+            class="ml-auto rounded-md border border-line px-3 py-1 text-xs font-semibold text-muted transition hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
+            :disabled="historyLoading"
+            @click="loadHistory"
+          >
+            {{ historyLoading ? '불러오는 중…' : '최근 20건 조회' }}
+          </button>
+        </header>
+        <div v-if="history" class="p-4">
+          <p v-if="!history.length" class="text-sm text-muted">이력이 없습니다.</p>
+          <JsonView v-else :value="history" label="Device History" :default-open="true" />
+        </div>
+        <p v-else class="px-4 py-3 text-xs text-muted">
+          버튼을 눌러 이 디바이스의 최근 이벤트 이력을 조회합니다 (locationId 기준).
+        </p>
+      </section>
 
       <!-- 접힌 원본 JSON -->
       <JsonView :value="detail" label="Device (원본 JSON)" />
