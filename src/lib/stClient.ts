@@ -1,5 +1,13 @@
 import { useTokenStore } from '@/stores/token'
-import type { Device, ListResponse, Location, Room } from '@/lib/types'
+import type {
+  CapabilityLocale,
+  CapabilityNamespace,
+  CapabilitySummary,
+  Device,
+  ListResponse,
+  Location,
+  Room,
+} from '@/lib/types'
 
 // SmartThings API 는 브라우저 CORS(ACAO: *)를 직접 허용하므로 프록시 없이 호출한다.
 // 필요 시 VITE_ST_API_BASE 로 게이트웨이 등으로 교체 가능.
@@ -69,3 +77,43 @@ export const getDeviceStatus = (deviceId: string) =>
 
 export const listRooms = (locationId: string) =>
   apiFetch<ListResponse<Room>>(`/locations/${locationId}/rooms`)
+
+// --- Capabilities ---
+const CAP_VERSION = 1 // SmartThings capability 는 version 1 만 허용
+
+export const listCapabilityNamespaces = () =>
+  apiFetch<CapabilityNamespace[]>('/capabilities/namespaces')
+
+export const listCapabilitiesInNamespace = (namespace: string) =>
+  apiFetch<ListResponse<CapabilitySummary>>(`/capabilities/namespaces/${namespace}`)
+
+export const listStandardCapabilities = () =>
+  apiFetch<ListResponse<CapabilitySummary>>('/capabilities')
+
+export const getCapability = (id: string, version = CAP_VERSION) =>
+  apiFetch<Record<string, unknown>>(`/capabilities/${id}/${version}`)
+
+export const createCapability = (body: string) =>
+  apiFetch<Record<string, unknown>>('/capabilities', { method: 'POST', body })
+
+export const updateCapability = (id: string, body: string, version = CAP_VERSION) =>
+  apiFetch<Record<string, unknown>>(`/capabilities/${id}/${version}`, { method: 'PUT', body })
+
+export const deleteCapability = (id: string, version = CAP_VERSION) =>
+  apiFetch<null>(`/capabilities/${id}/${version}`, { method: 'DELETE' })
+
+// Capability i18n locales
+export const listCapabilityLocales = (id: string, version = CAP_VERSION) =>
+  apiFetch<ListResponse<CapabilityLocale>>(`/capabilities/${id}/${version}/i18n`)
+
+export const getCapabilityLocale = (id: string, tag: string, version = CAP_VERSION) =>
+  apiFetch<Record<string, unknown>>(`/capabilities/${id}/${version}/i18n/${tag}`)
+
+export const createCapabilityLocale = (id: string, body: string, version = CAP_VERSION) =>
+  apiFetch<Record<string, unknown>>(`/capabilities/${id}/${version}/i18n`, { method: 'POST', body })
+
+export const updateCapabilityLocale = (id: string, tag: string, body: string, version = CAP_VERSION) =>
+  apiFetch<Record<string, unknown>>(`/capabilities/${id}/${version}/i18n/${tag}`, {
+    method: 'PUT',
+    body,
+  })

@@ -5,6 +5,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: () => import('@/views/HomeView.vue') },
     { path: '/device', name: 'device', component: () => import('@/views/DeviceView.vue') },
+    { path: '/capability', name: 'capability', component: () => import('@/views/CapabilityView.vue') },
     // 점진 이식: 새 도구 라우트를 여기에 추가
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],

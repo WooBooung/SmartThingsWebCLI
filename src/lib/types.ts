@@ -28,6 +28,23 @@ export interface ListResponse<T> {
   _links?: unknown
 }
 
+export interface CapabilitySummary {
+  id: string
+  version?: number
+  status?: string
+  name?: string
+}
+
+export interface CapabilityNamespace {
+  name: string
+  ownerType?: string
+  ownerId?: string
+}
+
+export interface CapabilityLocale {
+  tag: string
+}
+
 // 위치별로 그룹핑된 디바이스 (DeviceSelect 용)
 export interface DeviceWithLocationName extends Device {
   locationName: string
