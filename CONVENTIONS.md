@@ -36,6 +36,10 @@ const { hasToken } = storeToRefs(useTokenStore())
 <template v-else> ... 실제 UI ... </template>
 ```
 
+## CLI 명령 안내 (CliRef)
+- 모든 도구 페이지는 헤더(`<header>`) 바로 아래에 대응 SmartThings CLI 명령을 표시한다.
+- `import CliRef from '@/components/CliRef.vue'` 후 `<CliRef :commands="['devices:status [id]', ...]" />` (접두어 'smartthings' 없이). CLI 대응이 없는 보조 도구는 `:commands="[]" note="..."` 로 설명.
+
 ## 결과/에러/성공
 - 성공/실패 알림: `import { toastError, toastSuccess } from '@/lib/toast'`.
 - 응답 JSON 표시: `<JsonView :value="result" label="결과" />` (기본 접힘; 결과를 바로 보여주려면 `:default-open="true"`).

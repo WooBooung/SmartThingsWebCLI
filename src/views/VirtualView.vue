@@ -24,6 +24,7 @@ import {
   type ProfileSummary,
   type PrototypeOption,
 } from '@/lib/api/virtual'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -250,6 +251,7 @@ const TABS: { key: Mode; label: string }[] = [
       프로토타입 / 내 device profile / 커스텀 capability 조합 중 한 방식으로 가상 디바이스를 만듭니다.
     </p>
   </header>
+  <CliRef :commands="['virtualdevices:create', 'virtualdevices:create-standard']" />
 
   <div
     v-if="!hasToken"

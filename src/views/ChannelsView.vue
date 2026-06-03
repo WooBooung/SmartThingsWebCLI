@@ -25,6 +25,7 @@ import { parseJsonOrYaml } from '@/lib/yaml'
 import { toastError, toastSuccess } from '@/lib/toast'
 import JsonView from '@/components/JsonView.vue'
 import CopyButton from '@/components/CopyButton.vue'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -328,6 +329,7 @@ onMounted(() => {
       Edge 채널 생성·수정·삭제, 드라이버 할당/해제, 초대(Invite) 관리.
     </p>
   </header>
+  <CliRef :commands="['edge:channels [id]', 'edge:channels:create', 'edge:channels:update [id]', 'edge:channels:delete [id]', 'edge:channels:drivers [id]', 'edge:channels:invites', 'edge:channels:invites:create', 'edge:channels:invites:delete [id]']" />
 
   <div
     v-if="!hasToken"

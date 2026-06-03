@@ -6,6 +6,7 @@ import { getDeviceConfig, createDeviceConfig } from '@/lib/api/configuration'
 import { parseJsonOrYaml } from '@/lib/yaml'
 import { toastError, toastSuccess } from '@/lib/toast'
 import JsonView from '@/components/JsonView.vue'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -70,6 +71,7 @@ async function doCreate() {
       presentationId 로 device configuration 을 조회하거나, JSON/YAML 로 새로 생성합니다.
     </p>
   </header>
+  <CliRef :commands="['presentation:device-config <presentationId>', 'presentation:device-config:create', 'presentation:device-config:generate <id>']" />
 
   <div
     v-if="!hasToken"

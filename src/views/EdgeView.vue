@@ -24,6 +24,7 @@ import {
   type EdgeHub,
 } from '@/lib/api/edge'
 import type { Location } from '@/lib/types'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -289,6 +290,7 @@ onMounted(refreshAll)
       Edge 드라이버를 업로드·조회·삭제하고, 채널 배정·허브 설치·미사용 드라이버 정리를 합니다.
     </p>
   </header>
+  <CliRef :commands="['edge:drivers [id]', 'edge:drivers:package [dir]', 'edge:drivers:delete [id]', 'edge:drivers:install [driver]', 'edge:drivers:installed', 'edge:drivers:prune', 'edge:channels:assign [driver] [version]']" />
 
   <div
     v-if="!hasToken"

@@ -9,6 +9,7 @@ import DeviceSelect, { type DeviceSelection } from '@/components/DeviceSelect.vu
 import InfoGrid, { type InfoItem } from '@/components/InfoGrid.vue'
 import CopyButton from '@/components/CopyButton.vue'
 import JsonView from '@/components/JsonView.vue'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -151,6 +152,7 @@ async function lookupById() {
     <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Device 조회</h1>
     <p class="mt-1 text-sm text-muted">위치 → 디바이스를 선택하거나 deviceId 로 조회합니다.</p>
   </header>
+  <CliRef :commands="['devices [id]', 'devices:status [id]', 'devices:health [id]', 'devices:history [id]']" />
 
   <div
     v-if="!hasToken"

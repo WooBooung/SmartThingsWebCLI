@@ -7,6 +7,7 @@ import { listHubs, getHubInfo, listHubDrivers, type HubInfo, type HubDriver } fr
 import type { Location } from '@/lib/types'
 import { toastError, toastSuccess } from '@/lib/toast'
 import InfoGrid, { type InfoItem } from '@/components/InfoGrid.vue'
+import CliRef from '@/components/CliRef.vue'
 
 const tokenStore = useTokenStore()
 const { hasToken, pat } = storeToRefs(tokenStore)
@@ -152,6 +153,7 @@ watch(hasToken, (v) => {
       생성합니다. 복사해서 같은 네트워크의 터미널에서 실행하세요.
     </p>
   </header>
+  <CliRef :commands="['edge:drivers:logcat [driver-id]']" />
 
   <div
     v-if="!hasToken"

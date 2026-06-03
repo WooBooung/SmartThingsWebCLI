@@ -7,6 +7,7 @@ import type { Device } from '@/lib/types'
 import { toastError, toastSuccess } from '@/lib/toast'
 import { listSpeakers, speak } from '@/lib/api/tts'
 import JsonView from '@/components/JsonView.vue'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -129,6 +130,7 @@ onMounted(loadSpeakers)
       speechSynthesis 를 지원하는 스피커를 골라 메시지를 음성으로 재생합니다.
     </p>
   </header>
+  <CliRef :commands="['devices:commands [id]']" />
 
   <div
     v-if="!hasToken"

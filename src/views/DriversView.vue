@@ -13,6 +13,7 @@ import {
   type ChannelGroup,
   type DriverPlacement,
 } from '@/lib/api/drivers'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -165,6 +166,7 @@ onMounted(() => {
       허브에 설치된 Edge 드라이버를 채널의 최신 버전으로 강제 설치하거나 삭제합니다.
     </p>
   </header>
+  <CliRef :commands="['edge:drivers:installed [hub]', 'edge:drivers:install [driver]', 'edge:drivers:switch [device]', 'edge:drivers:uninstall [driver]']" />
 
   <div
     v-if="!hasToken"

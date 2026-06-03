@@ -4,6 +4,12 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'home', component: () => import('@/views/HomeView.vue') },
+    // Apps & Schema
+    { path: '/apps', name: 'apps', component: () => import('@/views/AppsView.vue') },
+    { path: '/installedapps', name: 'installedapps', component: () => import('@/views/InstalledAppsView.vue') },
+    { path: '/schema', name: 'schema', component: () => import('@/views/SchemaView.vue') },
+    { path: '/installedschema', name: 'installedschema', component: () => import('@/views/InstalledSchemaView.vue') },
+    { path: '/schema-invites', name: 'schema-invites', component: () => import('@/views/SchemaInvitesView.vue') },
     // Virtual Device
     { path: '/virtual', name: 'virtual', component: () => import('@/views/VirtualView.vue') },
     { path: '/events', name: 'events', component: () => import('@/views/EventsView.vue') },

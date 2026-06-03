@@ -15,6 +15,7 @@ import {
 import { parseJsonOrYaml } from '@/lib/yaml'
 import { toastError, toastSuccess } from '@/lib/toast'
 import JsonView from '@/components/JsonView.vue'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -173,6 +174,7 @@ onMounted(loadLists)
       </a>
     </p>
   </header>
+  <CliRef :commands="['capabilities:presentation [id]', 'capabilities:presentation:create [id]', 'capabilities:presentation:update [id]']" />
 
   <div
     v-if="!hasToken"

@@ -9,6 +9,7 @@ import {
 } from '@/lib/capabilityGenerator'
 import { toastError } from '@/lib/toast'
 import CopyButton from '@/components/CopyButton.vue'
+import CliRef from '@/components/CliRef.vue'
 
 const capaName = ref('')
 const capaType = ref<CapaType | ''>('')
@@ -82,6 +83,7 @@ const inputClass =
       타입과 속성 이름만 입력하면 커스텀 capability 정의 샘플(JSON/YAML)을 생성합니다.
     </p>
   </header>
+  <CliRef :commands="[]" note="CLI 직접 대응 없는 보조 도구입니다. 생성한 정의는 capabilities:create 로 등록할 수 있습니다." />
 
   <div class="grid gap-4 lg:grid-cols-2">
     <!-- 입력 -->

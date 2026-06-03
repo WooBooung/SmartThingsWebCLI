@@ -14,6 +14,7 @@ import {
 import { parseJsonOrYaml } from '@/lib/yaml'
 import { toastError, toastSuccess } from '@/lib/toast'
 import JsonView from '@/components/JsonView.vue'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -141,6 +142,7 @@ onMounted(loadList)
     <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Device Profile</h1>
     <p class="mt-1 text-sm text-muted">디바이스 프로파일을 조회·생성·수정·게시·삭제합니다.</p>
   </header>
+  <CliRef :commands="['deviceprofiles [id]', 'deviceprofiles:create', 'deviceprofiles:update [id]', 'deviceprofiles:delete [id]', 'deviceprofiles:publish [id]']" />
 
   <div
     v-if="!hasToken"

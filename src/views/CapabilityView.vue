@@ -19,6 +19,7 @@ import { parseJsonOrYaml } from '@/lib/yaml'
 import { toastError, toastSuccess } from '@/lib/toast'
 import { ApiError } from '@/lib/stClient'
 import JsonView from '@/components/JsonView.vue'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -206,6 +207,7 @@ onMounted(loadLists)
     <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Capability</h1>
     <p class="mt-1 text-sm text-muted">커스텀 capability 를 조회·생성·수정·삭제합니다 (version 1).</p>
   </header>
+  <CliRef :commands="['capabilities [id]', 'capabilities:create', 'capabilities:update [id]', 'capabilities:delete [id]', 'capabilities:namespaces', 'capabilities:translations [id] [tag]']" />
 
   <div
     v-if="!hasToken"

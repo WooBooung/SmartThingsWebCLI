@@ -7,6 +7,7 @@ import { getPresentation } from '@/lib/api/presentation'
 import { toastError } from '@/lib/toast'
 import DeviceSelect, { type DeviceSelection } from '@/components/DeviceSelect.vue'
 import JsonView from '@/components/JsonView.vue'
+import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 const route = useRoute()
@@ -79,6 +80,7 @@ onMounted(() => {
       </a>
     </p>
   </header>
+  <CliRef :commands="['presentation <presentationId>', 'devices:presentation [id]']" />
 
   <div
     v-if="!hasToken"
