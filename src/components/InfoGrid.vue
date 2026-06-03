@@ -5,6 +5,10 @@ export interface InfoItem {
   label: string
   value: string
   mono?: boolean
+  /** 설정 시 행 끝에 이동 링크 버튼을 표시한다. (vue-router 경로) */
+  to?: string
+  /** 링크 버튼 라벨 (기본 '조회') */
+  actionLabel?: string
 }
 
 defineProps<{ title?: string; items: InfoItem[] }>()
@@ -24,7 +28,7 @@ defineProps<{ title?: string; items: InfoItem[] }>()
       <div
         v-for="(item, i) in items"
         :key="item.label"
-        class="flex items-center gap-3 border-line px-4 py-3"
+        class="flex items-center gap-2 border-line px-4 py-3"
         :class="[
           i % 2 === 0 ? 'sm:border-r' : '',
           i >= 2 ? 'border-t' : i >= 1 ? 'border-t sm:border-t-0' : '',
@@ -40,6 +44,13 @@ defineProps<{ title?: string; items: InfoItem[] }>()
             {{ item.value || '—' }}
           </dd>
         </div>
+        <RouterLink
+          v-if="item.to && item.value"
+          :to="item.to"
+          class="shrink-0 rounded-md border border-brand-2/40 bg-brand-2/10 px-2 py-1 text-xs font-semibold text-brand-2 transition hover:border-brand-2"
+        >
+          {{ item.actionLabel ?? '조회' }} →
+        </RouterLink>
         <CopyButton v-if="item.mono && item.value" :text="item.value" :title="`${item.label} 복사`" />
       </div>
     </dl>

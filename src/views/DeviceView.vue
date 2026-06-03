@@ -41,7 +41,15 @@ const deviceInfo = computed<InfoItem[]>(() => {
     { label: 'deviceId', value: str(d.deviceId), mono: true },
     { label: 'locationId', value: str(d.locationId), mono: true },
     { label: 'roomId', value: str(d.roomId), mono: true },
-    { label: 'presentationId', value: str(d['presentationId']), mono: true },
+    {
+      label: 'presentationId',
+      value: str(d['presentationId']),
+      mono: true,
+      to: str(d['presentationId'])
+        ? `/presentation?presentationId=${encodeURIComponent(str(d['presentationId']))}`
+        : undefined,
+      actionLabel: 'Presentation',
+    },
     { label: 'profileId', value: str((d['profile'] as { id?: string } | undefined)?.id), mono: true },
   ]
   const comps = d['components']

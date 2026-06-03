@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/stores/token'
 import { getPresentation } from '@/lib/api/presentation'
@@ -8,6 +9,7 @@ import DeviceSelect, { type DeviceSelection } from '@/components/DeviceSelect.vu
 import JsonView from '@/components/JsonView.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
+const route = useRoute()
 
 const presentationId = ref('')
 const manufacturerName = ref('')
@@ -47,6 +49,19 @@ function onSelect(sel: DeviceSelection) {
   deviceId.value = str(sel.device.deviceId)
   retrieve()
 }
+
+// Device 조회 등에서 ?presentationId=... / ?manufacturerName=... / ?deviceId= 로 넘어오면 자동 조회
+onMounted(() => {
+  const pid = route.query.presentationId
+  const mfr = route.query.manufacturerName
+  const did = route.query.deviceId
+  if (typeof pid === 'string') presentationId.value = pid
+  if (typeof mfr === 'string') manufacturerName.value = mfr
+  if (typeof did === 'string') deviceId.value = did
+  if ((presentationId.value || manufacturerName.value || deviceId.value) && hasToken.value) {
+    retrieve()
+  }
+})
 </script>
 
 <template>
