@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { TOOLS } from '@/lib/tools'
+import { toolsByGroup } from '@/lib/tools'
 
 const router = useRouter()
+const groups = toolsByGroup()
 </script>
 
 <template>
@@ -23,24 +24,30 @@ const router = useRouter()
     </div>
   </section>
 
-  <div class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
-    <button
-      v-for="tool in TOOLS"
-      :key="tool.key"
-      :disabled="!tool.enabled"
-      class="group flex flex-col rounded-2xl border p-6 text-left transition"
-      :class="
-        tool.enabled
-          ? 'cursor-pointer border-brand-2/30 bg-gradient-to-br from-brand/10 to-brand-2/[0.04] hover:-translate-y-0.5 hover:border-brand-2'
-          : 'cursor-not-allowed border-line bg-card opacity-50'
-      "
-      @click="tool.enabled && router.push(tool.path)"
-    >
-      <h3 class="text-lg font-bold">
-        {{ tool.title }}
-        <span v-if="!tool.enabled" class="ml-1 text-xs font-normal text-muted">(준비 중)</span>
-      </h3>
-      <p class="mt-2 text-sm text-muted">{{ tool.desc }}</p>
-    </button>
+  <div v-for="g in groups" :key="g.group" class="mb-8">
+    <h2 class="mb-3 flex items-center gap-2 text-sm font-bold text-text">
+      <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
+      {{ g.label }}
+    </h2>
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
+      <button
+        v-for="tool in g.tools"
+        :key="tool.key"
+        :disabled="!tool.enabled"
+        class="group flex flex-col rounded-2xl border p-5 text-left transition"
+        :class="
+          tool.enabled
+            ? 'cursor-pointer border-brand-2/30 bg-gradient-to-br from-brand/10 to-brand-2/[0.04] hover:-translate-y-0.5 hover:border-brand-2'
+            : 'cursor-not-allowed border-line bg-card opacity-50'
+        "
+        @click="tool.enabled && router.push(tool.path)"
+      >
+        <h3 class="text-base font-bold">
+          {{ tool.title }}
+          <span v-if="!tool.enabled" class="ml-1 text-xs font-normal text-muted">(준비 중)</span>
+        </h3>
+        <p class="mt-1.5 text-sm text-muted">{{ tool.desc }}</p>
+      </button>
+    </div>
   </div>
 </template>

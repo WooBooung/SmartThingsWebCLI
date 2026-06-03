@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { TOOLS } from '@/lib/tools'
+import { toolsByGroup } from '@/lib/tools'
 
 defineProps<{ open: boolean }>()
 const emit = defineEmits<{ (e: 'navigate'): void }>()
+
+const groups = toolsByGroup()
 </script>
 
 <template>
@@ -20,27 +22,28 @@ const emit = defineEmits<{ (e: 'navigate'): void }>()
         홈
       </RouterLink>
 
-      <div class="mt-3 px-3 text-[11px] font-semibold tracking-wider text-muted/70 uppercase">
-        도구
-      </div>
-
-      <template v-for="tool in TOOLS" :key="tool.key">
-        <RouterLink
-          v-if="tool.enabled"
-          :to="tool.path"
-          class="rounded-md px-3 py-2 text-sm font-medium text-muted transition hover:bg-brand-2/10 hover:text-text"
-          active-class="!bg-brand/15 !text-text"
-          @click="emit('navigate')"
-        >
-          {{ tool.title }}
-        </RouterLink>
-        <span
-          v-else
-          class="cursor-not-allowed rounded-md px-3 py-2 text-sm text-muted/40"
-          :title="'준비 중'"
-        >
-          {{ tool.title }}
-        </span>
+      <template v-for="g in groups" :key="g.group">
+        <div class="mt-3 px-3 text-[11px] font-semibold tracking-wider text-muted/70 uppercase">
+          {{ g.label }}
+        </div>
+        <template v-for="tool in g.tools" :key="tool.key">
+          <RouterLink
+            v-if="tool.enabled"
+            :to="tool.path"
+            class="rounded-md px-3 py-2 text-sm font-medium text-muted transition hover:bg-brand-2/10 hover:text-text"
+            active-class="!bg-brand/15 !text-text"
+            @click="emit('navigate')"
+          >
+            {{ tool.title }}
+          </RouterLink>
+          <span
+            v-else
+            class="cursor-not-allowed rounded-md px-3 py-2 text-sm text-muted/40"
+            title="준비 중"
+          >
+            {{ tool.title }}
+          </span>
+        </template>
       </template>
     </nav>
   </aside>
