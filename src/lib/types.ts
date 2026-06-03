@@ -5,6 +5,12 @@ export interface Location {
   name: string
 }
 
+export interface Room {
+  roomId: string
+  name: string
+  locationId?: string
+}
+
 export interface Device {
   deviceId: string
   name?: string

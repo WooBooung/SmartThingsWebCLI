@@ -1,5 +1,5 @@
 import { useTokenStore } from '@/stores/token'
-import type { Device, ListResponse, Location } from '@/lib/types'
+import type { Device, ListResponse, Location, Room } from '@/lib/types'
 
 // SmartThings API 는 브라우저 CORS(ACAO: *)를 직접 허용하므로 프록시 없이 호출한다.
 // 필요 시 VITE_ST_API_BASE 로 게이트웨이 등으로 교체 가능.
@@ -66,3 +66,6 @@ export const getDevice = (deviceId: string) => apiFetch<Device>(`/devices/${devi
 
 export const getDeviceStatus = (deviceId: string) =>
   apiFetch<Record<string, unknown>>(`/devices/${deviceId}/status`)
+
+export const listRooms = (locationId: string) =>
+  apiFetch<ListResponse<Room>>(`/locations/${locationId}/rooms`)
