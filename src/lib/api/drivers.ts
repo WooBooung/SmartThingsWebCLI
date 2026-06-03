@@ -60,9 +60,11 @@ function listHubsInLocation(locationId: string) {
 export const listHubDrivers = (hubId: string) =>
   apiFetch<InstalledDriver[]>(`/hubdevices/${hubId}/drivers`)
 
-/** 허브가 등록(enroll)된 채널 목록 */
+/** 허브가 등록(enroll)된 채널 목록 — channelType=DRIVERS 필수(없으면 400) */
 export const listHubChannels = (hubId: string) =>
-  apiFetch<EnrolledChannel[] | ListResponse<EnrolledChannel>>(`/hubdevices/${hubId}/channels`)
+  apiFetch<EnrolledChannel[] | ListResponse<EnrolledChannel>>(
+    `/hubdevices/${hubId}/channels?channelType=DRIVERS`,
+  )
 
 /** 배포 채널 상세 */
 export const getDistChannel = (channelId: string) =>
