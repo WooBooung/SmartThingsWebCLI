@@ -1,0 +1,68 @@
+import { useTokenStore } from '@/stores/token'
+import type { Device, ListResponse, Location } from '@/lib/types'
+
+// SmartThings API 는 브라우저 CORS(ACAO: *)를 직접 허용하므로 프록시 없이 호출한다.
+// 필요 시 VITE_ST_API_BASE 로 게이트웨이 등으로 교체 가능.
+const BASE = import.meta.env.VITE_ST_API_BASE ?? 'https://api.smartthings.com/v1'
+
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
+function authHeaders(hasBody = false): Record<string, string> {
+  const pat = useTokenStore().pat
+  if (!pat) throw new ApiError(401, 'PAT 토큰이 설정되지 않았습니다.')
+  const h: Record<string, string> = { Authorization: `Bearer ${pat}` }
+  if (hasBody) h['Content-Type'] = 'application/json'
+  return h
+}
+
+/**
+ * 공통 fetch 래퍼. 모든 도구가 이걸 통해 ST API 를 호출한다.
+ * (기존 rules-api.js 의 apiFetch 패턴을 타입 안전하게 채택)
+ */
+export async function apiFetch<T = unknown>(path: string, opts: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    ...opts,
+    headers: { ...authHeaders(opts.body != null), ...(opts.headers as Record<string, string>) },
+  })
+  if (res.status === 204) return null as T
+  const text = await res.text()
+  const body = text ? safeParse(text) : {}
+  if (!res.ok) {
+    const message =
+      (body && typeof body === 'object' && 'message' in body && (body as { message?: string }).message) ||
+      text ||
+      res.statusText
+    throw new ApiError(res.status, `${res.status} – ${message}`)
+  }
+  return body as T
+}
+
+function safeParse(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return text
+  }
+}
+
+// --- 얇은 엔드포인트 헬퍼들 (도구별로 추가) ---
+
+export const listLocations = () => apiFetch<ListResponse<Location>>('/locations')
+
+export const listDevices = (query?: Record<string, string>) => {
+  const qs = query ? `?${new URLSearchParams(query).toString()}` : ''
+  return apiFetch<ListResponse<Device>>(`/devices${qs}`)
+}
+
+export const getDevice = (deviceId: string) => apiFetch<Device>(`/devices/${deviceId}`)
+
+export const getDeviceStatus = (deviceId: string) =>
+  apiFetch<Record<string, unknown>>(`/devices/${deviceId}/status`)

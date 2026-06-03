@@ -1,0 +1,71 @@
+@import 'tailwindcss';
+
+/*
+ * AEB(AndroidEdgeBridge) 다크 테마 토큰.
+ * 원본: x:\aeb\assets\style.css 의 :root 변수.
+ * Tailwind 4 는 @theme 블록의 토큰을 유틸리티(bg-bg, text-brand 등)로 노출한다.
+ */
+@theme {
+  /* 색상 */
+  --color-bg: #0b1020;
+  --color-bg-2: #121a33;
+  --color-card: #161f3a;
+  --color-line: #243056;
+  --color-text: #e8edff;
+  --color-muted: #9aa6cc;
+  --color-brand: #4f8cff;
+  --color-brand-2: #36c2ff;
+  --color-success: #2db35a;
+  --color-warn: #f0a440;
+
+  /* radius */
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-2xl: 16px;
+
+  /* 폰트 */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo',
+    'Noto Sans KR', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  min-height: 100vh;
+}
+
+/* 브랜드 그라데이션 텍스트 (로고 등) */
+.brand-gradient-text {
+  background: linear-gradient(90deg, var(--color-brand), var(--color-brand-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 히어로 배경 radial glow */
+.hero-glow {
+  background:
+    radial-gradient(1200px 500px at 20% -10%, rgba(79, 140, 255, 0.35), transparent 60%),
+    radial-gradient(900px 400px at 90% 0%, rgba(54, 194, 255, 0.25), transparent 60%);
+}
+
+/* 커스텀 스크롤바 (다크) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line) transparent;
+}
