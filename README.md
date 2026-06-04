@@ -1,5 +1,7 @@
 # SmartThings Web CLI
 
+**🌐 접속 주소 (Web URL):** [https://cli.dothesmartthings.com/](https://cli.dothesmartthings.com/)
+
 SmartThings API 를 브라우저에서 바로 다루는 개발자 도구 모음. 순수 정적 SPA 로,
 SmartThings API(`api.smartthings.com`)를 직접 호출한다(별도 서버/프록시 없음).
 
