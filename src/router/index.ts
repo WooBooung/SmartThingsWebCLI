@@ -1,7 +1,8 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 const router = createRouter({
-  history: createWebHistory(),
+  // hash 모드: 정적 호스팅에서 nginx 설정/프록시 없이 새로고침·딥링크 동작 (URL = /#/device)
+  history: createWebHashHistory(),
   routes: [
     { path: '/', name: 'home', component: () => import('@/views/HomeView.vue') },
     // Apps & Schema
