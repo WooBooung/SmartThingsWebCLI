@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { toastSuccess, toastError } from '@/lib/toast'
+import JsonTree from '@/components/JsonTree.vue'
+
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -57,12 +61,11 @@ async function copy() {
         class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
         @click.stop="copy"
       >
-        복사
+        {{ t('common.copy') }}
       </button>
     </div>
-    <pre
-      v-show="open"
-      class="max-h-[60vh] overflow-auto px-4 py-3 font-mono text-[13px] leading-relaxed whitespace-pre-wrap text-text"
-    >{{ text }}</pre>
+    <div v-show="open" class="max-h-[60vh] overflow-auto px-4 py-3">
+      <JsonTree :data="value" :expand-depth="1" />
+    </div>
   </div>
 </template>

@@ -33,13 +33,13 @@ export const GROUP_LABELS: Record<ToolGroup, string> = {
 }
 
 export const GROUP_ORDER: ToolGroup[] = [
-  'apps',
   'capability',
   'profiles',
   'devices',
   'virtual',
   'edge',
   'locations',
+  'apps',
   'org',
 ]
 

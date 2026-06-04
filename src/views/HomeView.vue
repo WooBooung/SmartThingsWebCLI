@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { toolsByGroup } from '@/lib/tools'
 
 const router = useRouter()
+const { t } = useI18n()
 const groups = toolsByGroup()
 </script>
 
@@ -12,14 +14,13 @@ const groups = toolsByGroup()
       <span
         class="inline-block rounded-full border border-brand-2/40 bg-brand-2/10 px-3 py-1 text-xs text-brand-2"
       >
-        SmartThings 개발자 도구
+        {{ t('home.badge') }}
       </span>
       <h1 class="mt-4 text-3xl font-extrabold tracking-tight md:text-[44px] md:leading-[1.15]">
-        Web CLI
+        {{ t('home.title') }}
       </h1>
       <p class="mt-3 max-w-[640px] text-base text-muted md:text-lg">
-        SmartThings API 를 브라우저에서 바로 다루는 도구 모음. PAT 토큰을 설정하고 원하는 도구를
-        선택하세요.
+        {{ t('home.desc') }}
       </p>
     </div>
   </section>
@@ -27,7 +28,7 @@ const groups = toolsByGroup()
   <div v-for="g in groups" :key="g.group" class="mb-8">
     <h2 class="mb-3 flex items-center gap-2 text-sm font-bold text-text">
       <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-      {{ g.label }}
+      {{ t('groups.' + g.group) }}
     </h2>
     <div class="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-4">
       <button
@@ -43,10 +44,12 @@ const groups = toolsByGroup()
         @click="tool.enabled && router.push(tool.path)"
       >
         <h3 class="text-base font-bold">
-          {{ tool.title }}
-          <span v-if="!tool.enabled" class="ml-1 text-xs font-normal text-muted">(준비 중)</span>
+          {{ t('tools.' + tool.key + '.title') }}
+          <span v-if="!tool.enabled" class="ml-1 text-xs font-normal text-muted">
+            ({{ t('common.preparing') }})
+          </span>
         </h3>
-        <p class="mt-1.5 text-sm text-muted">{{ tool.desc }}</p>
+        <p class="mt-1.5 text-sm text-muted">{{ t('tools.' + tool.key + '.desc') }}</p>
       </button>
     </div>
   </div>

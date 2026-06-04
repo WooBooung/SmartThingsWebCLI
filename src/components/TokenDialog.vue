@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useTokenStore } from '@/stores/token'
 import { toastSuccess } from '@/lib/toast'
 import CopyButton from '@/components/CopyButton.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
@@ -23,14 +26,14 @@ watch(
 
 function save() {
   store.setPat(draft.value)
-  toastSuccess('PAT 토큰을 저장했습니다.')
+  toastSuccess(t('token.saved'))
   emit('close')
 }
 
 function clear() {
   store.clear()
   draft.value = ''
-  toastSuccess('PAT 토큰을 삭제했습니다.')
+  toastSuccess(t('token.removed'))
 }
 </script>
 
@@ -40,11 +43,8 @@ function clear() {
     <div
       class="relative w-[min(94vw,520px)] rounded-2xl border border-line bg-card p-6 shadow-[0_18px_48px_rgba(0,0,0,0.7)]"
     >
-      <h2 class="text-lg font-bold">SmartThings PAT 토큰</h2>
-      <p class="mt-1 text-sm text-muted">
-        Personal Access Token 을 입력하세요. 브라우저(localStorage)에만 저장되며 SmartThings API
-        직접 호출에 사용됩니다.
-      </p>
+      <h2 class="text-lg font-bold">{{ t('token.title') }}</h2>
+      <p class="mt-1 text-sm text-muted">{{ t('token.desc') }}</p>
 
       <div
         class="mt-4 flex items-center gap-1 rounded-lg border border-line bg-bg-2 pr-1 focus-within:border-brand-2"
@@ -61,7 +61,7 @@ function clear() {
         <button
           type="button"
           class="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted transition hover:bg-brand-2/10 hover:text-brand-2"
-          :title="reveal ? '숨기기' : '보이기'"
+          :title="reveal ? t('token.hide') : t('token.show')"
           @click="reveal = !reveal"
         >
           <svg
@@ -93,7 +93,7 @@ function clear() {
           </svg>
         </button>
         <!-- 복사 -->
-        <CopyButton :text="draft" title="PAT 복사" />
+        <CopyButton :text="draft" :title="t('token.copy')" />
       </div>
 
       <a
@@ -102,7 +102,7 @@ function clear() {
         rel="noreferrer"
         class="mt-2 inline-block text-xs text-brand-2 hover:underline"
       >
-        PAT 발급 페이지 열기 →
+        {{ t('token.issue') }}
       </a>
 
       <div class="mt-5 flex items-center justify-between gap-2">
@@ -110,20 +110,20 @@ function clear() {
           class="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-muted transition hover:-translate-y-px hover:text-text"
           @click="clear"
         >
-          삭제
+          {{ t('token.delete') }}
         </button>
         <div class="flex gap-2">
           <button
             class="rounded-lg border border-line px-4 py-2 text-sm font-semibold transition hover:-translate-y-px"
             @click="emit('close')"
           >
-            취소
+            {{ t('token.cancel') }}
           </button>
           <button
             class="rounded-lg border border-transparent bg-gradient-to-br from-brand to-brand-2 px-4 py-2 text-sm font-semibold text-[#061026] transition hover:-translate-y-px"
             @click="save"
           >
-            저장
+            {{ t('token.save') }}
           </button>
         </div>
       </div>

@@ -1,10 +1,17 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useTokenStore } from '@/stores/token'
+import { setLang, type Lang } from '@/i18n'
 
 defineProps<{ menuOpen: boolean }>()
 const emit = defineEmits<{ (e: 'toggle-menu'): void; (e: 'open-token'): void }>()
 
 const store = useTokenStore()
+const { t, locale } = useI18n()
+
+function pick(l: Lang) {
+  setLang(l)
+}
 </script>
 
 <template>
@@ -13,7 +20,7 @@ const store = useTokenStore()
   >
     <button
       class="rounded-md p-2 text-muted transition hover:bg-brand-2/10 hover:text-text md:hidden"
-      aria-label="메뉴"
+      aria-label="menu"
       @click="emit('toggle-menu')"
     >
       <span class="block h-0.5 w-5 bg-current" />
@@ -22,27 +29,45 @@ const store = useTokenStore()
     </button>
 
     <RouterLink to="/" class="brand-gradient-text text-base font-extrabold tracking-tight">
-      SmartThings Web CLI
+      {{ t('app.title') }}
     </RouterLink>
 
     <div class="ml-auto flex items-center gap-2">
+      <!-- 언어 전환 -->
+      <div class="flex overflow-hidden rounded-full border border-line text-xs font-semibold">
+        <button
+          class="px-2.5 py-1 transition"
+          :class="locale === 'ko' ? 'bg-brand text-[#061026]' : 'text-muted hover:text-text'"
+          @click="pick('ko')"
+        >
+          KO
+        </button>
+        <button
+          class="px-2.5 py-1 transition"
+          :class="locale === 'en' ? 'bg-brand text-[#061026]' : 'text-muted hover:text-text'"
+          @click="pick('en')"
+        >
+          EN
+        </button>
+      </div>
+
       <span
         v-if="store.hasToken"
         class="hidden rounded-full border border-success/40 bg-success/10 px-3 py-1 text-xs text-success sm:inline"
       >
-        토큰 설정됨
+        {{ t('nav.tokenSet') }}
       </span>
       <span
         v-else
         class="hidden rounded-full border border-warn/40 bg-warn/10 px-3 py-1 text-xs text-warn sm:inline"
       >
-        토큰 없음
+        {{ t('nav.tokenNone') }}
       </span>
       <button
         class="rounded-lg border border-line bg-card px-3 py-1.5 text-sm font-semibold transition hover:-translate-y-px hover:border-brand-2"
         @click="emit('open-token')"
       >
-        PAT 설정
+        {{ t('nav.settings') }}
       </button>
     </div>
   </header>

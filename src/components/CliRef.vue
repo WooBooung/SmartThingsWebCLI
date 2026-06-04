@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import CopyButton from '@/components/CopyButton.vue'
 
 // 이 페이지가 대응하는 SmartThings CLI 명령과 공식 API 문서 링크를 보여준다.
@@ -8,6 +9,8 @@ defineProps<{
   note?: string
   docs?: { label: string; url: string }[]
 }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -17,7 +20,7 @@ defineProps<{
         <polyline points="4 17 10 11 4 5" />
         <line x1="12" y1="19" x2="20" y2="19" />
       </svg>
-      SmartThings CLI 대응 명령
+      {{ t('cli.label') }}
     </div>
     <ul v-if="commands.length" class="mt-2 flex flex-col gap-1.5">
       <li v-for="c in commands" :key="c" class="flex items-center gap-2">
@@ -30,7 +33,7 @@ defineProps<{
     <p v-if="note" class="mt-2 text-xs text-muted">{{ note }}</p>
 
     <div v-if="docs && docs.length" class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-2">
-      <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">API 문서</span>
+      <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">{{ t('cli.docs') }}</span>
       <a
         v-for="d in docs"
         :key="d.url"
