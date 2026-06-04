@@ -6,7 +6,9 @@ const LANG_KEY = 'webcli-lang'
 function detectLang(): Lang {
   const saved = localStorage.getItem(LANG_KEY)
   if (saved === 'ko' || saved === 'en') return saved
-  return navigator.language?.toLowerCase().startsWith('ko') ? 'ko' : 'en'
+  // Chrome 등 브라우저의 preferred language(목록 1순위) 기준 — 한국어가 아니면 영어
+  const pref = ((navigator.languages && navigator.languages[0]) || navigator.language || '').toLowerCase()
+  return pref.startsWith('ko') ? 'ko' : 'en'
 }
 
 const ko = {

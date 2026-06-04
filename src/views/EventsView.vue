@@ -24,6 +24,10 @@ const { t } = useI18n({
     ko: {
       title: 'Event Send',
       desc: '가상 디바이스의 capability attribute 에 이벤트(상태 값)를 전송합니다.',
+      selectLocation: '위치',
+      selectDevice: '가상 디바이스',
+      locationPlaceholder: '위치 선택',
+      devicePlaceholderNoLoc: '먼저 위치를 선택하세요',
       selectVirtualDevice: '가상 디바이스 선택',
       loading: '불러오는 중…',
       refreshDevices: '디바이스 목록 새로고침',
@@ -46,6 +50,10 @@ const { t } = useI18n({
     en: {
       title: 'Event Send',
       desc: 'Send events (state values) to a virtual device capability attribute.',
+      selectLocation: 'Location',
+      selectDevice: 'Virtual device',
+      locationPlaceholder: 'Select a location',
+      devicePlaceholderNoLoc: 'Select a location first',
       selectVirtualDevice: 'Select virtual device',
       loading: 'Loading…',
       refreshDevices: 'Refresh device list',
@@ -70,14 +78,32 @@ const { t } = useI18n({
 
 const { hasToken } = storeToRefs(useTokenStore())
 
-// --- 디바이스 목록 --------------------------------------------------------
+// --- 디바이스 목록 (위치 → 디바이스 2단계) --------------------------------
 interface DeviceOption {
   deviceId: string
   label: string
+  locationId: string
 }
 const devices = ref<DeviceOption[]>([])
+const selectedLocationId = ref('')
 const selectedDeviceId = ref('')
 const devicesLoading = ref(false)
+const locationNames = ref(new Map<string, string>())
+
+// 위치 옵션 (디바이스가 있는 위치만, 이름 + 개수)
+const locationOptions = computed(() => {
+  const map = new Map<string, { id: string; name: string; count: number }>()
+  for (const d of devices.value) {
+    const ex = map.get(d.locationId)
+    if (ex) ex.count++
+    else map.set(d.locationId, { id: d.locationId, name: locationNames.value.get(d.locationId) || d.locationId || t('noLocation'), count: 1 })
+  }
+  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name))
+})
+// 선택 위치의 디바이스
+const filteredDevices = computed(() =>
+  devices.value.filter((d) => d.locationId === selectedLocationId.value),
+)
 
 // --- 선택된 디바이스 상세/상태 -------------------------------------------
 interface CapEntry {
@@ -142,26 +168,31 @@ async function loadDevices() {
   devicesLoading.value = true
   try {
     const [locRes, devRes] = await Promise.all([listLocations(), listVirtualDevices()])
-    const locMap = new Map(locRes.items.map((l) => [l.locationId, l.name]))
+    locationNames.value = new Map(locRes.items.map((l) => [l.locationId, l.name]))
     const opts = devRes.items
       .map((d: VirtualDevice) => {
-        const locName = (d.locationId && locMap.get(d.locationId)) || d.locationId || t('noLocation')
         const label = d.label || d.name || d.deviceId
-        return { deviceId: d.deviceId, label: `[${locName}] ${label}` }
+        return { deviceId: d.deviceId, label, locationId: d.locationId || '' }
       })
       .sort((a, b) => a.label.localeCompare(b.label))
     devices.value = opts
-    if (opts.length) {
-      selectedDeviceId.value = opts[0].deviceId
-      await onDeviceChange()
-    } else {
-      selectedDeviceId.value = ''
+    selectedLocationId.value = ''
+    selectedDeviceId.value = ''
+    // 위치가 하나뿐이면 자동 선택
+    if (locationOptions.value.length === 1) {
+      selectedLocationId.value = locationOptions.value[0].id
     }
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
     devicesLoading.value = false
   }
+}
+
+function onLocationChange() {
+  selectedDeviceId.value = ''
+  // 컴포넌트/스키마 등 초기화
+  void onDeviceChange()
 }
 
 async function onDeviceChange() {
@@ -416,23 +447,23 @@ onMounted(loadDevices)
   </div>
 
   <template v-else>
-    <!-- 디바이스 선택 -->
+    <!-- 위치 → 디바이스 선택 -->
     <section class="rounded-xl border border-line bg-card p-4">
       <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">
         {{ t('selectVirtualDevice') }}
       </label>
-      <div class="mt-3 flex gap-2">
+      <!-- 1단계: 위치 -->
+      <div class="mt-3 flex items-center gap-2">
+        <span class="w-12 shrink-0 text-xs font-semibold text-muted">{{ t('selectLocation') }}</span>
         <select
-          v-model="selectedDeviceId"
+          v-model="selectedLocationId"
           class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2 disabled:opacity-50"
           :disabled="devicesLoading"
-          @change="onDeviceChange"
+          @change="onLocationChange"
         >
-          <option value="" disabled>
-            {{ devicesLoading ? t('loading') : t('selectVirtualDevice') }}
-          </option>
-          <option v-for="d in devices" :key="d.deviceId" :value="d.deviceId">
-            {{ d.label }}
+          <option value="" disabled>{{ devicesLoading ? t('loading') : t('locationPlaceholder') }}</option>
+          <option v-for="l in locationOptions" :key="l.id" :value="l.id">
+            {{ l.name }} ({{ l.count }})
           </option>
         </select>
         <button
@@ -443,6 +474,23 @@ onMounted(loadDevices)
         >
           ↻
         </button>
+      </div>
+      <!-- 2단계: 디바이스 -->
+      <div class="mt-2 flex items-center gap-2">
+        <span class="w-12 shrink-0 text-xs font-semibold text-muted">{{ t('selectDevice') }}</span>
+        <select
+          v-model="selectedDeviceId"
+          class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2 disabled:opacity-50"
+          :disabled="!selectedLocationId || devicesLoading"
+          @change="onDeviceChange"
+        >
+          <option value="" disabled>
+            {{ selectedLocationId ? t('selectVirtualDevice') : t('devicePlaceholderNoLoc') }}
+          </option>
+          <option v-for="d in filteredDevices" :key="d.deviceId" :value="d.deviceId">
+            {{ d.label }}
+          </option>
+        </select>
       </div>
       <p v-if="!devicesLoading && !devices.length" class="mt-2 text-xs text-muted">
         {{ t('noVirtualDevices') }}
