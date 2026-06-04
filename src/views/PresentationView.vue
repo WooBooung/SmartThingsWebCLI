@@ -105,7 +105,7 @@ onMounted(() => {
     <p class="mt-1 text-sm text-muted">
       {{ t('desc') }}
       <a
-        href="https://developer.smartthings.com/docs/api/public#tag/Presentations/operation/getDevicePresentation"
+        href="https://developer.smartthings.com/docs/api/public#tag/Presentation/operation/getDevicePresentation"
         target="_blank"
         rel="noopener"
         class="text-brand-2 underline-offset-2 hover:underline"
