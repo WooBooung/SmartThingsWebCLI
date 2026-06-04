@@ -11,7 +11,7 @@ export interface PresentationQuery {
  * Device Presentation 조회.
  * GET /presentation?presentationId=&manufacturerName=&deviceId=
  * 원본 presentation.js 의 getPresentation() 과 동일하게 비어 있지 않은 값만 쿼리에 포함한다.
- * 참고: https://developer.smartthings.com/docs/api/public#tag/Presentation/operation/getDevicePresentation
+ * 참고: https://developer.smartthings.com/docs/api/public/#tag/Presentation/operation/getDevicePresentation
  */
 export function getPresentation(query: PresentationQuery): Promise<Record<string, unknown>> {
   const params = new URLSearchParams()
