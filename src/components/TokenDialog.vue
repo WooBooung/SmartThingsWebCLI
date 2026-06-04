@@ -2,17 +2,22 @@
 import { ref, watch } from 'vue'
 import { useTokenStore } from '@/stores/token'
 import { toastSuccess } from '@/lib/toast'
+import CopyButton from '@/components/CopyButton.vue'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ (e: 'close'): void }>()
 
 const store = useTokenStore()
 const draft = ref('')
+const reveal = ref(false)
 
 watch(
   () => props.open,
   (o) => {
-    if (o) draft.value = store.pat
+    if (o) {
+      draft.value = store.pat
+      reveal.value = false
+    }
   },
 )
 
@@ -41,13 +46,55 @@ function clear() {
         직접 호출에 사용됩니다.
       </p>
 
-      <textarea
-        v-model="draft"
-        rows="3"
-        spellcheck="false"
-        placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-        class="mt-4 w-full resize-none rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-sm text-text outline-none focus:border-brand-2"
-      />
+      <div
+        class="mt-4 flex items-center gap-1 rounded-lg border border-line bg-bg-2 pr-1 focus-within:border-brand-2"
+      >
+        <input
+          v-model="draft"
+          :type="reveal ? 'text' : 'password'"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          class="min-w-0 flex-1 bg-transparent px-3 py-2 font-mono text-sm text-text outline-none"
+        />
+        <!-- 보이기/숨기기 토글 -->
+        <button
+          type="button"
+          class="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted transition hover:bg-brand-2/10 hover:text-brand-2"
+          :title="reveal ? '숨기기' : '보이기'"
+          @click="reveal = !reveal"
+        >
+          <svg
+            v-if="reveal"
+            viewBox="0 0 24 24"
+            class="size-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <svg
+            v-else
+            viewBox="0 0 24 24"
+            class="size-4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+            <path d="M6.61 6.61A13.5 13.5 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.39-1.61" />
+            <line x1="2" y1="2" x2="22" y2="22" />
+          </svg>
+        </button>
+        <!-- 복사 -->
+        <CopyButton :text="draft" title="PAT 복사" />
+      </div>
 
       <a
         href="https://account.smartthings.com/tokens"
