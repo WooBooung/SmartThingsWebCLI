@@ -23,6 +23,10 @@ const router = createRouter({
     { path: '/capability', name: 'capability', component: () => import('@/views/CapabilityView.vue') },
     { path: '/capability-presentation', name: 'capability-presentation', component: () => import('@/views/CapabilityPresentationView.vue') },
     { path: '/capability-generator', name: 'capability-generator', component: () => import('@/views/CapabilityGeneratorView.vue') },
+    // Device 제어
+    { path: '/device-control', name: 'device-control', component: () => import('@/views/DeviceControlView.vue') },
+    // Device Preferences
+    { path: '/devicepreferences', name: 'devicepreferences', component: () => import('@/views/DevicePreferencesView.vue') },
     // Edge Drivers
     { path: '/edge', name: 'edge', component: () => import('@/views/EdgeView.vue') },
     { path: '/channels', name: 'channels', component: () => import('@/views/ChannelsView.vue') },
@@ -30,6 +34,13 @@ const router = createRouter({
     { path: '/hublog', name: 'hublog', component: () => import('@/views/HubLogView.vue') },
     // 기타
     { path: '/tts', name: 'tts', component: () => import('@/views/TtsView.vue') },
+    // Locations
+    { path: '/locations', name: 'locations', component: () => import('@/views/LocationsView.vue') },
+    { path: '/rooms', name: 'rooms', component: () => import('@/views/RoomsView.vue') },
+    { path: '/modes', name: 'modes', component: () => import('@/views/ModesView.vue') },
+    { path: '/scenes', name: 'scenes', component: () => import('@/views/ScenesView.vue') },
+    // Organizations
+    { path: '/organizations', name: 'organizations', component: () => import('@/views/OrganizationsView.vue') },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 })

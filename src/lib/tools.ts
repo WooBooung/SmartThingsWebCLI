@@ -58,10 +58,10 @@ export const TOOLS: ToolDef[] = [
   { key: 'profile', title: 'Device Profile', desc: '디바이스 프로파일 조회/생성/수정/게시/삭제', path: '/profile', enabled: true, group: 'profiles' },
   { key: 'configuration', title: 'Device Config', desc: 'presentation device-config 조회/생성', path: '/configuration', enabled: true, group: 'profiles' },
   { key: 'presentation', title: 'Device Presentation', desc: '디바이스 presentation 조회', path: '/presentation', enabled: true, group: 'profiles' },
-  { key: 'devicepreferences', title: 'Device Preferences', desc: '디바이스 preference 조회/생성/수정/번역', path: '/devicepreferences', enabled: false, group: 'profiles' },
+  { key: 'devicepreferences', title: 'Device Preferences', desc: '디바이스 preference 조회/생성/수정/번역', path: '/devicepreferences', enabled: true, group: 'profiles' },
   // Devices
   { key: 'device', title: 'Device 조회', desc: '디바이스 목록·상세·상태·health·history', path: '/device', enabled: true, group: 'devices' },
-  { key: 'device-control', title: 'Device 제어', desc: 'devices:commands 실행, rename/update, preferences', path: '/device-control', enabled: false, group: 'devices' },
+  { key: 'device-control', title: 'Device 제어', desc: 'devices:commands 실행, rename/update, preferences', path: '/device-control', enabled: true, group: 'devices' },
   { key: 'tts', title: '메시지 전송 (TTS)', desc: 'speechSynthesis 명령 전송', path: '/tts', enabled: true, group: 'devices' },
   // Virtual Devices
   { key: 'virtual', title: 'Virtual Device', desc: '가상 디바이스 생성 (프로토타입/프로파일/커스텀)', path: '/virtual', enabled: true, group: 'virtual' },
@@ -72,12 +72,12 @@ export const TOOLS: ToolDef[] = [
   { key: 'drivers', title: 'Driver 업데이트', desc: '허브 드라이버 채널 최신 버전 설치/삭제', path: '/drivers', enabled: true, group: 'edge' },
   { key: 'hublog', title: 'Hub Log', desc: 'logcat CLI 명령어 생성', path: '/hublog', enabled: true, group: 'edge' },
   // Locations
-  { key: 'locations', title: 'Locations', desc: '위치 조회/생성/수정/삭제/history', path: '/locations', enabled: false, group: 'locations' },
-  { key: 'rooms', title: 'Rooms', desc: '방 조회/생성/수정/삭제', path: '/rooms', enabled: false, group: 'locations' },
-  { key: 'modes', title: 'Modes', desc: '모드 조회/생성/수정, 현재 모드 설정', path: '/modes', enabled: false, group: 'locations' },
-  { key: 'scenes', title: 'Scenes', desc: '씬 목록/실행', path: '/scenes', enabled: false, group: 'locations' },
+  { key: 'locations', title: 'Locations', desc: '위치 조회/생성/수정/삭제/history', path: '/locations', enabled: true, group: 'locations' },
+  { key: 'rooms', title: 'Rooms', desc: '방 조회/생성/수정/삭제', path: '/rooms', enabled: true, group: 'locations' },
+  { key: 'modes', title: 'Modes', desc: '모드 조회/생성/수정, 현재 모드 설정', path: '/modes', enabled: true, group: 'locations' },
+  { key: 'scenes', title: 'Scenes', desc: '씬 목록/실행', path: '/scenes', enabled: true, group: 'locations' },
   // Organizations
-  { key: 'organizations', title: 'Organizations', desc: '조직 목록/현재 조직', path: '/organizations', enabled: false, group: 'org' },
+  { key: 'organizations', title: 'Organizations', desc: '조직 목록/현재 조직', path: '/organizations', enabled: true, group: 'org' },
 ]
 
 export const enabledTools = () => TOOLS.filter((t) => t.enabled)
