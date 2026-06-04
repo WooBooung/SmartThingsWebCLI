@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/stores/token'
@@ -11,6 +12,39 @@ import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
 const route = useRoute()
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Device Presentation',
+      desc: '디바이스를 선택하거나 presentationId / 제조사 / deviceId 로 device presentation 을 조회합니다.',
+      apiDocs: 'API 문서',
+      selectByLocation: '위치 → 디바이스 선택',
+      selectHint: '선택하면 아래 필드가 자동으로 채워지고 곧바로 조회합니다.',
+      directInput: '직접 입력',
+      manufacturerLabel: '제조사 (manufacturerName)',
+      loading: '불러오는 중…',
+      lookup: '조회',
+      resultRawJson: 'Presentation (원본 JSON)',
+      needOneField: 'Presentation ID, 제조사, Device ID 중 하나 이상을 입력하세요.',
+    },
+    en: {
+      title: 'Device Presentation',
+      desc: 'Pick a device, or query a device presentation by presentationId / manufacturer / deviceId.',
+      apiDocs: 'API docs',
+      selectByLocation: 'Select device by location',
+      selectHint: 'Selecting a device auto-fills the fields below and queries immediately.',
+      directInput: 'Direct input',
+      manufacturerLabel: 'Manufacturer (manufacturerName)',
+      loading: 'Loading…',
+      lookup: 'Query',
+      resultRawJson: 'Presentation (raw JSON)',
+      needOneField: 'Enter at least one of Presentation ID, manufacturer, or Device ID.',
+    },
+  },
+})
 
 const presentationId = ref('')
 const manufacturerName = ref('')
@@ -25,7 +59,7 @@ function str(v: unknown): string {
 
 async function retrieve() {
   if (!presentationId.value.trim() && !manufacturerName.value.trim() && !deviceId.value.trim()) {
-    toastError('Presentation ID, 제조사, Device ID 중 하나 이상을 입력하세요.')
+    toastError(t('needOneField'))
     return
   }
   busy.value = true
@@ -67,16 +101,16 @@ onMounted(() => {
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Device Presentation</h1>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
     <p class="mt-1 text-sm text-muted">
-      디바이스를 선택하거나 presentationId / 제조사 / deviceId 로 device presentation 을 조회합니다.
+      {{ t('desc') }}
       <a
         href="https://developer.smartthings.com/docs/api/public#tag/Presentations/operation/getDevicePresentation"
         target="_blank"
         rel="noopener"
         class="text-brand-2 underline-offset-2 hover:underline"
       >
-        API 문서
+        {{ t('apiDocs') }}
       </a>
     </p>
   </header>
@@ -91,7 +125,7 @@ onMounted(() => {
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ $t('common.noToken') }}<strong>{{ $t('common.noTokenStrong') }}</strong>{{ $t('common.noTokenTail') }}
   </div>
 
   <template v-else>
@@ -99,20 +133,20 @@ onMounted(() => {
       <!-- 위치 → 디바이스 선택 -->
       <section class="rounded-xl border border-line bg-card p-4">
         <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          위치 → 디바이스 선택
+          {{ t('selectByLocation') }}
         </label>
         <div class="mt-3">
           <DeviceSelect @select="onSelect" />
         </div>
         <p class="mt-2 text-xs text-muted">
-          선택하면 아래 필드가 자동으로 채워지고 곧바로 조회합니다.
+          {{ t('selectHint') }}
         </p>
       </section>
 
       <!-- 직접 입력 -->
       <section class="rounded-xl border border-line bg-card p-4">
         <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          직접 입력
+          {{ t('directInput') }}
         </label>
         <div class="mt-3 flex flex-col gap-3">
           <div>
@@ -126,7 +160,7 @@ onMounted(() => {
             />
           </div>
           <div>
-            <span class="text-xs font-semibold text-muted">제조사 (manufacturerName)</span>
+            <span class="text-xs font-semibold text-muted">{{ t('manufacturerLabel') }}</span>
             <input
               v-model="manufacturerName"
               spellcheck="false"
@@ -151,7 +185,7 @@ onMounted(() => {
               :disabled="busy"
               @click="retrieve"
             >
-              {{ busy ? '불러오는 중…' : '조회' }}
+              {{ busy ? t('loading') : t('lookup') }}
             </button>
           </div>
         </div>
@@ -159,11 +193,11 @@ onMounted(() => {
     </div>
 
     <div v-if="busy" class="mt-8 flex items-center gap-2 text-sm text-muted">
-      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> 불러오는 중…
+      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> {{ t('loading') }}
     </div>
 
     <div v-if="result && !busy" class="mt-6">
-      <JsonView :value="result" label="Presentation (원본 JSON)" :default-open="true" />
+      <JsonView :value="result" :label="t('resultRawJson')" :default-open="true" />
     </div>
   </template>
 </template>

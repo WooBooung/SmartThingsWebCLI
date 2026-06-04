@@ -26,6 +26,118 @@ import {
 } from '@/lib/api/edge'
 import type { Location } from '@/lib/types'
 import CliRef from '@/components/CliRef.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Edge Driver',
+      desc: 'Edge 드라이버를 업로드·조회·삭제하고, 채널 배정·허브 설치·미사용 드라이버 정리를 합니다.',
+      uploadSection: '드라이버 패키지 업로드',
+      uploadDesc:
+        '드라이버 파일들을 .zip 으로 압축한 뒤 업로드하세요 (config.yml, init.lua 등이 zip 루트에 위치). raw zip 바이너리로 전송됩니다.',
+      uploading: '업로드 중…',
+      upload: '업로드',
+      uploadNoFile: '업로드할 zip 파일을 선택하세요.',
+      uploadSuccess: '드라이버 패키지를 업로드했습니다.',
+      listSection: '드라이버 목록 / 상세',
+      defaultLoading: '조회 중…',
+      defaultDrivers: '기본 드라이버',
+      defaultDriversTitle: 'SmartThings 기본 드라이버 목록 조회 (edge:drivers:default)',
+      listLoading: '불러오는 중…',
+      refresh: '↻ 새로고침',
+      selectDriver: '드라이버 선택 ({count})',
+      deleteDriver: '드라이버 삭제',
+      driverDetail: '드라이버 상세',
+      deleteNoDriver: '삭제할 드라이버를 선택하세요.',
+      deleteConfirm: '드라이버 "{name}" 를 삭제할까요? 되돌릴 수 없습니다.',
+      deleteResult: '드라이버 {id} 삭제 성공',
+      deleteSuccess: '드라이버를 삭제했습니다.',
+      assignSection: '채널 배정 / 허브 설치',
+      assignDesc: '위에서 선택한 드라이버를 채널에 배정하거나, 채널·허브를 골라 허브에 설치합니다.',
+      channel: '채널',
+      selectChannel: '채널 선택 ({count})',
+      selectChannelError: '채널을 선택하세요.',
+      selectDriverError: '드라이버를 선택하세요.',
+      selectHubError: '허브를 선택하세요.',
+      assignToChannel: '드라이버를 채널에 배정',
+      assignSuccess: '드라이버를 채널에 배정했습니다.',
+      installLocation: '설치 위치(Location)',
+      selectLocation: '위치 선택',
+      hub: '허브',
+      selectHub: '허브 선택',
+      installToHub: '드라이버를 허브에 설치',
+      installSuccess: '드라이버를 허브에 설치했습니다.',
+      cleanSection: '미사용 드라이버 정리',
+      cleanDesc: '허브에 설치돼 있으나 어떤 디바이스에도 쓰이지 않는 드라이버를 찾아 삭제합니다.',
+      location: '위치(Location)',
+      detecting: '탐지 중…',
+      unusedDrivers: '미사용 드라이버 ({count})',
+      rescan: '재탐지',
+      deleteUnused: '선택 미사용 드라이버 삭제',
+      deleteUnusedNone: '삭제할 미사용 드라이버를 선택하세요.',
+      deleteUnusedConfirm: '허브에서 미사용 드라이버 "{name}" 를 삭제할까요? 되돌릴 수 없습니다.',
+      deleteUnusedSuccess: '미사용 드라이버를 삭제했습니다.',
+      installedOnHub: '허브에 설치된 드라이버',
+      result: '결과',
+    },
+    en: {
+      title: 'Edge Driver',
+      desc: 'Upload, list, and delete Edge drivers; assign to channels, install on hubs, and clean up unused drivers.',
+      uploadSection: 'Upload driver package',
+      uploadDesc:
+        'Zip your driver files (config.yml, init.lua, etc. at the zip root) and upload. Sent as a raw zip binary.',
+      uploading: 'Uploading…',
+      upload: 'Upload',
+      uploadNoFile: 'Select a zip file to upload.',
+      uploadSuccess: 'Uploaded driver package.',
+      listSection: 'Driver list / detail',
+      defaultLoading: 'Loading…',
+      defaultDrivers: 'Default drivers',
+      defaultDriversTitle: 'List SmartThings default drivers (edge:drivers:default)',
+      listLoading: 'Loading…',
+      refresh: '↻ Refresh',
+      selectDriver: 'Select driver ({count})',
+      deleteDriver: 'Delete driver',
+      driverDetail: 'Driver detail',
+      deleteNoDriver: 'Select a driver to delete.',
+      deleteConfirm: 'Delete driver "{name}"? This cannot be undone.',
+      deleteResult: 'Driver {id} deleted',
+      deleteSuccess: 'Deleted driver.',
+      assignSection: 'Channel assign / hub install',
+      assignDesc:
+        'Assign the selected driver to a channel, or pick a channel and hub to install it on the hub.',
+      channel: 'Channel',
+      selectChannel: 'Select channel ({count})',
+      selectChannelError: 'Select a channel.',
+      selectDriverError: 'Select a driver.',
+      selectHubError: 'Select a hub.',
+      assignToChannel: 'Assign driver to channel',
+      assignSuccess: 'Assigned driver to channel.',
+      installLocation: 'Install location',
+      selectLocation: 'Select location',
+      hub: 'Hub',
+      selectHub: 'Select hub',
+      installToHub: 'Install driver on hub',
+      installSuccess: 'Installed driver on hub.',
+      cleanSection: 'Clean up unused drivers',
+      cleanDesc:
+        'Find and delete drivers installed on a hub that are not used by any device.',
+      location: 'Location',
+      detecting: 'Detecting…',
+      unusedDrivers: 'Unused drivers ({count})',
+      rescan: 'Rescan',
+      deleteUnused: 'Delete selected unused driver',
+      deleteUnusedNone: 'Select an unused driver to delete.',
+      deleteUnusedConfirm: 'Delete unused driver "{name}" from the hub? This cannot be undone.',
+      deleteUnusedSuccess: 'Deleted unused driver.',
+      installedOnHub: 'Drivers installed on hub',
+      result: 'Result',
+    },
+  },
+})
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -91,7 +203,7 @@ function onFileChange(e: Event) {
 
 async function doUpload() {
   if (!uploadFile.value) {
-    toastError('업로드할 zip 파일을 선택하세요.')
+    toastError(t('uploadNoFile'))
     return
   }
   uploading.value = true
@@ -99,7 +211,7 @@ async function doUpload() {
   try {
     const data = await uploadDriverPackage(uploadFile.value)
     result.value = data
-    toastSuccess('드라이버 패키지를 업로드했습니다.')
+    toastSuccess(t('uploadSuccess'))
     await refreshDrivers()
   } catch (e) {
     toastError(msg(e))
@@ -156,16 +268,16 @@ async function doGetDriver(id: string) {
 async function doDeleteDriver() {
   const id = selectedDriverId.value
   if (!id) {
-    toastError('삭제할 드라이버를 선택하세요.')
+    toastError(t('deleteNoDriver'))
     return
   }
   const found = drivers.value.find((d) => d.driverId === id)
-  if (!window.confirm(`드라이버 "${found?.name ?? id}" 를 삭제할까요? 되돌릴 수 없습니다.`)) return
+  if (!window.confirm(t('deleteConfirm', { name: found?.name ?? id }))) return
   busy.value = true
   try {
     await deleteDriver(id)
-    result.value = { message: `드라이버 ${id} 삭제 성공` }
-    toastSuccess('드라이버를 삭제했습니다.')
+    result.value = { message: t('deleteResult', { id }) }
+    toastSuccess(t('deleteSuccess'))
     selectedDriverId.value = ''
     driverDetails.value = null
     await refreshDrivers()
@@ -178,8 +290,8 @@ async function doDeleteDriver() {
 
 // --- 채널 배정 ---
 async function doAssignToChannel() {
-  if (!assignChannelId.value) return toastError('채널을 선택하세요.')
-  if (!selectedDriverId.value) return toastError('드라이버를 선택하세요.')
+  if (!assignChannelId.value) return toastError(t('selectChannelError'))
+  if (!selectedDriverId.value) return toastError(t('selectDriverError'))
   busy.value = true
   result.value = null
   try {
@@ -188,7 +300,7 @@ async function doAssignToChannel() {
       selectedDriverId.value,
       selectedDriverVersion.value,
     )
-    toastSuccess('드라이버를 채널에 배정했습니다.')
+    toastSuccess(t('assignSuccess'))
   } catch (e) {
     toastError(msg(e))
   } finally {
@@ -210,9 +322,9 @@ async function onInstallLocationChange() {
 }
 
 async function doInstallToHub() {
-  if (!assignChannelId.value) return toastError('채널을 선택하세요.')
-  if (!selectedDriverId.value) return toastError('드라이버를 선택하세요.')
-  if (!installHubId.value) return toastError('허브를 선택하세요.')
+  if (!assignChannelId.value) return toastError(t('selectChannelError'))
+  if (!selectedDriverId.value) return toastError(t('selectDriverError'))
+  if (!installHubId.value) return toastError(t('selectHubError'))
   busy.value = true
   result.value = null
   try {
@@ -228,8 +340,8 @@ async function doInstallToHub() {
       selectedDriverId.value,
       assignChannelId.value,
     )
-    result.value = data ?? { message: '드라이버를 허브에 설치했습니다.' }
-    toastSuccess('드라이버를 허브에 설치했습니다.')
+    result.value = data ?? { message: t('installSuccess') }
+    toastSuccess(t('installSuccess'))
   } catch (e) {
     toastError(msg(e))
   } finally {
@@ -275,19 +387,14 @@ async function loadUnusedDrivers() {
 
 async function doDeleteUnused() {
   const driverId = selectedUnusedId.value
-  if (!driverId) return toastError('삭제할 미사용 드라이버를 선택하세요.')
+  if (!driverId) return toastError(t('deleteUnusedNone'))
   const found = unusedDrivers.value.find((d) => d.driverId === driverId)
-  if (
-    !window.confirm(
-      `허브에서 미사용 드라이버 "${found?.name ?? driverId}" 를 삭제할까요? 되돌릴 수 없습니다.`,
-    )
-  )
-    return
+  if (!window.confirm(t('deleteUnusedConfirm', { name: found?.name ?? driverId }))) return
   busy.value = true
   try {
     await deleteHubDriver(cleanHubId.value, driverId)
-    result.value = { message: `드라이버 ${driverId} 삭제 성공` }
-    toastSuccess('미사용 드라이버를 삭제했습니다.')
+    result.value = { message: t('deleteResult', { id: driverId }) }
+    toastSuccess(t('deleteUnusedSuccess'))
     await loadUnusedDrivers()
   } catch (e) {
     toastError(msg(e))
@@ -301,9 +408,9 @@ onMounted(refreshAll)
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Edge Driver</h1>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
     <p class="mt-1 text-sm text-muted">
-      Edge 드라이버를 업로드·조회·삭제하고, 채널 배정·허브 설치·미사용 드라이버 정리를 합니다.
+      {{ t('desc') }}
     </p>
   </header>
   <CliRef
@@ -319,7 +426,7 @@ onMounted(refreshAll)
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ $t('common.noToken') }}<strong>{{ $t('common.noTokenStrong') }}</strong>{{ $t('common.noTokenTail') }}
   </div>
 
   <template v-else>
@@ -328,12 +435,11 @@ onMounted(refreshAll)
       <div class="mb-3 flex items-center gap-2">
         <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          드라이버 패키지 업로드
+          {{ t('uploadSection') }}
         </span>
       </div>
       <p class="mb-3 text-sm text-muted">
-        드라이버 파일들을 .zip 으로 압축한 뒤 업로드하세요 (config.yml, init.lua 등이 zip 루트에
-        위치). raw zip 바이너리로 전송됩니다.
+        {{ t('uploadDesc') }}
       </p>
       <div class="flex flex-wrap items-center gap-2">
         <input
@@ -347,7 +453,7 @@ onMounted(refreshAll)
           :disabled="uploading"
           @click="doUpload"
         >
-          {{ uploading ? '업로드 중…' : '업로드' }}
+          {{ uploading ? t('uploading') : t('upload') }}
         </button>
       </div>
     </section>
@@ -358,24 +464,24 @@ onMounted(refreshAll)
         <div class="flex items-center gap-2">
           <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
           <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-            드라이버 목록 / 상세
+            {{ t('listSection') }}
           </span>
         </div>
         <div class="flex items-center gap-2">
           <button
             class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
             :disabled="defaultLoading"
-            title="SmartThings 기본 드라이버 목록 조회 (edge:drivers:default)"
+            :title="t('defaultDriversTitle')"
             @click="loadDefaultDrivers"
           >
-            {{ defaultLoading ? '조회 중…' : '기본 드라이버' }}
+            {{ defaultLoading ? t('defaultLoading') : t('defaultDrivers') }}
           </button>
           <button
             class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
             :disabled="listLoading"
             @click="refreshAll"
           >
-            {{ listLoading ? '불러오는 중…' : '↻ 새로고침' }}
+            {{ listLoading ? t('listLoading') : t('refresh') }}
           </button>
         </div>
       </div>
@@ -385,7 +491,7 @@ onMounted(refreshAll)
           class="min-w-64 flex-1 rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           @change="onSelectDriver"
         >
-          <option value="">드라이버 선택 ({{ drivers.length }})</option>
+          <option value="">{{ t('selectDriver', { count: drivers.length }) }}</option>
           <option v-for="d in drivers" :key="d.driverId" :value="d.driverId">
             {{ d.name }} — v{{ d.version ?? '?' }}
           </option>
@@ -395,11 +501,11 @@ onMounted(refreshAll)
           :disabled="busy || !selectedDriverId"
           @click="doDeleteDriver"
         >
-          드라이버 삭제
+          {{ t('deleteDriver') }}
         </button>
       </div>
       <div v-if="driverDetails" class="mt-3">
-        <JsonView :value="driverDetails" label="드라이버 상세" :default-open="true" />
+        <JsonView :value="driverDetails" :label="t('driverDetail')" :default-open="true" />
       </div>
     </section>
 
@@ -408,21 +514,21 @@ onMounted(refreshAll)
       <div class="mb-3 flex items-center gap-2">
         <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          채널 배정 / 허브 설치
+          {{ t('assignSection') }}
         </span>
       </div>
       <p class="mb-3 text-sm text-muted">
-        위에서 선택한 드라이버를 채널에 배정하거나, 채널·허브를 골라 허브에 설치합니다.
+        {{ t('assignDesc') }}
       </p>
 
       <div class="grid gap-3 sm:grid-cols-2">
         <label class="block">
-          <span class="mb-1 block text-xs text-muted">채널</span>
+          <span class="mb-1 block text-xs text-muted">{{ t('channel') }}</span>
           <select
             v-model="assignChannelId"
             class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           >
-            <option value="">채널 선택 ({{ channels.length }})</option>
+            <option value="">{{ t('selectChannel', { count: channels.length }) }}</option>
             <option v-for="c in channels" :key="c.channelId" :value="c.channelId">
               {{ c.name }}
             </option>
@@ -434,32 +540,32 @@ onMounted(refreshAll)
             :disabled="busy"
             @click="doAssignToChannel"
           >
-            드라이버를 채널에 배정
+            {{ t('assignToChannel') }}
           </button>
         </div>
       </div>
 
       <div class="mt-4 grid gap-3 sm:grid-cols-2">
         <label class="block">
-          <span class="mb-1 block text-xs text-muted">설치 위치(Location)</span>
+          <span class="mb-1 block text-xs text-muted">{{ t('installLocation') }}</span>
           <select
             v-model="installLocationId"
             class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
             @change="onInstallLocationChange"
           >
-            <option value="">위치 선택</option>
+            <option value="">{{ t('selectLocation') }}</option>
             <option v-for="l in locations" :key="l.locationId" :value="l.locationId">
               {{ l.name }}
             </option>
           </select>
         </label>
         <label class="block">
-          <span class="mb-1 block text-xs text-muted">허브</span>
+          <span class="mb-1 block text-xs text-muted">{{ t('hub') }}</span>
           <select
             v-model="installHubId"
             class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           >
-            <option value="">허브 선택</option>
+            <option value="">{{ t('selectHub') }}</option>
             <option v-for="h in installHubs" :key="h.deviceId" :value="h.deviceId">
               {{ h.label ?? h.name ?? h.deviceId }}
             </option>
@@ -472,7 +578,7 @@ onMounted(refreshAll)
           :disabled="busy"
           @click="doInstallToHub"
         >
-          드라이버를 허브에 설치
+          {{ t('installToHub') }}
         </button>
       </div>
     </section>
@@ -482,35 +588,35 @@ onMounted(refreshAll)
       <div class="mb-3 flex items-center gap-2">
         <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          미사용 드라이버 정리
+          {{ t('cleanSection') }}
         </span>
       </div>
       <p class="mb-3 text-sm text-muted">
-        허브에 설치돼 있으나 어떤 디바이스에도 쓰이지 않는 드라이버를 찾아 삭제합니다.
+        {{ t('cleanDesc') }}
       </p>
 
       <div class="grid gap-3 sm:grid-cols-2">
         <label class="block">
-          <span class="mb-1 block text-xs text-muted">위치(Location)</span>
+          <span class="mb-1 block text-xs text-muted">{{ t('location') }}</span>
           <select
             v-model="cleanLocationId"
             class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
             @change="onCleanLocationChange"
           >
-            <option value="">위치 선택</option>
+            <option value="">{{ t('selectLocation') }}</option>
             <option v-for="l in locations" :key="l.locationId" :value="l.locationId">
               {{ l.name }}
             </option>
           </select>
         </label>
         <label class="block">
-          <span class="mb-1 block text-xs text-muted">허브</span>
+          <span class="mb-1 block text-xs text-muted">{{ t('hub') }}</span>
           <select
             v-model="cleanHubId"
             class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
             @change="loadUnusedDrivers"
           >
-            <option value="">허브 선택</option>
+            <option value="">{{ t('selectHub') }}</option>
             <option v-for="h in cleanHubs" :key="h.deviceId" :value="h.deviceId">
               {{ h.label ?? h.name ?? h.deviceId }}
             </option>
@@ -524,7 +630,7 @@ onMounted(refreshAll)
           class="min-w-64 flex-1 rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
         >
           <option value="">
-            {{ cleanLoading ? '탐지 중…' : `미사용 드라이버 (${unusedDrivers.length})` }}
+            {{ cleanLoading ? t('detecting') : t('unusedDrivers', { count: unusedDrivers.length }) }}
           </option>
           <option v-for="d in unusedDrivers" :key="d.driverId" :value="d.driverId">
             {{ d.name }}
@@ -535,25 +641,25 @@ onMounted(refreshAll)
           :disabled="cleanLoading || !cleanHubId"
           @click="loadUnusedDrivers"
         >
-          재탐지
+          {{ t('rescan') }}
         </button>
         <button
           class="shrink-0 rounded-lg border border-warn/50 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn transition hover:border-warn disabled:opacity-50"
           :disabled="busy || !selectedUnusedId"
           @click="doDeleteUnused"
         >
-          선택 미사용 드라이버 삭제
+          {{ t('deleteUnused') }}
         </button>
       </div>
 
       <div v-if="installedOnHub.length" class="mt-3">
-        <JsonView :value="installedOnHub" label="허브에 설치된 드라이버" />
+        <JsonView :value="installedOnHub" :label="t('installedOnHub')" />
       </div>
     </section>
 
     <!-- 결과 -->
     <div v-if="result" class="mt-4">
-      <JsonView :value="result" label="결과" :default-open="true" />
+      <JsonView :value="result" :label="t('result')" :default-open="true" />
     </div>
   </template>
 </template>

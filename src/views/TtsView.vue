@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/stores/token'
 import { listLocations } from '@/lib/stClient'
@@ -10,6 +11,63 @@ import JsonView from '@/components/JsonView.vue'
 import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Send Message (TTS)',
+      desc: 'speechSynthesis 를 지원하는 스피커를 골라 메시지를 음성으로 재생합니다.',
+      noLocation: '(위치 없음)',
+      selectSpeakers: '스피커 선택',
+      selectedCount: '{selected} / {total} 선택',
+      deselectAll: '전체 해제',
+      selectAll: '전체 선택',
+      loading: '불러오는 중…',
+      refresh: '↻ 새로고침',
+      noSpeakers: 'speechSynthesis / audioNotification 를 지원하는 스피커가 없습니다.',
+      messageLabel: '메시지',
+      messagePlaceholder: '재생할 메시지를 입력하세요',
+      sending: '전송 중…',
+      send: '전송',
+      sendResult: '전송 결과',
+      requestedAt: '요청 시각: {time}',
+      success: '성공',
+      failure: '실패',
+      response: '응답',
+      enterMessage: '보낼 메시지를 입력하세요.',
+      selectTarget: '대상 스피커를 하나 이상 선택하세요.',
+      sentAll: '{count}개 스피커로 메시지를 전송했습니다.',
+      sentPartialFail: '{failed}개 스피커 전송 실패 (총 {total}개).',
+    },
+    en: {
+      title: 'Send Message (TTS)',
+      desc: 'Pick speakers that support speechSynthesis and play a message as audio.',
+      noLocation: '(no location)',
+      selectSpeakers: 'Select speakers',
+      selectedCount: '{selected} / {total} selected',
+      deselectAll: 'Deselect all',
+      selectAll: 'Select all',
+      loading: 'Loading…',
+      refresh: '↻ Refresh',
+      noSpeakers: 'No speaker supports speechSynthesis / audioNotification.',
+      messageLabel: 'Message',
+      messagePlaceholder: 'Enter the message to play',
+      sending: 'Sending…',
+      send: 'Send',
+      sendResult: 'Send result',
+      requestedAt: 'Requested at: {time}',
+      success: 'Success',
+      failure: 'Failed',
+      response: 'Response',
+      enterMessage: 'Enter a message to send.',
+      selectTarget: 'Select at least one target speaker.',
+      sentAll: 'Message sent to {count} speaker(s).',
+      sentPartialFail: 'Failed to send to {failed} speaker(s) (of {total}).',
+    },
+  },
+})
 
 const speakers = ref<Device[]>([])
 const locationName = ref(new Map<string, string>())
@@ -41,7 +99,7 @@ interface SpeakerGroup {
 const groups = computed<SpeakerGroup[]>(() => {
   const byLoc = new Map<string, Device[]>()
   for (const d of speakers.value) {
-    const key = d.locationId ?? '(위치 없음)'
+    const key = d.locationId ?? t('noLocation')
     if (!byLoc.has(key)) byLoc.set(key, [])
     byLoc.get(key)!.push(d)
   }
@@ -91,9 +149,9 @@ function toggleAll() {
 
 async function send() {
   const text = message.value.trim()
-  if (!text) return toastError('보낼 메시지를 입력하세요.')
+  if (!text) return toastError(t('enterMessage'))
   const targets = speakers.value.filter((d) => selectedIds.value.has(d.deviceId))
-  if (!targets.length) return toastError('대상 스피커를 하나 이상 선택하세요.')
+  if (!targets.length) return toastError(t('selectTarget'))
 
   sending.value = true
   results.value = []
@@ -113,8 +171,8 @@ async function send() {
       }
     }
     const failed = results.value.filter((r) => !r.ok).length
-    if (failed === 0) toastSuccess(`${targets.length}개 스피커로 메시지를 전송했습니다.`)
-    else toastError(`${failed}개 스피커 전송 실패 (총 ${targets.length}개).`)
+    if (failed === 0) toastSuccess(t('sentAll', { count: targets.length }))
+    else toastError(t('sentPartialFail', { failed, total: targets.length }))
   } finally {
     sending.value = false
   }
@@ -125,9 +183,9 @@ onMounted(loadSpeakers)
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Send Message (TTS)</h1>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
     <p class="mt-1 text-sm text-muted">
-      speechSynthesis 를 지원하는 스피커를 골라 메시지를 음성으로 재생합니다.
+      {{ t('desc') }}
     </p>
   </header>
   <CliRef
@@ -144,7 +202,7 @@ onMounted(loadSpeakers)
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ $t('common.noToken') }}<strong>{{ $t('common.noTokenStrong') }}</strong>{{ $t('common.noTokenTail') }}
   </div>
 
   <template v-else>
@@ -152,32 +210,32 @@ onMounted(loadSpeakers)
     <section class="overflow-hidden rounded-xl border border-line bg-card">
       <header class="flex flex-wrap items-center gap-2 border-b border-line px-4 py-3">
         <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-        <h3 class="text-sm font-bold">스피커 선택</h3>
-        <span class="text-xs text-muted">{{ selectedCount }} / {{ speakers.length }} 선택</span>
+        <h3 class="text-sm font-bold">{{ t('selectSpeakers') }}</h3>
+        <span class="text-xs text-muted">{{ t('selectedCount', { selected: selectedCount, total: speakers.length }) }}</span>
         <div class="ml-auto flex gap-2">
           <button
             v-if="speakers.length"
             class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
             @click="toggleAll"
           >
-            {{ selectedCount === speakers.length ? '전체 해제' : '전체 선택' }}
+            {{ selectedCount === speakers.length ? t('deselectAll') : t('selectAll') }}
           </button>
           <button
             class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
             :disabled="loading"
             @click="loadSpeakers"
           >
-            {{ loading ? '불러오는 중…' : '↻ 새로고침' }}
+            {{ loading ? t('loading') : t('refresh') }}
           </button>
         </div>
       </header>
 
       <div class="p-4">
         <div v-if="loading" class="flex items-center gap-2 text-sm text-muted">
-          <span class="size-2 animate-pulse rounded-full bg-brand-2" /> 불러오는 중…
+          <span class="size-2 animate-pulse rounded-full bg-brand-2" /> {{ t('loading') }}
         </div>
         <p v-else-if="!speakers.length" class="text-sm text-muted">
-          speechSynthesis / audioNotification 를 지원하는 스피커가 없습니다.
+          {{ t('noSpeakers') }}
         </p>
         <div v-else class="flex flex-col gap-4">
           <div v-for="g in groups" :key="g.locationId">
@@ -207,12 +265,12 @@ onMounted(loadSpeakers)
 
     <!-- 메시지 + 전송 -->
     <section class="mt-4 rounded-xl border border-line bg-card p-4">
-      <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">메시지</label>
+      <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">{{ t('messageLabel') }}</label>
       <div class="mt-3 flex gap-2">
         <input
           v-model="message"
           spellcheck="false"
-          placeholder="재생할 메시지를 입력하세요"
+          :placeholder="t('messagePlaceholder')"
           class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           @keyup.enter="canSend && send()"
         />
@@ -221,7 +279,7 @@ onMounted(loadSpeakers)
           :disabled="!canSend"
           @click="send"
         >
-          {{ sending ? '전송 중…' : '전송' }}
+          {{ sending ? t('sending') : t('send') }}
         </button>
       </div>
     </section>
@@ -230,8 +288,8 @@ onMounted(loadSpeakers)
     <section v-if="results.length" class="mt-4 overflow-hidden rounded-xl border border-line bg-card">
       <header class="flex items-center gap-2 border-b border-line px-4 py-3">
         <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-        <h3 class="text-sm font-bold">전송 결과</h3>
-        <span v-if="requestedAt" class="text-xs text-muted">요청 시각: {{ requestedAt }}</span>
+        <h3 class="text-sm font-bold">{{ t('sendResult') }}</h3>
+        <span v-if="requestedAt" class="text-xs text-muted">{{ t('requestedAt', { time: requestedAt }) }}</span>
       </header>
       <div class="flex flex-col gap-3 p-4">
         <div
@@ -244,12 +302,12 @@ onMounted(loadSpeakers)
               class="rounded-full px-2 py-0.5 text-xs font-semibold"
               :class="r.ok ? 'bg-success/15 text-success' : 'bg-warn/15 text-warn'"
             >
-              {{ r.ok ? '성공' : '실패' }}
+              {{ r.ok ? t('success') : t('failure') }}
             </span>
             <span class="truncate text-sm font-semibold text-text">{{ r.name }}</span>
           </div>
           <div class="mt-2">
-            <JsonView :value="r.detail" label="응답" :default-open="!r.ok" />
+            <JsonView :value="r.detail" :label="t('response')" :default-open="!r.ok" />
           </div>
         </div>
       </div>

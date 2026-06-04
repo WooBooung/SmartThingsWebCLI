@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/stores/token'
 import {
@@ -20,6 +21,59 @@ import JsonView from '@/components/JsonView.vue'
 import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Device 조회',
+      desc: '위치 → 디바이스를 선택하거나 deviceId 로 조회합니다.',
+      selectByLocation: '위치 → 디바이스 선택',
+      enterDeviceId: 'deviceId 직접 입력',
+      lookup: '조회',
+      loading: '불러오는 중…',
+      copyDeviceId: 'deviceId 복사',
+      lastUpdated: '최종 갱신',
+      currentStatus: '현재 상태',
+      deviceInfo: '디바이스 정보',
+      history: '이력 (history)',
+      loadRecent20: '최근 20건 조회',
+      noHistory: '이력이 없습니다.',
+      historyHint: '버튼을 눌러 이 디바이스의 최근 이벤트 이력을 조회합니다 (locationId 기준).',
+      deviceRawJson: 'Device (원본 JSON)',
+      statusRawJson: 'Status (원본 JSON)',
+      infoDeviceTypeName: '디바이스 타입명',
+      infoManufacturer: '제조사',
+      infoComponentsCaps: '컴포넌트 / capability',
+      noLocationForHistory: '이 디바이스는 locationId 가 없어 이력을 조회할 수 없습니다.',
+      deviceIdNotFound: '해당 deviceId 를 찾을 수 없습니다.',
+    },
+    en: {
+      title: 'Device Info',
+      desc: 'Pick a device by location, or look it up by deviceId.',
+      selectByLocation: 'Select device by location',
+      enterDeviceId: 'Enter deviceId directly',
+      lookup: 'Look up',
+      loading: 'Loading…',
+      copyDeviceId: 'Copy deviceId',
+      lastUpdated: 'Last updated',
+      currentStatus: 'Current status',
+      deviceInfo: 'Device info',
+      history: 'History',
+      loadRecent20: 'Load last 20',
+      noHistory: 'No history.',
+      historyHint: 'Click the button to load this device’s recent event history (by locationId).',
+      deviceRawJson: 'Device (raw JSON)',
+      statusRawJson: 'Status (raw JSON)',
+      infoDeviceTypeName: 'Device type name',
+      infoManufacturer: 'Manufacturer',
+      infoComponentsCaps: 'Components / capabilities',
+      noLocationForHistory: 'This device has no locationId, so history cannot be loaded.',
+      deviceIdNotFound: 'That deviceId could not be found.',
+    },
+  },
+})
 
 const deviceIdInput = ref('')
 const detail = ref<Device | null>(null)
@@ -48,8 +102,8 @@ const deviceInfo = computed<InfoItem[]>(() => {
   const d = detail.value
   if (!d) return []
   const items: InfoItem[] = [
-    { label: '디바이스 타입명', value: str(d.deviceTypeName) },
-    { label: '제조사', value: str(d['manufacturerName']) },
+    { label: t('infoDeviceTypeName'), value: str(d.deviceTypeName) },
+    { label: t('infoManufacturer'), value: str(d['manufacturerName']) },
     { label: 'deviceId', value: str(d.deviceId), mono: true },
     { label: 'locationId', value: str(d.locationId), mono: true },
     { label: 'roomId', value: str(d.roomId), mono: true },
@@ -74,7 +128,7 @@ const deviceInfo = computed<InfoItem[]>(() => {
           : 0),
       0,
     )
-    items.push({ label: '컴포넌트 / capability', value: `${comps.length} / ${capCount}` })
+    items.push({ label: t('infoComponentsCaps'), value: `${comps.length} / ${capCount}` })
   }
   return items.filter((i) => i.value)
 })
@@ -130,7 +184,7 @@ async function loadHistory() {
   const d = detail.value
   if (!d) return
   if (!d.locationId) {
-    toastError('이 디바이스는 locationId 가 없어 이력을 조회할 수 없습니다.')
+    toastError(t('noLocationForHistory'))
     return
   }
   historyLoading.value = true
@@ -162,7 +216,7 @@ async function lookupById() {
   try {
     const res = await listDevices({ deviceId: id })
     if (!res.items?.length) {
-      toastError('해당 deviceId 를 찾을 수 없습니다.')
+      toastError(t('deviceIdNotFound'))
       return
     }
     const dev = res.items[0]
@@ -186,8 +240,8 @@ async function lookupById() {
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Device 조회</h1>
-    <p class="mt-1 text-sm text-muted">위치 → 디바이스를 선택하거나 deviceId 로 조회합니다.</p>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
+    <p class="mt-1 text-sm text-muted">{{ t('desc') }}</p>
   </header>
   <CliRef
     :commands="['devices [id]', 'devices:status [id]', 'devices:health [id]', 'devices:history [id]']"
@@ -201,14 +255,14 @@ async function lookupById() {
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ $t('common.noToken') }}<strong>{{ $t('common.noTokenStrong') }}</strong>{{ $t('common.noTokenTail') }}
   </div>
 
   <template v-else>
     <div class="grid gap-4 md:grid-cols-2">
       <div class="rounded-xl border border-line bg-card p-4">
         <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          위치 → 디바이스 선택
+          {{ t('selectByLocation') }}
         </label>
         <div class="mt-3">
           <DeviceSelect @select="onSelect" />
@@ -217,7 +271,7 @@ async function lookupById() {
 
       <div class="rounded-xl border border-line bg-card p-4">
         <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          deviceId 직접 입력
+          {{ t('enterDeviceId') }}
         </label>
         <div class="mt-3 flex gap-2">
           <input
@@ -231,14 +285,14 @@ async function lookupById() {
             class="shrink-0 rounded-lg border border-transparent bg-gradient-to-br from-brand to-brand-2 px-4 py-2 text-sm font-semibold text-[#061026] transition hover:-translate-y-px"
             @click="lookupById"
           >
-            조회
+            {{ t('lookup') }}
           </button>
         </div>
       </div>
     </div>
 
     <div v-if="loading" class="mt-8 flex items-center gap-2 text-sm text-muted">
-      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> 불러오는 중…
+      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> {{ t('loading') }}
     </div>
 
     <div v-if="detail && !loading" class="mt-6 flex flex-col gap-4">
@@ -258,7 +312,7 @@ async function lookupById() {
                   ? 'border-success/40 bg-success/10 text-success'
                   : 'border-warn/40 bg-warn/10 text-warn'
               "
-              :title="health.lastUpdatedDate ? `최종 갱신: ${health.lastUpdatedDate}` : ''"
+              :title="health.lastUpdatedDate ? `${t('lastUpdated')}: ${health.lastUpdatedDate}` : ''"
             >
               ● {{ health.state }}
             </span>
@@ -274,7 +328,7 @@ async function lookupById() {
           <code class="truncate rounded-md bg-black/25 px-2 py-1 font-mono text-[12.5px] text-muted">
             {{ detail.deviceId }}
           </code>
-          <CopyButton :text="detail.deviceId" title="deviceId 복사" />
+          <CopyButton :text="detail.deviceId" :title="t('copyDeviceId')" />
         </div>
       </section>
 
@@ -282,7 +336,7 @@ async function lookupById() {
       <section v-if="statusChips.length" class="overflow-hidden rounded-xl border border-line bg-card">
         <header class="flex items-center gap-2 border-b border-line px-4 py-3">
           <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-          <h3 class="text-sm font-bold">현재 상태</h3>
+          <h3 class="text-sm font-bold">{{ t('currentStatus') }}</h3>
         </header>
         <div class="flex flex-wrap gap-2 p-4">
           <div
@@ -297,33 +351,33 @@ async function lookupById() {
       </section>
 
       <!-- 상세 정보 -->
-      <InfoGrid title="디바이스 정보" :items="deviceInfo" />
+      <InfoGrid :title="t('deviceInfo')" :items="deviceInfo" />
 
       <!-- 이력 (history) -->
       <section class="overflow-hidden rounded-xl border border-line bg-card">
         <header class="flex items-center gap-2 border-b border-line px-4 py-3">
           <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-          <h3 class="text-sm font-bold">이력 (history)</h3>
+          <h3 class="text-sm font-bold">{{ t('history') }}</h3>
           <button
             class="ml-auto rounded-md border border-line px-3 py-1 text-xs font-semibold text-muted transition hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
             :disabled="historyLoading"
             @click="loadHistory"
           >
-            {{ historyLoading ? '불러오는 중…' : '최근 20건 조회' }}
+            {{ historyLoading ? t('loading') : t('loadRecent20') }}
           </button>
         </header>
         <div v-if="history" class="p-4">
-          <p v-if="!history.length" class="text-sm text-muted">이력이 없습니다.</p>
+          <p v-if="!history.length" class="text-sm text-muted">{{ t('noHistory') }}</p>
           <JsonView v-else :value="history" label="Device History" :default-open="true" />
         </div>
         <p v-else class="px-4 py-3 text-xs text-muted">
-          버튼을 눌러 이 디바이스의 최근 이벤트 이력을 조회합니다 (locationId 기준).
+          {{ t('historyHint') }}
         </p>
       </section>
 
       <!-- 접힌 원본 JSON -->
-      <JsonView :value="detail" label="Device (원본 JSON)" />
-      <JsonView v-if="status" :value="status" label="Status (원본 JSON)" />
+      <JsonView :value="detail" :label="t('deviceRawJson')" />
+      <JsonView v-if="status" :value="status" :label="t('statusRawJson')" />
     </div>
   </template>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useTokenStore } from '@/stores/token'
 import {
   listCapabilityNamespaces,
@@ -18,6 +19,73 @@ import JsonView from '@/components/JsonView.vue'
 import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Capability Presentation',
+      descPre: '커스텀 capability 의 presentation 을 조회·생성·수정합니다.',
+      docs: '문서',
+      noTokenPre: 'PAT 토큰이 없습니다. 우측 상단의 ',
+      noTokenStrong: 'PAT 설정',
+      noTokenPost: ' 으로 토큰을 입력하세요.',
+      selectLabel: 'Capability 선택',
+      loading: '불러오는 중…',
+      refresh: '↻ 새로고침',
+      customOption: '커스텀 capability ({count})',
+      standardOption: '표준 capability ({count})',
+      idPlaceholder: 'capability id (예: namespace.myCapability)',
+      versionPlaceholder: 'version',
+      get: '조회',
+      bodyLabel: 'Presentation Body (JSON 또는 YAML)',
+      create: '생성',
+      update: '수정',
+      bodyHintPre: 'body 의 ',
+      bodyHintMid: ' 은 위 Capability ID / Version 과 일치해야 합니다.',
+      editorPlaceholder: 'presentation 정의를 JSON 또는 YAML 로 입력하세요.',
+      resultLabel: '결과',
+      errIdVerRequired: 'Capability ID 와 Version 을 입력하세요.',
+      errParse: '파싱 오류',
+      errMismatch: 'Capability ID 및 Version 이 일치하지 않습니다. 확인 후 다시 시도하세요.',
+      msgGetOk: 'Presentation 조회 성공',
+      msgCreated: 'Presentation 을 생성했습니다.',
+      msgUpdated: 'Presentation 을 수정했습니다.',
+      confirmUpdate: 'Presentation "{id}" (v{version}) 을 수정할까요?',
+    },
+    en: {
+      title: 'Capability Presentation',
+      descPre: 'Get, create, and update the presentation of a custom capability.',
+      docs: 'Docs',
+      noTokenPre: 'No PAT token. Enter your token via ',
+      noTokenStrong: 'PAT Settings',
+      noTokenPost: ' at the top right.',
+      selectLabel: 'Select Capability',
+      loading: 'Loading…',
+      refresh: '↻ Refresh',
+      customOption: 'Custom capability ({count})',
+      standardOption: 'Standard capability ({count})',
+      idPlaceholder: 'capability id (e.g. namespace.myCapability)',
+      versionPlaceholder: 'version',
+      get: 'Get',
+      bodyLabel: 'Presentation Body (JSON or YAML)',
+      create: 'Create',
+      update: 'Update',
+      bodyHintPre: "The body's ",
+      bodyHintMid: ' must match the Capability ID / Version above.',
+      editorPlaceholder: 'Enter the presentation definition as JSON or YAML.',
+      resultLabel: 'Result',
+      errIdVerRequired: 'Enter a Capability ID and Version.',
+      errParse: 'Parse error',
+      errMismatch: 'Capability ID and Version do not match. Check and try again.',
+      msgGetOk: 'Presentation retrieved successfully',
+      msgCreated: 'Presentation created.',
+      msgUpdated: 'Presentation updated.',
+      confirmUpdate: 'Update presentation "{id}" (v{version})?',
+    },
+  },
+})
 
 const customCaps = ref<string[]>([])
 const standardCaps = ref<string[]>([])
@@ -58,7 +126,7 @@ async function doGet(id?: string) {
   const cid = (id ?? capabilityId.value).trim()
   const ver = capabilityVersion.value.trim()
   if (!cid || !ver) {
-    toastError('Capability ID 와 Version 을 입력하세요.')
+    toastError(t('errIdVerRequired'))
     return
   }
   capabilityId.value = cid
@@ -67,7 +135,7 @@ async function doGet(id?: string) {
   try {
     const data = await getCapabilityPresentation(cid, ver)
     editor.value = JSON.stringify(data, null, 2)
-    toastSuccess('Presentation 조회 성공')
+    toastSuccess(t('msgGetOk'))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -98,17 +166,17 @@ function validateBody(): string | null {
   const cid = capabilityId.value.trim()
   const ver = capabilityVersion.value.trim()
   if (!cid || !ver) {
-    toastError('Capability ID 와 Version 을 입력하세요.')
+    toastError(t('errIdVerRequired'))
     return null
   }
   const parsed = parseJsonOrYaml(editor.value)
   if (!parsed.ok) {
-    toastError(parsed.error ?? '파싱 오류')
+    toastError(parsed.error ?? t('errParse'))
     return null
   }
   const obj = parsed.value as { id?: unknown; version?: unknown }
   if (obj.id !== cid || String(obj.version) !== ver) {
-    toastError('Capability ID 및 Version 이 일치하지 않습니다. 확인 후 다시 시도하세요.')
+    toastError(t('errMismatch'))
     return null
   }
   return parsed.json
@@ -124,7 +192,7 @@ async function doCreate() {
       capabilityVersion.value.trim(),
       body,
     )
-    toastSuccess('Presentation 을 생성했습니다.')
+    toastSuccess(t('msgCreated'))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -137,7 +205,10 @@ async function doUpdate() {
   if (body == null) return
   if (
     !window.confirm(
-      `Presentation "${capabilityId.value.trim()}" (v${capabilityVersion.value.trim()}) 을 수정할까요?`,
+      t('confirmUpdate', {
+        id: capabilityId.value.trim(),
+        version: capabilityVersion.value.trim(),
+      }),
     )
   )
     return
@@ -148,7 +219,7 @@ async function doUpdate() {
       capabilityVersion.value.trim(),
       body,
     )
-    toastSuccess('Presentation 을 수정했습니다.')
+    toastSuccess(t('msgUpdated'))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -161,16 +232,16 @@ onMounted(loadLists)
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Capability Presentation</h1>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
     <p class="mt-1 text-sm text-muted">
-      커스텀 capability 의 presentation 을 조회·생성·수정합니다.
+      {{ t('descPre') }}
       <a
         href="https://developer.smartthings.com/docs/devices/capabilities/capability-presentations"
         target="_blank"
         rel="noreferrer"
         class="text-brand-2 underline-offset-2 hover:underline"
       >
-        문서
+        {{ t('docs') }}
       </a>
     </p>
   </header>
@@ -193,7 +264,7 @@ onMounted(loadLists)
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ t('noTokenPre') }}<strong>{{ t('noTokenStrong') }}</strong>{{ t('noTokenPost') }}
   </div>
 
   <template v-else>
@@ -201,14 +272,14 @@ onMounted(loadLists)
     <section class="rounded-xl border border-line bg-card p-4">
       <div class="flex items-center justify-between">
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          Capability 선택
+          {{ t('selectLabel') }}
         </span>
         <button
           class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
           :disabled="listLoading"
           @click="loadLists"
         >
-          {{ listLoading ? '불러오는 중…' : '↻ 새로고침' }}
+          {{ listLoading ? t('loading') : t('refresh') }}
         </button>
       </div>
       <div class="mt-3 grid gap-3 sm:grid-cols-2">
@@ -217,7 +288,7 @@ onMounted(loadLists)
           class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           @change="onSelectCustom"
         >
-          <option value="">커스텀 capability ({{ customCaps.length }})</option>
+          <option value="">{{ t('customOption', { count: customCaps.length }) }}</option>
           <option v-for="c in customCaps" :key="c" :value="c">{{ c }}</option>
         </select>
         <select
@@ -225,7 +296,7 @@ onMounted(loadLists)
           class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           @change="onSelectStandard"
         >
-          <option value="">표준 capability ({{ standardCaps.length }})</option>
+          <option value="">{{ t('standardOption', { count: standardCaps.length }) }}</option>
           <option v-for="c in standardCaps" :key="c" :value="c">{{ c }}</option>
         </select>
       </div>
@@ -233,14 +304,14 @@ onMounted(loadLists)
         <input
           v-model="capabilityId"
           spellcheck="false"
-          placeholder="capability id (예: namespace.myCapability)"
+          :placeholder="t('idPlaceholder')"
           class="min-w-0 grow rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-sm text-text outline-none focus:border-brand-2"
           @keyup.enter="doGet()"
         />
         <input
           v-model="capabilityVersion"
           spellcheck="false"
-          placeholder="version"
+          :placeholder="t('versionPlaceholder')"
           class="w-24 shrink-0 rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-sm text-text outline-none focus:border-brand-2"
           @keyup.enter="doGet()"
         />
@@ -249,7 +320,7 @@ onMounted(loadLists)
           :disabled="busy"
           @click="doGet()"
         >
-          조회
+          {{ t('get') }}
         </button>
       </div>
     </section>
@@ -258,7 +329,7 @@ onMounted(loadLists)
     <section class="mt-4 rounded-xl border border-line bg-card p-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          Presentation Body (JSON 또는 YAML)
+          {{ t('bodyLabel') }}
         </span>
         <div class="flex gap-2">
           <button
@@ -266,33 +337,34 @@ onMounted(loadLists)
             :disabled="busy"
             @click="doCreate"
           >
-            생성
+            {{ t('create') }}
           </button>
           <button
             class="rounded-lg border border-line px-4 py-1.5 text-sm font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
             :disabled="busy"
             @click="doUpdate"
           >
-            수정
+            {{ t('update') }}
           </button>
         </div>
       </div>
       <p class="mt-2 text-xs text-muted">
-        body 의 <code class="font-mono text-brand-2">id</code> / <code class="font-mono text-brand-2">version</code> 은 위
-        Capability ID / Version 과 일치해야 합니다.
+        {{ t('bodyHintPre')
+        }}<code class="font-mono text-brand-2">id</code> /
+        <code class="font-mono text-brand-2">version</code>{{ t('bodyHintMid') }}
       </p>
       <textarea
         v-model="editor"
         spellcheck="false"
         rows="16"
-        placeholder="presentation 정의를 JSON 또는 YAML 로 입력하세요."
+        :placeholder="t('editorPlaceholder')"
         class="mt-3 w-full resize-y rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-[13px] leading-relaxed text-text outline-none focus:border-brand-2"
       />
     </section>
 
     <!-- 결과 -->
     <div v-if="result" class="mt-4">
-      <JsonView :value="result" label="결과" :default-open="true" />
+      <JsonView :value="result" :label="t('resultLabel')" :default-open="true" />
     </div>
   </template>
 </template>

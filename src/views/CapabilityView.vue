@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useTokenStore } from '@/stores/token'
 import {
   listCapabilityNamespaces,
@@ -22,6 +23,85 @@ import JsonView from '@/components/JsonView.vue'
 import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Capability',
+      desc: '커스텀 capability 를 조회·생성·수정·삭제합니다 (version 1).',
+      noTokenPre: 'PAT 토큰이 없습니다. 우측 상단의 ',
+      noTokenStrong: 'PAT 설정',
+      noTokenPost: ' 으로 토큰을 입력하세요.',
+      selectLabel: 'Capability 선택',
+      loading: '불러오는 중…',
+      refresh: '↻ 새로고침',
+      customOption: '커스텀 capability ({count})',
+      standardOption: '표준 capability ({count})',
+      idPlaceholder: 'capability id (예: namespace.myCapability)',
+      get: '조회',
+      defLabel: '정의 (JSON 또는 YAML)',
+      create: '생성',
+      update: '수정',
+      delete: '삭제',
+      editorPlaceholder: 'capability 정의를 JSON 또는 YAML 로 입력하세요.',
+      resultLabel: '결과',
+      i18nLabel: 'i18n 로케일',
+      localeCount: '{count}개',
+      localeSelect: '로케일 선택',
+      tagPlaceholder: '태그 (예: ko)',
+      save: '저장',
+      localeBodyPlaceholder: '로케일 정의 (JSON 또는 YAML)',
+      errIdRequired: 'Capability ID 를 입력하세요.',
+      errParse: '파싱 오류',
+      errTagRequired: '로케일 태그(예: ko, en)를 입력하세요.',
+      msgCreated: 'Capability 를 생성했습니다.',
+      msgUpdated: 'Capability 를 수정했습니다.',
+      msgDeleted: 'Capability 를 삭제했습니다.',
+      confirmDelete: 'Capability "{id}" 를 삭제할까요? 되돌릴 수 없습니다.',
+      deleteResult: 'Capability "{id}" 삭제 성공',
+      localeAdded: '로케일 "{tag}" 을 추가했습니다.',
+      localeUpdated: '로케일 "{tag}" 을 갱신했습니다.',
+    },
+    en: {
+      title: 'Capability',
+      desc: 'Get, create, update, and delete custom capabilities (version 1).',
+      noTokenPre: 'No PAT token. Enter your token via ',
+      noTokenStrong: 'PAT Settings',
+      noTokenPost: ' at the top right.',
+      selectLabel: 'Select Capability',
+      loading: 'Loading…',
+      refresh: '↻ Refresh',
+      customOption: 'Custom capability ({count})',
+      standardOption: 'Standard capability ({count})',
+      idPlaceholder: 'capability id (e.g. namespace.myCapability)',
+      get: 'Get',
+      defLabel: 'Definition (JSON or YAML)',
+      create: 'Create',
+      update: 'Update',
+      delete: 'Delete',
+      editorPlaceholder: 'Enter the capability definition as JSON or YAML.',
+      resultLabel: 'Result',
+      i18nLabel: 'i18n Locales',
+      localeCount: '{count}',
+      localeSelect: 'Select locale',
+      tagPlaceholder: 'tag (e.g. ko)',
+      save: 'Save',
+      localeBodyPlaceholder: 'Locale definition (JSON or YAML)',
+      errIdRequired: 'Enter a Capability ID.',
+      errParse: 'Parse error',
+      errTagRequired: 'Enter a locale tag (e.g. ko, en).',
+      msgCreated: 'Capability created.',
+      msgUpdated: 'Capability updated.',
+      msgDeleted: 'Capability deleted.',
+      confirmDelete: 'Delete capability "{id}"? This cannot be undone.',
+      deleteResult: 'Capability "{id}" deleted successfully',
+      localeAdded: 'Locale "{tag}" added.',
+      localeUpdated: 'Locale "{tag}" updated.',
+    },
+  },
+})
 
 const customCaps = ref<string[]>([])
 const standardCaps = ref<string[]>([])
@@ -65,7 +145,7 @@ async function loadLists() {
 async function doGet(id?: string) {
   const cid = (id ?? capabilityId.value).trim()
   if (!cid) {
-    toastError('Capability ID 를 입력하세요.')
+    toastError(t('errIdRequired'))
     return
   }
   capabilityId.value = cid
@@ -97,11 +177,11 @@ function onSelectStandard() {
 
 async function doCreate() {
   const parsed = parseJsonOrYaml(editor.value)
-  if (!parsed.ok) return toastError(parsed.error ?? '파싱 오류')
+  if (!parsed.ok) return toastError(parsed.error ?? t('errParse'))
   busy.value = true
   try {
     result.value = await createCapability(parsed.json)
-    toastSuccess('Capability 를 생성했습니다.')
+    toastSuccess(t('msgCreated'))
     await loadLists()
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
@@ -111,13 +191,13 @@ async function doCreate() {
 }
 
 async function doUpdate() {
-  if (!capabilityId.value.trim()) return toastError('Capability ID 를 입력하세요.')
+  if (!capabilityId.value.trim()) return toastError(t('errIdRequired'))
   const parsed = parseJsonOrYaml(editor.value)
-  if (!parsed.ok) return toastError(parsed.error ?? '파싱 오류')
+  if (!parsed.ok) return toastError(parsed.error ?? t('errParse'))
   busy.value = true
   try {
     result.value = await updateCapability(capabilityId.value.trim(), parsed.json)
-    toastSuccess('Capability 를 수정했습니다.')
+    toastSuccess(t('msgUpdated'))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -127,13 +207,13 @@ async function doUpdate() {
 
 async function doDelete() {
   const cid = capabilityId.value.trim()
-  if (!cid) return toastError('Capability ID 를 입력하세요.')
-  if (!window.confirm(`Capability "${cid}" 를 삭제할까요? 되돌릴 수 없습니다.`)) return
+  if (!cid) return toastError(t('errIdRequired'))
+  if (!window.confirm(t('confirmDelete', { id: cid }))) return
   busy.value = true
   try {
     await deleteCapability(cid)
-    result.value = { message: `Capability "${cid}" 삭제 성공` }
-    toastSuccess('Capability 를 삭제했습니다.')
+    result.value = { message: t('deleteResult', { id: cid }) }
+    toastSuccess(t('msgDeleted'))
     await loadLists()
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
@@ -172,21 +252,21 @@ async function doGetLocale() {
 async function doUpsertLocale() {
   const cid = capabilityId.value.trim()
   const tag = localeTag.value.trim()
-  if (!cid) return toastError('Capability ID 를 입력하세요.')
-  if (!tag) return toastError('로케일 태그(예: ko, en)를 입력하세요.')
+  if (!cid) return toastError(t('errIdRequired'))
+  if (!tag) return toastError(t('errTagRequired'))
   const parsed = parseJsonOrYaml(localeBody.value)
-  if (!parsed.ok) return toastError(parsed.error ?? '파싱 오류')
+  if (!parsed.ok) return toastError(parsed.error ?? t('errParse'))
   busy.value = true
   try {
     await createCapabilityLocale(cid, parsed.json)
-    toastSuccess(`로케일 "${tag}" 을 추가했습니다.`)
+    toastSuccess(t('localeAdded', { tag }))
     await loadLocales()
   } catch (e) {
     // 이미 존재하면 PUT 으로 갱신
     if (e instanceof ApiError && /already exists/i.test(e.message)) {
       try {
         await updateCapabilityLocale(cid, tag, parsed.json)
-        toastSuccess(`로케일 "${tag}" 을 갱신했습니다.`)
+        toastSuccess(t('localeUpdated', { tag }))
         await loadLocales()
       } catch (e2) {
         toastError(e2 instanceof Error ? e2.message : String(e2))
@@ -204,8 +284,8 @@ onMounted(loadLists)
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Capability</h1>
-    <p class="mt-1 text-sm text-muted">커스텀 capability 를 조회·생성·수정·삭제합니다 (version 1).</p>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
+    <p class="mt-1 text-sm text-muted">{{ t('desc') }}</p>
   </header>
   <CliRef
     :commands="[
@@ -225,7 +305,7 @@ onMounted(loadLists)
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ t('noTokenPre') }}<strong>{{ t('noTokenStrong') }}</strong>{{ t('noTokenPost') }}
   </div>
 
   <template v-else>
@@ -233,14 +313,14 @@ onMounted(loadLists)
     <section class="rounded-xl border border-line bg-card p-4">
       <div class="flex items-center justify-between">
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          Capability 선택
+          {{ t('selectLabel') }}
         </span>
         <button
           class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
           :disabled="listLoading"
           @click="loadLists"
         >
-          {{ listLoading ? '불러오는 중…' : '↻ 새로고침' }}
+          {{ listLoading ? t('loading') : t('refresh') }}
         </button>
       </div>
       <div class="mt-3 grid gap-3 sm:grid-cols-2">
@@ -249,7 +329,7 @@ onMounted(loadLists)
           class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           @change="onSelectCustom"
         >
-          <option value="">커스텀 capability ({{ customCaps.length }})</option>
+          <option value="">{{ t('customOption', { count: customCaps.length }) }}</option>
           <option v-for="c in customCaps" :key="c" :value="c">{{ c }}</option>
         </select>
         <select
@@ -257,7 +337,7 @@ onMounted(loadLists)
           class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           @change="onSelectStandard"
         >
-          <option value="">표준 capability ({{ standardCaps.length }})</option>
+          <option value="">{{ t('standardOption', { count: standardCaps.length }) }}</option>
           <option v-for="c in standardCaps" :key="c" :value="c">{{ c }}</option>
         </select>
       </div>
@@ -265,7 +345,7 @@ onMounted(loadLists)
         <input
           v-model="capabilityId"
           spellcheck="false"
-          placeholder="capability id (예: namespace.myCapability)"
+          :placeholder="t('idPlaceholder')"
           class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-sm text-text outline-none focus:border-brand-2"
           @keyup.enter="doGet()"
         />
@@ -274,7 +354,7 @@ onMounted(loadLists)
           :disabled="busy"
           @click="doGet()"
         >
-          조회
+          {{ t('get') }}
         </button>
       </div>
     </section>
@@ -283,7 +363,7 @@ onMounted(loadLists)
     <section class="mt-4 rounded-xl border border-line bg-card p-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          정의 (JSON 또는 YAML)
+          {{ t('defLabel') }}
         </span>
         <div class="flex gap-2">
           <button
@@ -291,21 +371,21 @@ onMounted(loadLists)
             :disabled="busy"
             @click="doCreate"
           >
-            생성
+            {{ t('create') }}
           </button>
           <button
             class="rounded-lg border border-line px-4 py-1.5 text-sm font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
             :disabled="busy"
             @click="doUpdate"
           >
-            수정
+            {{ t('update') }}
           </button>
           <button
             class="rounded-lg border border-warn/50 bg-warn/10 px-4 py-1.5 text-sm font-semibold text-warn transition hover:-translate-y-px hover:border-warn disabled:opacity-50"
             :disabled="busy"
             @click="doDelete"
           >
-            삭제
+            {{ t('delete') }}
           </button>
         </div>
       </div>
@@ -313,14 +393,14 @@ onMounted(loadLists)
         v-model="editor"
         spellcheck="false"
         rows="16"
-        placeholder="capability 정의를 JSON 또는 YAML 로 입력하세요."
+        :placeholder="t('editorPlaceholder')"
         class="mt-3 w-full resize-y rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-[13px] leading-relaxed text-text outline-none focus:border-brand-2"
       />
     </section>
 
     <!-- 결과 -->
     <div v-if="result" class="mt-4">
-      <JsonView :value="result" label="결과" :default-open="true" />
+      <JsonView :value="result" :label="t('resultLabel')" :default-open="true" />
     </div>
 
     <!-- i18n -->
@@ -330,8 +410,8 @@ onMounted(loadLists)
         @click="i18nOpen = !i18nOpen"
       >
         <span class="text-brand-2 transition-transform" :class="i18nOpen ? 'rotate-90' : ''">▶</span>
-        <span class="text-sm font-bold">i18n 로케일</span>
-        <span class="ml-auto text-xs text-muted">{{ locales.length }}개</span>
+        <span class="text-sm font-bold">{{ t('i18nLabel') }}</span>
+        <span class="ml-auto text-xs text-muted">{{ t('localeCount', { count: locales.length }) }}</span>
       </button>
 
       <div v-if="i18nOpen" class="border-t border-line p-4">
@@ -341,13 +421,13 @@ onMounted(loadLists)
             class="min-w-40 rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
             @change="doGetLocale"
           >
-            <option value="">로케일 선택</option>
+            <option value="">{{ t('localeSelect') }}</option>
             <option v-for="l in locales" :key="l" :value="l">{{ l }}</option>
           </select>
           <input
             v-model="localeTag"
             spellcheck="false"
-            placeholder="태그 (예: ko)"
+            :placeholder="t('tagPlaceholder')"
             class="w-28 rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-sm text-text outline-none focus:border-brand-2"
           />
           <button
@@ -355,14 +435,14 @@ onMounted(loadLists)
             :disabled="busy"
             @click="doUpsertLocale"
           >
-            저장
+            {{ t('save') }}
           </button>
         </div>
         <textarea
           v-model="localeBody"
           spellcheck="false"
           rows="8"
-          placeholder="로케일 정의 (JSON 또는 YAML)"
+          :placeholder="t('localeBodyPlaceholder')"
           class="mt-3 w-full resize-y rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-[13px] leading-relaxed text-text outline-none focus:border-brand-2"
         />
       </div>

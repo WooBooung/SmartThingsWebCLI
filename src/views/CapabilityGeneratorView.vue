@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import yaml from 'js-yaml'
 import {
   validateInputs,
@@ -10,6 +11,52 @@ import {
 import { toastError } from '@/lib/toast'
 import CopyButton from '@/components/CopyButton.vue'
 import CliRef from '@/components/CliRef.vue'
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Capability Sample Generator',
+      desc: '타입과 속성 이름만 입력하면 커스텀 capability 정의 샘플(JSON/YAML)을 생성합니다.',
+      cliNote: 'CLI 직접 대응 없는 보조 도구입니다. 생성한 정의는 capabilities:create 로 등록할 수 있습니다.',
+      inputHeading: '정의 입력',
+      capaNameLabel: 'Capability Name',
+      capaNamePlaceholder: '예: myCapability',
+      capaTypeLabel: 'Capability Type',
+      selectOption: '==Select==',
+      attrIdLabel: 'Attribute ID',
+      attrIdPlaceholder: '예: myValue',
+      resultFormatLabel: 'Result Format',
+      generate: 'Generate',
+      resultHeading: '결과 ({format})',
+      copyTitle: '결과 복사',
+      emptyPre: '타입을 선택하고 ',
+      emptyStrong: 'Generate',
+      emptyPost: ' 를 누르면 결과가 표시됩니다.',
+    },
+    en: {
+      title: 'Capability Sample Generator',
+      desc: 'Enter a type and attribute name to generate a custom capability definition sample (JSON/YAML).',
+      cliNote:
+        'A helper tool with no direct CLI equivalent. The generated definition can be registered with capabilities:create.',
+      inputHeading: 'Definition Input',
+      capaNameLabel: 'Capability Name',
+      capaNamePlaceholder: 'e.g. myCapability',
+      capaTypeLabel: 'Capability Type',
+      selectOption: '==Select==',
+      attrIdLabel: 'Attribute ID',
+      attrIdPlaceholder: 'e.g. myValue',
+      resultFormatLabel: 'Result Format',
+      generate: 'Generate',
+      resultHeading: 'Result ({format})',
+      copyTitle: 'Copy result',
+      emptyPre: 'Select a type and press ',
+      emptyStrong: 'Generate',
+      emptyPost: ' to see the result.',
+    },
+  },
+})
 
 const capaName = ref('')
 const capaType = ref<CapaType | ''>('')
@@ -78,14 +125,14 @@ const inputClass =
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Capability Sample Generator</h1>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
     <p class="mt-1 text-sm text-muted">
-      타입과 속성 이름만 입력하면 커스텀 capability 정의 샘플(JSON/YAML)을 생성합니다.
+      {{ t('desc') }}
     </p>
   </header>
   <CliRef
     :commands="[]"
-    note="CLI 직접 대응 없는 보조 도구입니다. 생성한 정의는 capabilities:create 로 등록할 수 있습니다."
+    :note="t('cliNote')"
     :docs="[
       { label: 'Capabilities', url: 'https://developer.smartthings.com/docs/api/public/#tag/Capabilities' },
     ]"
@@ -96,7 +143,7 @@ const inputClass =
     <section class="rounded-xl border border-line bg-card p-4">
       <header class="mb-4 flex items-center gap-2">
         <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-        <h2 class="text-sm font-bold">정의 입력</h2>
+        <h2 class="text-sm font-bold">{{ t('inputHeading') }}</h2>
       </header>
 
       <div class="flex flex-col gap-4">
@@ -105,14 +152,14 @@ const inputClass =
             for="capa_name"
             class="text-[11px] font-semibold tracking-wider text-muted uppercase"
           >
-            Capability Name
+            {{ t('capaNameLabel') }}
           </label>
           <input
             id="capa_name"
             v-model="capaName"
             spellcheck="false"
             maxlength="50"
-            placeholder="예: myCapability"
+            :placeholder="t('capaNamePlaceholder')"
             :class="['font-mono', inputClass]"
           />
         </div>
@@ -122,10 +169,10 @@ const inputClass =
             for="capa_type"
             class="text-[11px] font-semibold tracking-wider text-muted uppercase"
           >
-            Capability Type
+            {{ t('capaTypeLabel') }}
           </label>
           <select id="capa_type" v-model="capaType" :class="inputClass">
-            <option value="">==Select==</option>
+            <option value="">{{ t('selectOption') }}</option>
             <option value="string">string</option>
             <option value="integer">integer</option>
             <option value="number">number</option>
@@ -140,13 +187,13 @@ const inputClass =
               for="capa_attr_name"
               class="text-[11px] font-semibold tracking-wider text-muted uppercase"
             >
-              Attribute ID
+              {{ t('attrIdLabel') }}
             </label>
             <input
               id="capa_attr_name"
               v-model="attrName"
               spellcheck="false"
-              placeholder="예: myValue"
+              :placeholder="t('attrIdPlaceholder')"
               :class="['font-mono', inputClass]"
             />
           </div>
@@ -211,7 +258,7 @@ const inputClass =
                 for="result_format"
                 class="text-[11px] font-semibold tracking-wider text-muted uppercase"
               >
-                Result Format
+                {{ t('resultFormatLabel') }}
               </label>
               <select
                 id="result_format"
@@ -227,7 +274,7 @@ const inputClass =
               class="rounded-lg border border-transparent bg-gradient-to-br from-brand to-brand-2 px-4 py-2 text-sm font-semibold text-[#061026] transition hover:-translate-y-px disabled:opacity-50"
               @click="generate"
             >
-              Generate
+              {{ t('generate') }}
             </button>
           </div>
         </template>
@@ -239,16 +286,16 @@ const inputClass =
       <header class="flex items-center justify-between border-b border-line px-4 py-3">
         <div class="flex items-center gap-2">
           <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-          <h2 class="text-sm font-bold">결과 ({{ resultFormat.toUpperCase() }})</h2>
+          <h2 class="text-sm font-bold">{{ t('resultHeading', { format: resultFormat.toUpperCase() }) }}</h2>
         </div>
-        <CopyButton v-if="output" :text="output" title="결과 복사" />
+        <CopyButton v-if="output" :text="output" :title="t('copyTitle')" />
       </header>
       <pre
         v-if="output"
         class="max-h-[70vh] overflow-auto px-4 py-3 font-mono text-[13px] leading-relaxed whitespace-pre-wrap text-text"
       >{{ output }}</pre>
       <p v-else class="px-4 py-6 text-sm text-muted">
-        타입을 선택하고 <strong class="text-text">Generate</strong> 를 누르면 결과가 표시됩니다.
+        {{ t('emptyPre') }}<strong class="text-text">{{ t('emptyStrong') }}</strong>{{ t('emptyPost') }}
       </p>
     </section>
   </div>

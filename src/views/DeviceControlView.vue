@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/stores/token'
 import { getDevice, getDeviceStatus, listRooms } from '@/lib/stClient'
@@ -22,6 +23,93 @@ import {
 } from '@/lib/api/deviceControl'
 
 const { hasToken } = storeToRefs(useTokenStore())
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Device 제어',
+      desc: '실제 디바이스에 명령을 실행하고 이름/방을 변경하며 preferences·status 를 조회합니다.',
+      selectByLocation: '위치 → 디바이스 선택',
+      loading: '불러오는 중…',
+      refreshStatus: '↻ 상태 새로고침',
+      capabilities: 'Capabilities',
+      noControllableCap: '제어 가능한 capability 가 없습니다.',
+      schemaLoading: '스키마 불러오는 중…',
+      component: 'component',
+      noCommands: '이 capability 에는 실행할 command 가 없습니다 (읽기 전용).',
+      optional: '(선택)',
+      noArgs: '인자 없음',
+      dontSend: '(전송 안 함)',
+      sending: '전송 중…',
+      runCommand: '▶ 명령 실행',
+      renameSection: '이름 / 방 변경 (rename · update)',
+      labelField: 'label (이름)',
+      deviceNamePlaceholder: '디바이스 이름',
+      roomField: 'room (방)',
+      noRoom: '(방 없음)',
+      saving: '저장 중…',
+      saveChanges: '변경 사항 저장',
+      preferences: 'Preferences',
+      lookup: '조회',
+      preferencesHint: '버튼을 눌러 이 디바이스의 preferences 를 조회합니다.',
+      execLog: '실행 로그',
+      currentStatusRawJson: '현재 디바이스 상태 (원본 JSON)',
+      missingArg: '⚠ "{cmd}" 의 필수 인자 "{arg}" 를 입력하세요.',
+      confirmSendCommand: '실제 기기에 명령을 전송합니다.\n\n{device}\n{cap}.{cmd}{args}\n\n계속할까요?',
+      cmdOk: '✓ OK: {label}',
+      sentCommand: '명령을 전송했습니다.',
+      cmdError: '✗ 오류: {msg}',
+      noChanges: '변경된 내용이 없습니다.',
+      confirmUpdate: '디바이스 정보를 변경합니다.\n\n{detail}\n\n계속할까요?',
+      updateName: '이름: {name}',
+      updateRoom: '방: {room}',
+      updated: '디바이스 정보를 변경했습니다.',
+      roomNone: '(없음)',
+    },
+    en: {
+      title: 'Device Control',
+      desc: 'Run commands on a real device, rename it, change its room, and query preferences/status.',
+      selectByLocation: 'Select device by location',
+      loading: 'Loading…',
+      refreshStatus: '↻ Refresh status',
+      capabilities: 'Capabilities',
+      noControllableCap: 'No controllable capability.',
+      schemaLoading: 'Loading schema…',
+      component: 'component',
+      noCommands: 'This capability has no commands to run (read-only).',
+      optional: '(optional)',
+      noArgs: 'No arguments',
+      dontSend: '(do not send)',
+      sending: 'Sending…',
+      runCommand: '▶ Run command',
+      renameSection: 'Rename / change room (rename · update)',
+      labelField: 'label (name)',
+      deviceNamePlaceholder: 'Device name',
+      roomField: 'room',
+      noRoom: '(no room)',
+      saving: 'Saving…',
+      saveChanges: 'Save changes',
+      preferences: 'Preferences',
+      lookup: 'Query',
+      preferencesHint: 'Click the button to query this device’s preferences.',
+      execLog: 'Run log',
+      currentStatusRawJson: 'Current device status (raw JSON)',
+      missingArg: '⚠ Enter the required argument "{arg}" for "{cmd}".',
+      confirmSendCommand: 'This will send a command to the real device.\n\n{device}\n{cap}.{cmd}{args}\n\nContinue?',
+      cmdOk: '✓ OK: {label}',
+      sentCommand: 'Command sent.',
+      cmdError: '✗ Error: {msg}',
+      noChanges: 'Nothing changed.',
+      confirmUpdate: 'This will update the device.\n\n{detail}\n\nContinue?',
+      updateName: 'Name: {name}',
+      updateRoom: 'Room: {room}',
+      updated: 'Device updated.',
+      roomNone: '(none)',
+    },
+  },
+})
 
 // --- 선택된 디바이스 -------------------------------------------------------
 const device = ref<Device | null>(null)
@@ -247,7 +335,7 @@ async function runCommand(cmd: CommandDef) {
   for (const arg of cmd.arguments ?? []) {
     const r = resolveArg(arg, inputs[arg.name])
     if (!r.ok) {
-      addLog(`⚠ "${cmd.name}" 의 필수 인자 "${arg.name}" 를 입력하세요.`, 'error')
+      addLog(t('missingArg', { cmd: cmd.name, arg: arg.name }), 'error')
       return
     }
     if (r.value === undefined) {
@@ -260,7 +348,12 @@ async function runCommand(cmd: CommandDef) {
   const argStr = args.length ? `(${args.map((a) => JSON.stringify(a)).join(', ')})` : '()'
   if (
     !window.confirm(
-      `실제 기기에 명령을 전송합니다.\n\n${deviceLabel.value}\n${selectedCapability.value}.${cmd.name}${argStr}\n\n계속할까요?`,
+      t('confirmSendCommand', {
+        device: deviceLabel.value,
+        cap: selectedCapability.value,
+        cmd: cmd.name,
+        args: argStr,
+      }),
     )
   ) {
     return
@@ -277,12 +370,12 @@ async function runCommand(cmd: CommandDef) {
         arguments: args,
       },
     ])
-    addLog(`✓ OK: ${selectedCapability.value}.${cmd.name}${argStr}`, 'success')
-    toastSuccess('명령을 전송했습니다.')
+    addLog(t('cmdOk', { label: `${selectedCapability.value}.${cmd.name}${argStr}` }), 'success')
+    toastSuccess(t('sentCommand'))
     void refreshStatus()
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
-    addLog(`✗ 오류: ${msg}`, 'error')
+    addLog(t('cmdError', { msg }), 'error')
     toastError(msg)
   } finally {
     sendingCommand.value = null
@@ -301,17 +394,19 @@ async function applyUpdate() {
   const newRoom = roomIdInput.value.trim()
   if (newRoom !== (d.roomId ?? '')) body.roomId = newRoom
   if (!('label' in body) && !('roomId' in body)) {
-    toastError('변경된 내용이 없습니다.')
+    toastError(t('noChanges'))
     return
   }
   if (
     !window.confirm(
-      `디바이스 정보를 변경합니다.\n\n${[
-        'label' in body ? `이름: ${body.label}` : null,
-        'roomId' in body ? `방: ${roomLabel(body.roomId ?? '')}` : null,
-      ]
-        .filter(Boolean)
-        .join('\n')}\n\n계속할까요?`,
+      t('confirmUpdate', {
+        detail: [
+          'label' in body ? t('updateName', { name: body.label ?? '' }) : null,
+          'roomId' in body ? t('updateRoom', { room: roomLabel(body.roomId ?? '') }) : null,
+        ]
+          .filter(Boolean)
+          .join('\n'),
+      }),
     )
   ) {
     return
@@ -319,7 +414,7 @@ async function applyUpdate() {
   updating.value = true
   try {
     await updateDevice(d.deviceId, body)
-    toastSuccess('디바이스 정보를 변경했습니다.')
+    toastSuccess(t('updated'))
     // 로컬 반영
     const fresh = await getDevice(d.deviceId)
     device.value = fresh
@@ -333,7 +428,7 @@ async function applyUpdate() {
 }
 
 function roomLabel(roomId: string): string {
-  if (!roomId) return '(없음)'
+  if (!roomId) return t('roomNone')
   return rooms.value.find((r) => r.roomId === roomId)?.name ?? roomId
 }
 
@@ -399,9 +494,9 @@ async function loadCapabilityStatus() {
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Device 제어</h1>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
     <p class="mt-1 text-sm text-muted">
-      실제 디바이스에 명령을 실행하고 이름/방을 변경하며 preferences·status 를 조회합니다.
+      {{ t('desc') }}
     </p>
   </header>
   <CliRef
@@ -420,14 +515,14 @@ async function loadCapabilityStatus() {
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ $t('common.noToken') }}<strong>{{ $t('common.noTokenStrong') }}</strong>{{ $t('common.noTokenTail') }}
   </div>
 
   <template v-else>
     <!-- 디바이스 선택 -->
     <section class="rounded-xl border border-line bg-card p-4">
       <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-        위치 → 디바이스 선택
+        {{ t('selectByLocation') }}
       </label>
       <div class="mt-3">
         <DeviceSelect @select="onSelect" />
@@ -435,7 +530,7 @@ async function loadCapabilityStatus() {
     </section>
 
     <div v-if="deviceLoading" class="mt-6 flex items-center gap-2 text-sm text-muted">
-      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> 불러오는 중…
+      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> {{ t('loading') }}
     </div>
 
     <div v-if="device && !deviceLoading" class="mt-6 flex flex-col gap-4">
@@ -453,7 +548,7 @@ async function loadCapabilityStatus() {
             :disabled="statusLoading"
             @click="refreshStatus"
           >
-            {{ statusLoading ? '불러오는 중…' : '↻ 상태 새로고침' }}
+            {{ statusLoading ? t('loading') : t('refreshStatus') }}
           </button>
         </div>
       </section>
@@ -467,7 +562,7 @@ async function loadCapabilityStatus() {
             <h3 class="text-sm font-bold">Capabilities</h3>
           </header>
           <div v-if="!componentGroups.length" class="px-4 py-4 text-sm text-muted">
-            제어 가능한 capability 가 없습니다.
+            {{ t('noControllableCap') }}
           </div>
           <div v-else class="max-h-[60vh] overflow-y-auto">
             <template v-for="g in componentGroups" :key="g.componentId">
@@ -496,7 +591,7 @@ async function loadCapabilityStatus() {
         <!-- command 카드 -->
         <section>
           <div v-if="schemaLoading" class="flex items-center gap-2 text-sm text-muted">
-            <span class="size-2 animate-pulse rounded-full bg-brand-2" /> 스키마 불러오는 중…
+            <span class="size-2 animate-pulse rounded-full bg-brand-2" /> {{ t('schemaLoading') }}
           </div>
 
           <template v-else-if="selectedCapability">
@@ -507,7 +602,7 @@ async function loadCapabilityStatus() {
                 {{ selectedCapability }}
               </span>
               <span class="text-xs text-muted">
-                component: <strong class="text-text">{{ selectedComponent }}</strong>
+                {{ t('component') }}: <strong class="text-text">{{ selectedComponent }}</strong>
               </span>
               <div class="ml-auto flex gap-2">
                 <button
@@ -531,7 +626,7 @@ async function loadCapabilityStatus() {
               v-if="!currentCommands.length"
               class="rounded-xl border border-line bg-card px-4 py-3 text-sm text-muted"
             >
-              이 capability 에는 실행할 command 가 없습니다 (읽기 전용).
+              {{ t('noCommands') }}
             </div>
 
             <div v-else class="grid gap-3.5 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
@@ -546,11 +641,11 @@ async function loadCapabilityStatus() {
 
                 <!-- 인자 입력 -->
                 <div class="flex flex-1 flex-col gap-3 px-4 py-4">
-                  <p v-if="!cmd.arguments?.length" class="text-xs text-muted">인자 없음</p>
+                  <p v-if="!cmd.arguments?.length" class="text-xs text-muted">{{ t('noArgs') }}</p>
                   <div v-for="arg in cmd.arguments ?? []" :key="arg.name" class="flex flex-col gap-1">
                     <label class="flex items-center gap-1.5 text-xs text-muted">
                       <span class="font-mono text-text">{{ arg.name }}</span>
-                      <span v-if="arg.optional" class="text-[10px] text-muted">(선택)</span>
+                      <span v-if="arg.optional" class="text-[10px] text-muted">{{ t('optional') }}</span>
                       <span v-if="arg.schema.type" class="text-[10px] text-brand-2">{{ arg.schema.type }}</span>
                     </label>
 
@@ -560,7 +655,7 @@ async function loadCapabilityStatus() {
                       v-model="argInputs[cmd.name][arg.name] as string"
                       class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
                     >
-                      <option v-if="arg.optional" value="">(전송 안 함)</option>
+                      <option v-if="arg.optional" value="">{{ t('dontSend') }}</option>
                       <option v-for="ev in arg.schema.enum ?? []" :key="ev" :value="ev">
                         {{ ev }}
                       </option>
@@ -625,7 +720,7 @@ async function loadCapabilityStatus() {
                     :disabled="sendingCommand === cmd.name"
                     @click="runCommand(cmd)"
                   >
-                    {{ sendingCommand === cmd.name ? '전송 중…' : '▶ 명령 실행' }}
+                    {{ sendingCommand === cmd.name ? t('sending') : t('runCommand') }}
                   </button>
                 </div>
               </div>
@@ -653,26 +748,26 @@ async function loadCapabilityStatus() {
       <section class="overflow-hidden rounded-xl border border-line bg-card">
         <header class="flex items-center gap-2 border-b border-line px-4 py-3">
           <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-          <h3 class="text-sm font-bold">이름 / 방 변경 (rename · update)</h3>
+          <h3 class="text-sm font-bold">{{ t('renameSection') }}</h3>
         </header>
         <div class="grid gap-3 p-4 sm:grid-cols-2">
           <div class="flex flex-col gap-1">
-            <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">label (이름)</label>
+            <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">{{ t('labelField') }}</label>
             <input
               v-model="labelInput"
               type="text"
               spellcheck="false"
-              placeholder="디바이스 이름"
+              :placeholder="t('deviceNamePlaceholder')"
               class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
             />
           </div>
           <div class="flex flex-col gap-1">
-            <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">room (방)</label>
+            <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">{{ t('roomField') }}</label>
             <select
               v-model="roomIdInput"
               class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
             >
-              <option value="">(방 없음)</option>
+              <option value="">{{ t('noRoom') }}</option>
               <option v-for="r in rooms" :key="r.roomId" :value="r.roomId">{{ r.name }}</option>
             </select>
           </div>
@@ -683,7 +778,7 @@ async function loadCapabilityStatus() {
             :disabled="updating"
             @click="applyUpdate"
           >
-            {{ updating ? '저장 중…' : '변경 사항 저장' }}
+            {{ updating ? t('saving') : t('saveChanges') }}
           </button>
         </div>
       </section>
@@ -698,7 +793,7 @@ async function loadCapabilityStatus() {
             :disabled="preferencesLoading"
             @click="loadPreferences"
           >
-            {{ preferencesLoading ? '불러오는 중…' : '조회' }}
+            {{ preferencesLoading ? t('loading') : t('lookup') }}
           </button>
         </header>
         <div class="p-4">
@@ -708,7 +803,7 @@ async function loadCapabilityStatus() {
             label="Device Preferences"
             :default-open="true"
           />
-          <p v-else class="text-xs text-muted">버튼을 눌러 이 디바이스의 preferences 를 조회합니다.</p>
+          <p v-else class="text-xs text-muted">{{ t('preferencesHint') }}</p>
         </div>
       </section>
 
@@ -717,7 +812,7 @@ async function loadCapabilityStatus() {
         <header class="flex items-center justify-between border-b border-line px-4 py-2.5">
           <div class="flex items-center gap-2">
             <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-            <h3 class="text-sm font-bold">실행 로그</h3>
+            <h3 class="text-sm font-bold">{{ t('execLog') }}</h3>
           </div>
           <button
             class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
@@ -739,7 +834,7 @@ async function loadCapabilityStatus() {
       </section>
 
       <!-- 현재 상태 원본 -->
-      <JsonView v-if="deviceStatus" :value="deviceStatus" label="현재 디바이스 상태 (원본 JSON)" />
+      <JsonView v-if="deviceStatus" :value="deviceStatus" :label="t('currentStatusRawJson')" />
     </div>
   </template>
 </template>

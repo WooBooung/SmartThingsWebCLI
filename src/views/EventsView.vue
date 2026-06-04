@@ -13,8 +13,60 @@ import {
   type ValueSchema,
 } from '@/lib/api/events'
 import { toastError } from '@/lib/toast'
+import { useI18n } from 'vue-i18n'
 import JsonView from '@/components/JsonView.vue'
 import CliRef from '@/components/CliRef.vue'
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Event Send',
+      desc: '가상 디바이스의 capability attribute 에 이벤트(상태 값)를 전송합니다.',
+      selectVirtualDevice: '가상 디바이스 선택',
+      loading: '불러오는 중…',
+      refreshDevices: '디바이스 목록 새로고침',
+      noVirtualDevices: '가상 디바이스가 없습니다.',
+      capabilities: 'Capabilities',
+      schemaLoading: '스키마 불러오는 중…',
+      noAttributes: '이 capability 에는 attribute 가 없습니다.',
+      writable: '쓰기 가능 (setter)',
+      readonly: '읽기 전용',
+      sending: '전송 중…',
+      sendEvent: '▶ Send Event',
+      eventLog: 'Event Log',
+      clear: 'Clear',
+      refreshStatus: '↻ 상태 새로고침',
+      deviceStatusLabel: '현재 디바이스 상태 (원본 JSON)',
+      noLocation: '위치 없음',
+      logSelectValue: '⚠ "{name}" 값을 선택/입력하세요.',
+      logError: '✗ 오류: {msg}',
+    },
+    en: {
+      title: 'Event Send',
+      desc: 'Send events (state values) to a virtual device capability attribute.',
+      selectVirtualDevice: 'Select virtual device',
+      loading: 'Loading…',
+      refreshDevices: 'Refresh device list',
+      noVirtualDevices: 'No virtual devices.',
+      capabilities: 'Capabilities',
+      schemaLoading: 'Loading schema…',
+      noAttributes: 'This capability has no attributes.',
+      writable: 'Writable (setter)',
+      readonly: 'Read-only',
+      sending: 'Sending…',
+      sendEvent: '▶ Send Event',
+      eventLog: 'Event Log',
+      clear: 'Clear',
+      refreshStatus: '↻ Refresh status',
+      deviceStatusLabel: 'Current device status (raw JSON)',
+      noLocation: 'No location',
+      logSelectValue: '⚠ Select/enter a value for "{name}".',
+      logError: '✗ Error: {msg}',
+    },
+  },
+})
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -93,7 +145,7 @@ async function loadDevices() {
     const locMap = new Map(locRes.items.map((l) => [l.locationId, l.name]))
     const opts = devRes.items
       .map((d: VirtualDevice) => {
-        const locName = (d.locationId && locMap.get(d.locationId)) || d.locationId || '위치 없음'
+        const locName = (d.locationId && locMap.get(d.locationId)) || d.locationId || t('noLocation')
         const label = d.label || d.name || d.deviceId
         return { deviceId: d.deviceId, label: `[${locName}] ${label}` }
       })
@@ -308,7 +360,7 @@ async function sendEvent(av: AttrView) {
   if (!selectedDeviceId.value || !selectedComponent.value || !selectedCapability.value) return
   const resolved = resolveSendValue(av)
   if (!resolved.ok) {
-    addLog(`⚠ "${av.name}" 값을 선택/입력하세요.`, 'warning')
+    addLog(t('logSelectValue', { name: av.name }), 'warning')
     return
   }
   const unit = av.unitEnum && av.unitEnum.length > 0 ? av.unitEnum[0] : null
@@ -329,7 +381,7 @@ async function sendEvent(av: AttrView) {
     addLog(`✓ OK: ${selectedCapability.value}.${av.name} = ${JSON.stringify(resolved.value)}`, 'success')
     await refreshStatus()
   } catch (e) {
-    addLog(`✗ 오류: ${e instanceof Error ? e.message : String(e)}`, 'error')
+    addLog(t('logError', { msg: e instanceof Error ? e.message : String(e) }), 'error')
   } finally {
     sendingAttr.value = null
   }
@@ -344,9 +396,9 @@ onMounted(loadDevices)
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Event Send</h1>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
     <p class="mt-1 text-sm text-muted">
-      가상 디바이스의 capability attribute 에 이벤트(상태 값)를 전송합니다.
+      {{ t('desc') }}
     </p>
   </header>
   <CliRef
@@ -360,14 +412,14 @@ onMounted(loadDevices)
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ $t('common.noToken') }}<strong>{{ $t('common.noTokenStrong') }}</strong>{{ $t('common.noTokenTail') }}
   </div>
 
   <template v-else>
     <!-- 디바이스 선택 -->
     <section class="rounded-xl border border-line bg-card p-4">
       <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-        가상 디바이스 선택
+        {{ t('selectVirtualDevice') }}
       </label>
       <div class="mt-3 flex gap-2">
         <select
@@ -377,7 +429,7 @@ onMounted(loadDevices)
           @change="onDeviceChange"
         >
           <option value="" disabled>
-            {{ devicesLoading ? '불러오는 중…' : '가상 디바이스 선택' }}
+            {{ devicesLoading ? t('loading') : t('selectVirtualDevice') }}
           </option>
           <option v-for="d in devices" :key="d.deviceId" :value="d.deviceId">
             {{ d.label }}
@@ -386,14 +438,14 @@ onMounted(loadDevices)
         <button
           class="shrink-0 rounded-lg border border-line px-3 py-2 text-sm text-muted transition hover:-translate-y-px hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
           :disabled="devicesLoading"
-          title="디바이스 목록 새로고침"
+          :title="t('refreshDevices')"
           @click="loadDevices"
         >
           ↻
         </button>
       </div>
       <p v-if="!devicesLoading && !devices.length" class="mt-2 text-xs text-muted">
-        가상 디바이스가 없습니다.
+        {{ t('noVirtualDevices') }}
       </p>
     </section>
 
@@ -403,9 +455,9 @@ onMounted(loadDevices)
       <section class="overflow-hidden rounded-xl border border-line bg-card">
         <header class="flex items-center gap-2 border-b border-line px-4 py-3">
           <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-          <h3 class="text-sm font-bold">Capabilities</h3>
+          <h3 class="text-sm font-bold">{{ t('capabilities') }}</h3>
         </header>
-        <div v-if="deviceLoading" class="px-4 py-4 text-sm text-muted">불러오는 중…</div>
+        <div v-if="deviceLoading" class="px-4 py-4 text-sm text-muted">{{ t('loading') }}</div>
         <div v-else class="max-h-[60vh] overflow-y-auto">
           <template v-for="g in componentGroups" :key="g.componentId">
             <div
@@ -433,7 +485,7 @@ onMounted(loadDevices)
       <!-- attribute 카드 -->
       <section>
         <div v-if="schemaLoading" class="flex items-center gap-2 text-sm text-muted">
-          <span class="size-2 animate-pulse rounded-full bg-brand-2" /> 스키마 불러오는 중…
+          <span class="size-2 animate-pulse rounded-full bg-brand-2" /> {{ t('schemaLoading') }}
         </div>
 
         <template v-else-if="currentSchema">
@@ -452,7 +504,7 @@ onMounted(loadDevices)
             v-if="!attrViews.length"
             class="rounded-xl border border-line bg-card px-4 py-3 text-sm text-muted"
           >
-            이 capability 에는 attribute 가 없습니다.
+            {{ t('noAttributes') }}
           </div>
 
           <div v-else class="grid gap-3.5 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
@@ -468,10 +520,10 @@ onMounted(loadDevices)
                   <span
                     v-if="av.hasSetter"
                     class="text-xs text-success"
-                    title="쓰기 가능 (setter)"
+                    :title="t('writable')"
                     >✎</span
                   >
-                  <span v-else class="text-xs text-muted" title="읽기 전용">👁</span>
+                  <span v-else class="text-xs text-muted" :title="t('readonly')">👁</span>
                 </div>
                 <span
                   class="rounded-md px-2 py-0.5 text-xs font-semibold"
@@ -590,7 +642,7 @@ onMounted(loadDevices)
                   :disabled="sendingAttr === av.name"
                   @click="sendEvent(av)"
                 >
-                  {{ sendingAttr === av.name ? '전송 중…' : '▶ Send Event' }}
+                  {{ sendingAttr === av.name ? t('sending') : t('sendEvent') }}
                 </button>
               </div>
             </div>
@@ -604,13 +656,13 @@ onMounted(loadDevices)
       <header class="flex items-center justify-between border-b border-line px-4 py-2.5">
         <div class="flex items-center gap-2">
           <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-          <h3 class="text-sm font-bold">Event Log</h3>
+          <h3 class="text-sm font-bold">{{ t('eventLog') }}</h3>
         </div>
         <button
           class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
           @click="clearLog"
         >
-          Clear
+          {{ t('clear') }}
         </button>
       </header>
       <div class="max-h-52 overflow-y-auto px-4 py-2 font-mono text-[12px]">
@@ -633,10 +685,10 @@ onMounted(loadDevices)
           :disabled="statusLoading"
           @click="refreshStatus"
         >
-          {{ statusLoading ? '불러오는 중…' : '↻ 상태 새로고침' }}
+          {{ statusLoading ? t('loading') : t('refreshStatus') }}
         </button>
       </div>
-      <JsonView v-if="deviceStatus" :value="deviceStatus" label="현재 디바이스 상태 (원본 JSON)" />
+      <JsonView v-if="deviceStatus" :value="deviceStatus" :label="t('deviceStatusLabel')" />
     </div>
   </template>
 </template>

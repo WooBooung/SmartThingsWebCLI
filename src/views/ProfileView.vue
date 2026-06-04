@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { useTokenStore } from '@/stores/token'
 import {
@@ -18,6 +19,99 @@ import { parseJsonOrYaml } from '@/lib/yaml'
 import { toastError, toastSuccess } from '@/lib/toast'
 import JsonView from '@/components/JsonView.vue'
 import CliRef from '@/components/CliRef.vue'
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Device Profile',
+      desc: '디바이스 프로파일을 조회·생성·수정·게시·삭제합니다.',
+      noTokenPre: 'PAT 토큰이 없습니다. 우측 상단의 ',
+      noTokenPost: ' 으로 토큰을 입력하세요.',
+      patSetting: 'PAT 설정',
+      myProfiles: '내 프로파일 ({count})',
+      loading: '불러오는 중…',
+      refresh: '↻ 새로고침',
+      noName: '(이름 없음)',
+      noProfiles: '프로파일이 없습니다.',
+      retrieve: '조회',
+      viewBtn: '통합 보기 (view)',
+      viewTitle: '프로파일 + presentation 통합 보기 (deviceprofiles:view)',
+      deviceConfigTitle: 'metadata.vid/mnmn 로 device configuration 조회 (deviceprofiles:device-config)',
+      presentationTitle: 'metadata.vid/mnmn 로 presentation 조회 (deviceprofiles:presentation)',
+      refHintPre: '통합 보기·device-config·presentation 은 프로파일의 ',
+      refHintMid: ' / ',
+      refHintPost: ' 으로 presentation 을 조회합니다 (CLI 와 동일).',
+      editorLabel: '프로파일 정의 (JSON 또는 YAML)',
+      create: '생성',
+      update: '수정',
+      publish: '게시',
+      del: '삭제',
+      editorPlaceholder: '프로파일 정의를 JSON 또는 YAML 로 입력하세요.',
+      resultLabel: '결과',
+      // toasts / confirms / messages
+      needProfileId: 'Profile ID 를 입력하세요.',
+      noVidFor: '이 프로파일에는 {action} 에 필요한 metadata.vid 가 없습니다. (게시 전이거나 presentation 미연결)',
+      noVidMerge: 'metadata.vid 가 없어 presentation 을 합칠 수 없습니다. 프로파일만 표시합니다.',
+      presentationFetchFail: 'presentation 조회에 실패하여 프로파일만 표시합니다.',
+      viewLoaded: '프로파일 + presentation 통합 보기를 불러왔습니다.',
+      deviceConfigLoaded: '프로파일의 device configuration 을 불러왔습니다.',
+      presentationLoaded: '프로파일의 presentation 을 불러왔습니다.',
+      parseError: '파싱 오류',
+      created: 'Device Profile 을 생성했습니다.',
+      updated: 'Device Profile 을 수정했습니다.',
+      confirmPublish: 'Device Profile "{id}" 을 게시(PUBLISHED)할까요? 게시 후에는 일부 변경이 제한됩니다.',
+      published: 'Device Profile 을 게시했습니다.',
+      confirmDelete: 'Device Profile "{id}" 을 삭제할까요? 되돌릴 수 없습니다.',
+      deleteSuccess: 'Device Profile "{id}" 삭제 성공',
+      deleted: 'Device Profile 을 삭제했습니다.',
+    },
+    en: {
+      title: 'Device Profile',
+      desc: 'Retrieve, create, update, publish, and delete device profiles.',
+      noTokenPre: 'No PAT token. Enter a token via ',
+      noTokenPost: ' at the top right.',
+      patSetting: 'PAT Settings',
+      myProfiles: 'My profiles ({count})',
+      loading: 'Loading…',
+      refresh: '↻ Refresh',
+      noName: '(no name)',
+      noProfiles: 'No profiles.',
+      retrieve: 'Retrieve',
+      viewBtn: 'Combined view (view)',
+      viewTitle: 'Profile + presentation combined view (deviceprofiles:view)',
+      deviceConfigTitle: 'Get device configuration via metadata.vid/mnmn (deviceprofiles:device-config)',
+      presentationTitle: 'Get presentation via metadata.vid/mnmn (deviceprofiles:presentation)',
+      refHintPre: 'Combined view, device-config, and presentation are looked up from the profile ',
+      refHintMid: ' / ',
+      refHintPost: ' (same as the CLI).',
+      editorLabel: 'Profile definition (JSON or YAML)',
+      create: 'Create',
+      update: 'Update',
+      publish: 'Publish',
+      del: 'Delete',
+      editorPlaceholder: 'Enter the profile definition as JSON or YAML.',
+      resultLabel: 'Result',
+      // toasts / confirms / messages
+      needProfileId: 'Enter a Profile ID.',
+      noVidFor: 'This profile has no metadata.vid required for {action}. (not published yet, or presentation not linked)',
+      noVidMerge: 'No metadata.vid, so presentation cannot be merged. Showing the profile only.',
+      presentationFetchFail: 'Failed to fetch presentation; showing the profile only.',
+      viewLoaded: 'Loaded the profile + presentation combined view.',
+      deviceConfigLoaded: 'Loaded the device configuration of the profile.',
+      presentationLoaded: 'Loaded the presentation of the profile.',
+      parseError: 'Parse error',
+      created: 'Created the Device Profile.',
+      updated: 'Updated the Device Profile.',
+      confirmPublish: 'Publish (PUBLISHED) Device Profile "{id}"? Some changes are restricted after publishing.',
+      published: 'Published the Device Profile.',
+      confirmDelete: 'Delete Device Profile "{id}"? This cannot be undone.',
+      deleteSuccess: 'Device Profile "{id}" deleted successfully',
+      deleted: 'Deleted the Device Profile.',
+    },
+  },
+})
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -47,7 +141,7 @@ async function loadList() {
 async function doRetrieve(id?: string) {
   const pid = (id ?? profileId.value).trim()
   if (!pid) {
-    toastError('Profile ID 를 입력하세요.')
+    toastError(t('needProfileId'))
     return
   }
   profileId.value = pid
@@ -68,13 +162,13 @@ async function doRetrieve(id?: string) {
 async function withPresentationRef(action: string): Promise<ReturnType<typeof extractPresentationRef>> {
   const pid = profileId.value.trim()
   if (!pid) {
-    toastError('Profile ID 를 입력하세요.')
+    toastError(t('needProfileId'))
     return null
   }
   const profile = await getProfile(pid)
   const ref = extractPresentationRef(profile)
   if (!ref) {
-    toastError(`이 프로파일에는 ${action} 에 필요한 metadata.vid 가 없습니다. (게시 전이거나 presentation 미연결)`)
+    toastError(t('noVidFor', { action }))
     return null
   }
   return ref
@@ -82,7 +176,7 @@ async function withPresentationRef(action: string): Promise<ReturnType<typeof ex
 
 async function doView() {
   const pid = profileId.value.trim()
-  if (!pid) return toastError('Profile ID 를 입력하세요.')
+  if (!pid) return toastError(t('needProfileId'))
   busy.value = true
   result.value = null
   try {
@@ -91,7 +185,7 @@ async function doView() {
     const ref = extractPresentationRef(profile)
     if (!ref) {
       result.value = profile
-      toastError('metadata.vid 가 없어 presentation 을 합칠 수 없습니다. 프로파일만 표시합니다.')
+      toastError(t('noVidMerge'))
       return
     }
     try {
@@ -99,9 +193,9 @@ async function doView() {
       result.value = { ...profile, view }
     } catch {
       result.value = profile
-      toastError('presentation 조회에 실패하여 프로파일만 표시합니다.')
+      toastError(t('presentationFetchFail'))
     }
-    toastSuccess('프로파일 + presentation 통합 보기를 불러왔습니다.')
+    toastSuccess(t('viewLoaded'))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -116,7 +210,7 @@ async function doDeviceConfig() {
     const ref = await withPresentationRef('device-config')
     if (!ref) return
     result.value = await getProfileDeviceConfig(ref)
-    toastSuccess('프로파일의 device configuration 을 불러왔습니다.')
+    toastSuccess(t('deviceConfigLoaded'))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -131,7 +225,7 @@ async function doPresentation() {
     const ref = await withPresentationRef('presentation')
     if (!ref) return
     result.value = await getProfilePresentation(ref)
-    toastSuccess('프로파일의 presentation 을 불러왔습니다.')
+    toastSuccess(t('presentationLoaded'))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -141,14 +235,14 @@ async function doPresentation() {
 
 async function doCreate() {
   const parsed = parseJsonOrYaml(editor.value)
-  if (!parsed.ok) return toastError(parsed.error ?? '파싱 오류')
+  if (!parsed.ok) return toastError(parsed.error ?? t('parseError'))
   busy.value = true
   try {
     const data = await createProfile(parsed.json)
     result.value = data
     const newId = (data as { id?: string }).id
     if (newId) profileId.value = newId
-    toastSuccess('Device Profile 을 생성했습니다.')
+    toastSuccess(t('created'))
     await loadList()
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
@@ -159,13 +253,13 @@ async function doCreate() {
 
 async function doUpdate() {
   const pid = profileId.value.trim()
-  if (!pid) return toastError('Profile ID 를 입력하세요.')
+  if (!pid) return toastError(t('needProfileId'))
   const parsed = parseJsonOrYaml(editor.value)
-  if (!parsed.ok) return toastError(parsed.error ?? '파싱 오류')
+  if (!parsed.ok) return toastError(parsed.error ?? t('parseError'))
   busy.value = true
   try {
     result.value = await updateProfile(pid, parsed.json)
-    toastSuccess('Device Profile 을 수정했습니다.')
+    toastSuccess(t('updated'))
     await loadList()
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
@@ -176,15 +270,14 @@ async function doUpdate() {
 
 async function doPublish() {
   const pid = profileId.value.trim()
-  if (!pid) return toastError('Profile ID 를 입력하세요.')
-  if (!window.confirm(`Device Profile "${pid}" 을 게시(PUBLISHED)할까요? 게시 후에는 일부 변경이 제한됩니다.`))
-    return
+  if (!pid) return toastError(t('needProfileId'))
+  if (!window.confirm(t('confirmPublish', { id: pid }))) return
   busy.value = true
   try {
     const data = await publishProfile(pid)
     editor.value = JSON.stringify(data, null, 2)
     result.value = data
-    toastSuccess('Device Profile 을 게시했습니다.')
+    toastSuccess(t('published'))
     await loadList()
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
@@ -195,15 +288,15 @@ async function doPublish() {
 
 async function doDelete() {
   const pid = profileId.value.trim()
-  if (!pid) return toastError('Profile ID 를 입력하세요.')
-  if (!window.confirm(`Device Profile "${pid}" 을 삭제할까요? 되돌릴 수 없습니다.`)) return
+  if (!pid) return toastError(t('needProfileId'))
+  if (!window.confirm(t('confirmDelete', { id: pid }))) return
   busy.value = true
   try {
     await deleteProfile(pid)
-    result.value = { message: `Device Profile "${pid}" 삭제 성공` }
+    result.value = { message: t('deleteSuccess', { id: pid }) }
     profileId.value = ''
     editor.value = ''
-    toastSuccess('Device Profile 을 삭제했습니다.')
+    toastSuccess(t('deleted'))
     await loadList()
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
@@ -217,8 +310,8 @@ onMounted(loadList)
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Device Profile</h1>
-    <p class="mt-1 text-sm text-muted">디바이스 프로파일을 조회·생성·수정·게시·삭제합니다.</p>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
+    <p class="mt-1 text-sm text-muted">{{ t('desc') }}</p>
   </header>
   <CliRef
     :commands="[
@@ -241,7 +334,8 @@ onMounted(loadList)
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    <span>{{ t('noTokenPre') }}</span
+    ><strong>{{ t('patSetting') }}</strong><span>{{ t('noTokenPost') }}</span>
   </div>
 
   <template v-else>
@@ -249,14 +343,14 @@ onMounted(loadList)
     <section class="rounded-xl border border-line bg-card p-4">
       <div class="flex items-center justify-between">
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          내 프로파일 ({{ profiles.length }})
+          {{ t('myProfiles', { count: profiles.length }) }}
         </span>
         <button
           class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
           :disabled="listLoading"
           @click="loadList"
         >
-          {{ listLoading ? '불러오는 중…' : '↻ 새로고침' }}
+          {{ listLoading ? t('loading') : t('refresh') }}
         </button>
       </div>
       <div
@@ -270,7 +364,7 @@ onMounted(loadList)
           :class="p.id === profileId ? 'border-brand-2' : ''"
           @click="doRetrieve(p.id)"
         >
-          <span class="truncate text-sm font-semibold text-text">{{ p.name || '(이름 없음)' }}</span>
+          <span class="truncate text-sm font-semibold text-text">{{ p.name || t('noName') }}</span>
           <span class="flex items-center gap-2">
             <span class="truncate font-mono text-[11px] text-muted">{{ p.id }}</span>
             <span
@@ -282,7 +376,7 @@ onMounted(loadList)
           </span>
         </button>
       </div>
-      <p v-else-if="!listLoading" class="mt-3 text-sm text-muted">프로파일이 없습니다.</p>
+      <p v-else-if="!listLoading" class="mt-3 text-sm text-muted">{{ t('noProfiles') }}</p>
     </section>
 
     <!-- Profile ID -->
@@ -301,22 +395,22 @@ onMounted(loadList)
           :disabled="busy"
           @click="doRetrieve()"
         >
-          조회
+          {{ t('retrieve') }}
         </button>
       </div>
       <div class="mt-3 flex flex-wrap gap-2">
         <button
           class="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
           :disabled="busy"
-          title="프로파일 + presentation 통합 보기 (deviceprofiles:view)"
+          :title="t('viewTitle')"
           @click="doView"
         >
-          통합 보기 (view)
+          {{ t('viewBtn') }}
         </button>
         <button
           class="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
           :disabled="busy"
-          title="metadata.vid/mnmn 로 device configuration 조회 (deviceprofiles:device-config)"
+          :title="t('deviceConfigTitle')"
           @click="doDeviceConfig"
         >
           device-config
@@ -324,15 +418,15 @@ onMounted(loadList)
         <button
           class="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
           :disabled="busy"
-          title="metadata.vid/mnmn 로 presentation 조회 (deviceprofiles:presentation)"
+          :title="t('presentationTitle')"
           @click="doPresentation"
         >
           presentation
         </button>
       </div>
       <p class="mt-2 text-xs text-muted">
-        통합 보기·device-config·presentation 은 프로파일의 <code class="font-mono">metadata.vid</code> /
-        <code class="font-mono">metadata.mnmn</code> 으로 presentation 을 조회합니다 (CLI 와 동일).
+        {{ t('refHintPre') }}<code class="font-mono">metadata.vid</code>{{ t('refHintMid')
+        }}<code class="font-mono">metadata.mnmn</code>{{ t('refHintPost') }}
       </p>
     </section>
 
@@ -340,7 +434,7 @@ onMounted(loadList)
     <section class="mt-4 rounded-xl border border-line bg-card p-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          프로파일 정의 (JSON 또는 YAML)
+          {{ t('editorLabel') }}
         </span>
         <div class="flex flex-wrap gap-2">
           <button
@@ -348,28 +442,28 @@ onMounted(loadList)
             :disabled="busy"
             @click="doCreate"
           >
-            생성
+            {{ t('create') }}
           </button>
           <button
             class="rounded-lg border border-line px-4 py-1.5 text-sm font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
             :disabled="busy"
             @click="doUpdate"
           >
-            수정
+            {{ t('update') }}
           </button>
           <button
             class="rounded-lg border border-line px-4 py-1.5 text-sm font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
             :disabled="busy"
             @click="doPublish"
           >
-            게시
+            {{ t('publish') }}
           </button>
           <button
             class="rounded-lg border border-warn/50 bg-warn/10 px-4 py-1.5 text-sm font-semibold text-warn transition hover:-translate-y-px hover:border-warn disabled:opacity-50"
             :disabled="busy"
             @click="doDelete"
           >
-            삭제
+            {{ t('del') }}
           </button>
         </div>
       </div>
@@ -377,14 +471,14 @@ onMounted(loadList)
         v-model="editor"
         spellcheck="false"
         rows="16"
-        placeholder="프로파일 정의를 JSON 또는 YAML 로 입력하세요."
+        :placeholder="t('editorPlaceholder')"
         class="mt-3 w-full resize-y rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-[13px] leading-relaxed text-text outline-none focus:border-brand-2"
       />
     </section>
 
     <!-- 결과 -->
     <div v-if="result" class="mt-4">
-      <JsonView :value="result" label="결과" :default-open="true" />
+      <JsonView :value="result" :label="t('resultLabel')" :default-open="true" />
     </div>
   </template>
 </template>

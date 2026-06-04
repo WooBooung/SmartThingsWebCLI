@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useTokenStore } from '@/stores/token'
 import { listLocations } from '@/lib/stClient'
 import {
@@ -19,6 +20,81 @@ import JsonView from '@/components/JsonView.vue'
 import CliRef from '@/components/CliRef.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Modes',
+      subtitle: '위치별 모드를 조회·생성·수정·삭제하고 현재 모드를 설정합니다.',
+      noTokenPre: 'PAT 토큰이 없습니다. 우측 상단의',
+      patSettings: 'PAT 설정',
+      noTokenPost: '으로 토큰을 입력하세요.',
+      selectLabel: '위치 선택',
+      loading: '불러오는 중…',
+      refresh: '↻ 새로고침',
+      locationPlaceholder: '위치를 선택하세요 ({count})',
+      currentMode: '현재 모드',
+      setAsCurrent: '현재 모드로 설정',
+      modeList: '모드 목록',
+      count: '{count}개',
+      modesEmpty: '모드가 없습니다.',
+      current: '현재',
+      edit: '수정',
+      delete: '삭제',
+      defLabel: '모드 정의 (JSON 또는 YAML)',
+      editTargetPre: '· 수정 대상',
+      create: '생성',
+      saveUpdate: '수정 저장',
+      newMode: '새로 만들기',
+      resultLabel: '결과',
+      errSelectLocation: '위치를 먼저 선택하세요.',
+      errNoEditId: '수정할 모드 ID 가 없습니다 (목록에서 수정을 누르세요).',
+      parseError: '파싱 오류',
+      setCurrentToast: '현재 모드를 "{label}" 로 변경했습니다.',
+      confirmDelete: '모드 "{label}" 를 삭제할까요? 되돌릴 수 없습니다.',
+      deleteSuccessMsg: '모드 "{label}" 삭제 성공',
+      createdToast: '모드를 생성했습니다.',
+      updatedToast: '모드를 수정했습니다.',
+      deletedToast: '모드를 삭제했습니다.',
+    },
+    en: {
+      title: 'Modes',
+      subtitle: 'Query, create, update, and delete modes per location, and set the current mode.',
+      noTokenPre: 'No PAT token. Use',
+      patSettings: 'PAT Settings',
+      noTokenPost: 'in the top-right to enter a token.',
+      selectLabel: 'Select Location',
+      loading: 'Loading…',
+      refresh: '↻ Refresh',
+      locationPlaceholder: 'Select a location ({count})',
+      currentMode: 'Current Mode',
+      setAsCurrent: 'Set as Current Mode',
+      modeList: 'Mode List',
+      count: '{count}',
+      modesEmpty: 'No modes.',
+      current: 'Current',
+      edit: 'Edit',
+      delete: 'Delete',
+      defLabel: 'Mode Definition (JSON or YAML)',
+      editTargetPre: '· editing',
+      create: 'Create',
+      saveUpdate: 'Save Update',
+      newMode: 'New',
+      resultLabel: 'Result',
+      errSelectLocation: 'Select a location first.',
+      errNoEditId: 'No mode ID to update (click Edit in the list).',
+      parseError: 'Parse error',
+      setCurrentToast: 'Current mode changed to "{label}".',
+      confirmDelete: 'Delete mode "{label}"? This cannot be undone.',
+      deleteSuccessMsg: 'Mode "{label}" deleted successfully',
+      createdToast: 'Mode created.',
+      updatedToast: 'Mode updated.',
+      deletedToast: 'Mode deleted.',
+    },
+  },
+})
 
 const locations = ref<Location[]>([])
 const selectedLocation = ref('')
@@ -81,7 +157,7 @@ async function doSetCurrent() {
   try {
     await setCurrentMode(loc, pickedModeId.value)
     currentModeId.value = pickedModeId.value
-    toastSuccess(`현재 모드를 "${currentModeLabel.value}" 로 변경했습니다.`)
+    toastSuccess(t('setCurrentToast', { label: currentModeLabel.value }))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -96,13 +172,13 @@ function editFor(m: Mode) {
 
 async function doCreate() {
   const loc = selectedLocation.value
-  if (!loc) return toastError('위치를 먼저 선택하세요.')
+  if (!loc) return toastError(t('errSelectLocation'))
   const parsed = parseJsonOrYaml(editor.value)
-  if (!parsed.ok) return toastError(parsed.error ?? '파싱 오류')
+  if (!parsed.ok) return toastError(parsed.error ?? t('parseError'))
   busy.value = true
   try {
     result.value = await createMode(loc, parsed.json)
-    toastSuccess('모드를 생성했습니다.')
+    toastSuccess(t('createdToast'))
     editModeId.value = ''
     await loadModes()
   } catch (e) {
@@ -114,14 +190,14 @@ async function doCreate() {
 
 async function doUpdate() {
   const loc = selectedLocation.value
-  if (!loc) return toastError('위치를 먼저 선택하세요.')
-  if (!editModeId.value.trim()) return toastError('수정할 모드 ID 가 없습니다 (목록에서 수정을 누르세요).')
+  if (!loc) return toastError(t('errSelectLocation'))
+  if (!editModeId.value.trim()) return toastError(t('errNoEditId'))
   const parsed = parseJsonOrYaml(editor.value)
-  if (!parsed.ok) return toastError(parsed.error ?? '파싱 오류')
+  if (!parsed.ok) return toastError(parsed.error ?? t('parseError'))
   busy.value = true
   try {
     result.value = await updateMode(loc, editModeId.value.trim(), parsed.json)
-    toastSuccess('모드를 수정했습니다.')
+    toastSuccess(t('updatedToast'))
     await loadModes()
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
@@ -133,12 +209,12 @@ async function doUpdate() {
 async function doDelete(m: Mode) {
   const loc = selectedLocation.value
   if (!loc) return
-  if (!window.confirm(`모드 "${m.label}" 를 삭제할까요? 되돌릴 수 없습니다.`)) return
+  if (!window.confirm(t('confirmDelete', { label: m.label }))) return
   busy.value = true
   try {
     await deleteMode(loc, m.id)
-    result.value = { message: `모드 "${m.label}" 삭제 성공` }
-    toastSuccess('모드를 삭제했습니다.')
+    result.value = { message: t('deleteSuccessMsg', { label: m.label }) }
+    toastSuccess(t('deletedToast'))
     if (editModeId.value === m.id) editModeId.value = ''
     await loadModes()
   } catch (e) {
@@ -153,8 +229,8 @@ onMounted(loadLocations)
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Modes</h1>
-    <p class="mt-1 text-sm text-muted">위치별 모드를 조회·생성·수정·삭제하고 현재 모드를 설정합니다.</p>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
+    <p class="mt-1 text-sm text-muted">{{ t('subtitle') }}</p>
   </header>
   <CliRef
     :commands="[
@@ -172,20 +248,20 @@ onMounted(loadLocations)
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ t('noTokenPre') }} <strong>{{ t('patSettings') }}</strong> {{ t('noTokenPost') }}
   </div>
 
   <template v-else>
     <!-- 위치 선택 -->
     <section class="rounded-xl border border-line bg-card p-4">
       <div class="flex items-center justify-between">
-        <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">위치 선택</span>
+        <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">{{ t('selectLabel') }}</span>
         <button
           class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
           :disabled="locationsLoading"
           @click="loadLocations"
         >
-          {{ locationsLoading ? '불러오는 중…' : '↻ 새로고침' }}
+          {{ locationsLoading ? t('loading') : t('refresh') }}
         </button>
       </div>
       <select
@@ -193,7 +269,7 @@ onMounted(loadLocations)
         class="mt-3 w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
         @change="loadModes"
       >
-        <option value="">위치를 선택하세요 ({{ locations.length }})</option>
+        <option value="">{{ t('locationPlaceholder', { count: locations.length }) }}</option>
         <option v-for="l in locations" :key="l.locationId" :value="l.locationId">
           {{ l.name }}
         </option>
@@ -201,7 +277,7 @@ onMounted(loadLocations)
     </section>
 
     <div v-if="listLoading" class="mt-6 flex items-center gap-2 text-sm text-muted">
-      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> 불러오는 중…
+      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> {{ t('loading') }}
     </div>
 
     <template v-if="selectedLocation && !listLoading">
@@ -209,7 +285,7 @@ onMounted(loadLocations)
       <section class="mt-4 overflow-hidden rounded-xl border border-line bg-card">
         <header class="flex items-center gap-2 border-b border-line px-4 py-3">
           <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-          <h3 class="text-sm font-bold">현재 모드</h3>
+          <h3 class="text-sm font-bold">{{ t('currentMode') }}</h3>
           <span
             v-if="currentModeId"
             class="ml-auto rounded-full border border-brand-2/40 bg-brand-2/10 px-3 py-1 text-xs font-semibold text-brand-2"
@@ -229,7 +305,7 @@ onMounted(loadLocations)
             :disabled="busy || !pickedModeId || pickedModeId === currentModeId"
             @click="doSetCurrent"
           >
-            현재 모드로 설정
+            {{ t('setAsCurrent') }}
           </button>
         </div>
       </section>
@@ -238,10 +314,10 @@ onMounted(loadLocations)
       <section class="mt-4 overflow-hidden rounded-xl border border-line bg-card">
         <header class="flex items-center gap-2 border-b border-line px-4 py-3">
           <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-          <h3 class="text-sm font-bold">모드 목록</h3>
-          <span class="ml-auto text-xs text-muted">{{ modes.length }}개</span>
+          <h3 class="text-sm font-bold">{{ t('modeList') }}</h3>
+          <span class="ml-auto text-xs text-muted">{{ t('count', { count: modes.length }) }}</span>
         </header>
-        <p v-if="!modes.length" class="px-4 py-3 text-sm text-muted">모드가 없습니다.</p>
+        <p v-if="!modes.length" class="px-4 py-3 text-sm text-muted">{{ t('modesEmpty') }}</p>
         <ul v-else class="divide-y divide-line">
           <li
             v-for="m in modes"
@@ -256,7 +332,7 @@ onMounted(loadLocations)
                   v-if="m.id === currentModeId"
                   class="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success"
                 >
-                  현재
+                  {{ t('current') }}
                 </span>
               </div>
               <code class="mt-0.5 block truncate font-mono text-[11px] text-muted">{{ m.id }}</code>
@@ -266,14 +342,14 @@ onMounted(loadLocations)
               :disabled="busy"
               @click="editFor(m)"
             >
-              수정
+              {{ t('edit') }}
             </button>
             <button
               class="shrink-0 rounded-lg border border-warn/50 bg-warn/10 px-3 py-1.5 text-xs font-semibold text-warn transition hover:border-warn disabled:opacity-50"
               :disabled="busy"
               @click="doDelete(m)"
             >
-              삭제
+              {{ t('delete') }}
             </button>
           </li>
         </ul>
@@ -283,8 +359,8 @@ onMounted(loadLocations)
       <section class="mt-4 rounded-xl border border-line bg-card p-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-            모드 정의 (JSON 또는 YAML)
-            <template v-if="editModeId">· 수정 대상 <code class="font-mono text-brand-2">{{ editModeId }}</code></template>
+            {{ t('defLabel') }}
+            <template v-if="editModeId">{{ t('editTargetPre') }} <code class="font-mono text-brand-2">{{ editModeId }}</code></template>
           </span>
           <div class="flex gap-2">
             <button
@@ -292,21 +368,21 @@ onMounted(loadLocations)
               :disabled="busy"
               @click="doCreate"
             >
-              생성
+              {{ t('create') }}
             </button>
             <button
               class="rounded-lg border border-line px-4 py-1.5 text-sm font-semibold transition hover:-translate-y-px hover:border-brand-2 disabled:opacity-50"
               :disabled="busy || !editModeId"
               @click="doUpdate"
             >
-              수정 저장
+              {{ t('saveUpdate') }}
             </button>
             <button
               v-if="editModeId"
               class="rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-muted transition hover:border-brand-2 hover:text-brand-2"
               @click="editModeId = ''"
             >
-              새로 만들기
+              {{ t('newMode') }}
             </button>
           </div>
         </div>
@@ -320,7 +396,7 @@ onMounted(loadLocations)
       </section>
 
       <div v-if="result" class="mt-4">
-        <JsonView :value="result" label="결과" :default-open="true" />
+        <JsonView :value="result" :label="t('resultLabel')" :default-open="true" />
       </div>
     </template>
   </template>

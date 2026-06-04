@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useTokenStore } from '@/stores/token'
 import {
   listSchemaApps,
@@ -18,6 +19,67 @@ import InfoGrid, { type InfoItem } from '@/components/InfoGrid.vue'
 import JsonView from '@/components/JsonView.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Schema 초대',
+      desc: 'ST Schema 앱 초대(invitation)를 조회·생성·삭제합니다.',
+      cliNote: 'REST 는 /invites/schemaApp (호스트 루트). 목록은 schemaAppId 쿼리가 필요합니다.',
+      noName: '(이름 없음)',
+      selectAppFirst: '먼저 Schema 앱을 선택하세요.',
+      enterInviteId: 'Invitation ID 를 입력하세요.',
+      parseError: '파싱 오류',
+      needSchemaAppId: 'schemaAppId 가 필요합니다. (에디터 본문 또는 앱 선택)',
+      created: 'Schema 앱 초대를 생성했습니다.',
+      deleteConfirm: '초대 "{id}" 를 삭제(취소)할까요? 되돌릴 수 없습니다.',
+      deleted: '초대를 삭제했습니다.',
+      selectApp: 'Schema 앱 선택 (초대 목록)',
+      loading: '불러오는 중…',
+      refreshApps: '↻ 앱 새로고침',
+      appOption: 'Schema 앱 ({count})',
+      inviteList: '초대 목록',
+      get: '조회',
+      delete: '삭제',
+      noInvites: '이 앱에 대한 초대가 없거나 조회 권한이 없습니다.',
+      directLabel: 'Invitation ID 로 직접 조회 / 삭제',
+      summary: '초대 정보',
+      createInvite: '초대 생성 (JSON 또는 YAML)',
+      create: '생성',
+      createPlaceholder: '{ "schemaAppId": "viper_...", "description": "초대 설명", "acceptLimit": 1 }',
+      rawJson: '원본 JSON',
+    },
+    en: {
+      title: 'Schema Invites',
+      desc: 'List, create, and delete ST Schema app invitations.',
+      cliNote: 'REST is /invites/schemaApp (host root). The list requires a schemaAppId query.',
+      noName: '(no name)',
+      selectAppFirst: 'Select a Schema app first.',
+      enterInviteId: 'Enter an Invitation ID.',
+      parseError: 'Parse error',
+      needSchemaAppId: 'schemaAppId is required. (editor body or app selection)',
+      created: 'Schema app invitation created.',
+      deleteConfirm: 'Delete (cancel) invitation "{id}"? This cannot be undone.',
+      deleted: 'Invitation deleted.',
+      selectApp: 'Select Schema app (invitation list)',
+      loading: 'Loading…',
+      refreshApps: '↻ Refresh apps',
+      appOption: 'Schema apps ({count})',
+      inviteList: 'Invitations',
+      get: 'Get',
+      delete: 'Delete',
+      noInvites: 'No invitations for this app, or no permission to view them.',
+      directLabel: 'Get / delete directly by Invitation ID',
+      summary: 'Invitation info',
+      createInvite: 'Create invitation (JSON or YAML)',
+      create: 'Create',
+      createPlaceholder: '{ "schemaAppId": "viper_...", "description": "invitation description", "acceptLimit": 1 }',
+      rawJson: 'Raw JSON',
+    },
+  },
+})
 
 // schema 앱 선택 (초대 목록은 schemaAppId 기준)
 const apps = ref<SchemaApp[]>([])
@@ -48,7 +110,7 @@ const infoItems = computed<InfoItem[]>(() => {
 })
 
 function appOptionLabel(a: SchemaApp): string {
-  const name = a.appName || a.partnerName || '(이름 없음)'
+  const name = a.appName || a.partnerName || t('noName')
   return `${name} — ${a.endpointAppId ?? ''}`
 }
 
@@ -73,7 +135,7 @@ async function loadApps() {
 
 async function loadInvites() {
   const appId = selectedApp.value.trim()
-  if (!appId) return toastError('먼저 Schema 앱을 선택하세요.')
+  if (!appId) return toastError(t('selectAppFirst'))
   listLoading.value = true
   invites.value = []
   try {
@@ -95,7 +157,7 @@ function onSelectApp() {
 
 async function doGet(id?: string) {
   const iid = (id ?? inviteId.value).trim()
-  if (!iid) return toastError('Invitation ID 를 입력하세요.')
+  if (!iid) return toastError(t('enterInviteId'))
   inviteId.value = iid
   busy.value = true
   current.value = null
@@ -115,10 +177,10 @@ function onSelectInvite(v: SchemaAppInvitation) {
 
 async function doCreate() {
   const parsed = parseJsonOrYaml(editor.value)
-  if (!parsed.ok) return toastError(parsed.error ?? '파싱 오류')
+  if (!parsed.ok) return toastError(parsed.error ?? t('parseError'))
   const value = parsed.value as { schemaAppId?: string; description?: string; acceptLimit?: number }
   const appId = (value.schemaAppId ?? selectedApp.value).trim()
-  if (!appId) return toastError('schemaAppId 가 필요합니다. (에디터 본문 또는 앱 선택)')
+  if (!appId) return toastError(t('needSchemaAppId'))
   busy.value = true
   try {
     const res = await createSchemaInvite({
@@ -127,7 +189,7 @@ async function doCreate() {
       acceptLimit: value.acceptLimit,
     })
     current.value = res as SchemaAppInvitation
-    toastSuccess('Schema 앱 초대를 생성했습니다.')
+    toastSuccess(t('created'))
     selectedApp.value = appId
     await loadInvites()
   } catch (e) {
@@ -139,15 +201,15 @@ async function doCreate() {
 
 async function doDelete(id?: string) {
   const iid = (id ?? inviteId.value).trim()
-  if (!iid) return toastError('Invitation ID 를 입력하세요.')
-  if (!window.confirm(`초대 "${iid}" 를 삭제(취소)할까요? 되돌릴 수 없습니다.`)) return
+  if (!iid) return toastError(t('enterInviteId'))
+  if (!window.confirm(t('deleteConfirm', { id: iid }))) return
   busy.value = true
   try {
     await deleteSchemaInvite(iid)
     if (current.value && (current.value.invitationId === iid || current.value.id === iid)) {
       current.value = null
     }
-    toastSuccess('초대를 삭제했습니다.')
+    toastSuccess(t('deleted'))
     if (selectedApp.value) await loadInvites()
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
@@ -161,15 +223,15 @@ onMounted(loadApps)
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Schema 초대</h1>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
     <p class="mt-1 text-sm text-muted">
-      ST Schema 앱 초대(invitation)를 조회·생성·삭제합니다.
+      {{ t('desc') }}
     </p>
   </header>
 
   <CliRef
     :commands="['invites:schema [id]', 'invites:schema:create', 'invites:schema:delete [id]']"
-    note="REST 는 /invites/schemaApp (호스트 루트). 목록은 schemaAppId 쿼리가 필요합니다."
+    :note="t('cliNote')"
     :docs="[{ label: 'ST Schema', url: 'https://developer.smartthings.com/docs/devices/cloud-connected/st-schema' }]"
   />
 
@@ -177,7 +239,7 @@ onMounted(loadApps)
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ $t('common.noToken') }}<strong>{{ $t('common.noTokenStrong') }}</strong>{{ $t('common.noTokenTail') }}
   </div>
 
   <template v-else>
@@ -185,14 +247,14 @@ onMounted(loadApps)
     <section class="rounded-xl border border-line bg-card p-4">
       <div class="flex items-center justify-between">
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          Schema 앱 선택 (초대 목록)
+          {{ t('selectApp') }}
         </span>
         <button
           class="rounded-md border border-line px-2 py-1 text-xs text-muted transition hover:border-brand-2 hover:text-brand-2"
           :disabled="appsLoading"
           @click="loadApps"
         >
-          {{ appsLoading ? '불러오는 중…' : '↻ 앱 새로고침' }}
+          {{ appsLoading ? t('loading') : t('refreshApps') }}
         </button>
       </div>
       <div class="mt-3 flex gap-2">
@@ -201,7 +263,7 @@ onMounted(loadApps)
           class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           @change="onSelectApp"
         >
-          <option value="">Schema 앱 ({{ apps.length }})</option>
+          <option value="">{{ t('appOption', { count: apps.length }) }}</option>
           <option v-for="a in apps" :key="a.endpointAppId" :value="a.endpointAppId">
             {{ appOptionLabel(a) }}
           </option>
@@ -211,7 +273,7 @@ onMounted(loadApps)
           :disabled="listLoading || !selectedApp"
           @click="loadInvites"
         >
-          {{ listLoading ? '불러오는 중…' : '초대 목록' }}
+          {{ listLoading ? t('loading') : t('inviteList') }}
         </button>
       </div>
 
@@ -230,26 +292,26 @@ onMounted(loadApps)
             :disabled="busy"
             @click="onSelectInvite(v)"
           >
-            조회
+            {{ t('get') }}
           </button>
           <button
             class="shrink-0 rounded-md border border-warn/50 bg-warn/10 px-2 py-1 text-xs font-semibold text-warn transition hover:border-warn"
             :disabled="busy"
             @click="doDelete(v.invitationId ?? v.id)"
           >
-            삭제
+            {{ t('delete') }}
           </button>
         </li>
       </ul>
       <p v-else-if="selectedApp && !listLoading" class="mt-3 text-xs text-muted">
-        이 앱에 대한 초대가 없거나 조회 권한이 없습니다.
+        {{ t('noInvites') }}
       </p>
     </section>
 
     <!-- 단건 조회 / 삭제 by id -->
     <section class="mt-4 rounded-xl border border-line bg-card p-4">
       <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-        Invitation ID 로 직접 조회 / 삭제
+        {{ t('directLabel') }}
       </span>
       <div class="mt-3 flex gap-2">
         <input
@@ -264,49 +326,49 @@ onMounted(loadApps)
           :disabled="busy"
           @click="doGet()"
         >
-          조회
+          {{ t('get') }}
         </button>
         <button
           class="shrink-0 rounded-lg border border-warn/50 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn transition hover:-translate-y-px hover:border-warn disabled:opacity-50"
           :disabled="busy"
           @click="doDelete()"
         >
-          삭제
+          {{ t('delete') }}
         </button>
       </div>
     </section>
 
     <!-- 요약 -->
     <div v-if="current" class="mt-4">
-      <InfoGrid title="초대 정보" :items="infoItems" />
+      <InfoGrid :title="t('summary')" :items="infoItems" />
     </div>
 
     <!-- 생성 에디터 -->
     <section class="mt-4 rounded-xl border border-line bg-card p-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          초대 생성 (JSON 또는 YAML)
+          {{ t('createInvite') }}
         </span>
         <button
           class="rounded-lg border border-transparent bg-gradient-to-br from-brand to-brand-2 px-4 py-1.5 text-sm font-semibold text-[#061026] transition hover:-translate-y-px disabled:opacity-50"
           :disabled="busy"
           @click="doCreate"
         >
-          생성
+          {{ t('create') }}
         </button>
       </div>
       <textarea
         v-model="editor"
         spellcheck="false"
         rows="8"
-        placeholder='{ "schemaAppId": "viper_...", "description": "초대 설명", "acceptLimit": 1 }'
+        :placeholder="t('createPlaceholder')"
         class="mt-3 w-full resize-y rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-[13px] leading-relaxed text-text outline-none focus:border-brand-2"
       />
     </section>
 
     <!-- 원본 결과 -->
     <div v-if="current" class="mt-4">
-      <JsonView :value="current" label="원본 JSON" :default-open="true" />
+      <JsonView :value="current" :label="t('rawJson')" :default-open="true" />
     </div>
   </template>
 </template>

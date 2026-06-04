@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useI18n } from 'vue-i18n'
 import { useTokenStore } from '@/stores/token'
 import { listLocations } from '@/lib/stClient'
 import type { Location } from '@/lib/types'
@@ -17,6 +18,59 @@ import InfoGrid, { type InfoItem } from '@/components/InfoGrid.vue'
 import JsonView from '@/components/JsonView.vue'
 
 const { hasToken } = storeToRefs(useTokenStore())
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Installed Apps',
+      desc: '설치된 앱(SmartApp 인스턴스)을 조회·이름변경·삭제합니다.',
+      createdDate: '생성일',
+      updatedDate: '수정일',
+      renamed: '이름을 변경했습니다.',
+      deleteConfirm: '설치 앱 "{name}" 을(를) 삭제합니다. 되돌릴 수 없습니다. 계속할까요?',
+      deleted: '삭제했습니다.',
+      locationFilter: '위치 필터',
+      allLocations: '전체 위치',
+      loadList: '목록 조회',
+      idInputLabel: 'installedAppId 직접 입력',
+      get: '조회',
+      loading: '불러오는 중…',
+      listHeader: '설치된 앱 {count}개',
+      noApps: '표시할 설치 앱이 없습니다.',
+      manage: '관리',
+      renameLabel: '이름 변경 (displayName)',
+      newNamePlaceholder: '새 이름',
+      rename: '이름 변경',
+      delete: '삭제',
+      rawJson: 'Installed App (원본 JSON)',
+    },
+    en: {
+      title: 'Installed Apps',
+      desc: 'List, rename, and delete installed apps (SmartApp instances).',
+      createdDate: 'Created',
+      updatedDate: 'Updated',
+      renamed: 'Renamed.',
+      deleteConfirm: 'Delete installed app "{name}"? This cannot be undone. Continue?',
+      deleted: 'Deleted.',
+      locationFilter: 'Location filter',
+      allLocations: 'All locations',
+      loadList: 'List',
+      idInputLabel: 'Enter installedAppId directly',
+      get: 'Get',
+      loading: 'Loading…',
+      listHeader: '{count} installed apps',
+      noApps: 'No installed apps to show.',
+      manage: 'Manage',
+      renameLabel: 'Rename (displayName)',
+      newNamePlaceholder: 'New name',
+      rename: 'Rename',
+      delete: 'Delete',
+      rawJson: 'Installed App (raw JSON)',
+    },
+  },
+})
 
 function str(v: unknown): string {
   if (v == null) return ''
@@ -85,8 +139,8 @@ const detailInfo = computed<InfoItem[]>(() => {
     { label: 'installedAppType', value: str(a.installedAppType) },
     { label: 'installedAppStatus', value: str(a.installedAppStatus) },
     { label: 'locationId', value: loc ? `${loc} (${str(a.locationId)})` : str(a.locationId), mono: !loc },
-    { label: '생성일', value: str(a.createdDate) },
-    { label: '수정일', value: str(a.lastUpdatedDate) },
+    { label: t('createdDate'), value: str(a.createdDate) },
+    { label: t('updatedDate'), value: str(a.lastUpdatedDate) },
   ].filter((i) => i.value)
 })
 
@@ -125,7 +179,7 @@ async function doRename() {
     // 목록 항목도 갱신
     const idx = apps.value.findIndex((a) => a.installedAppId === id)
     if (idx >= 0) apps.value[idx] = { ...apps.value[idx], displayName: updated.displayName }
-    toastSuccess('이름을 변경했습니다.')
+    toastSuccess(t('renamed'))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -137,13 +191,13 @@ async function doDelete() {
   const id = selectedId.value
   if (!id) return
   const name = detail.value ? appName(detail.value) : id
-  if (!window.confirm(`설치 앱 "${name}" 을(를) 삭제합니다. 되돌릴 수 없습니다. 계속할까요?`)) return
+  if (!window.confirm(t('deleteConfirm', { name }))) return
   busy.value = true
   try {
     await deleteInstalledApp(id)
     apps.value = apps.value.filter((a) => a.installedAppId !== id)
     detail.value = null
-    toastSuccess('삭제했습니다.')
+    toastSuccess(t('deleted'))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -157,8 +211,8 @@ if (hasToken.value) void ensureLocations()
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Installed Apps</h1>
-    <p class="mt-1 text-sm text-muted">설치된 앱(SmartApp 인스턴스)을 조회·이름변경·삭제합니다.</p>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
+    <p class="mt-1 text-sm text-muted">{{ t('desc') }}</p>
   </header>
 
   <CliRef
@@ -170,7 +224,7 @@ if (hasToken.value) void ensureLocations()
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ $t('common.noToken') }}<strong>{{ $t('common.noTokenStrong') }}</strong>{{ $t('common.noTokenTail') }}
   </div>
 
   <template v-else>
@@ -178,14 +232,14 @@ if (hasToken.value) void ensureLocations()
       <!-- 위치 필터 + 목록 불러오기 -->
       <div class="rounded-xl border border-line bg-card p-4">
         <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          위치 필터
+          {{ t('locationFilter') }}
         </label>
         <div class="mt-3 flex gap-2">
           <select
             v-model="locationId"
             class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           >
-            <option value="">전체 위치</option>
+            <option value="">{{ t('allLocations') }}</option>
             <option v-for="l in locations" :key="l.locationId" :value="l.locationId">
               {{ l.name }}
             </option>
@@ -195,7 +249,7 @@ if (hasToken.value) void ensureLocations()
             :disabled="listLoading"
             @click="loadList"
           >
-            목록 조회
+            {{ t('loadList') }}
           </button>
         </div>
       </div>
@@ -203,7 +257,7 @@ if (hasToken.value) void ensureLocations()
       <!-- installedAppId 직접 입력 -->
       <div class="rounded-xl border border-line bg-card p-4">
         <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          installedAppId 직접 입력
+          {{ t('idInputLabel') }}
         </label>
         <div class="mt-3 flex gap-2">
           <input
@@ -218,7 +272,7 @@ if (hasToken.value) void ensureLocations()
             :disabled="detailLoading"
             @click="lookupById"
           >
-            조회
+            {{ t('get') }}
           </button>
         </div>
       </div>
@@ -226,7 +280,7 @@ if (hasToken.value) void ensureLocations()
 
     <!-- 목록 -->
     <div v-if="listLoading" class="mt-8 flex items-center gap-2 text-sm text-muted">
-      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> 불러오는 중…
+      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> {{ t('loading') }}
     </div>
 
     <section
@@ -235,9 +289,9 @@ if (hasToken.value) void ensureLocations()
     >
       <header class="flex items-center gap-2 border-b border-line px-4 py-3">
         <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-        <h3 class="text-sm font-bold">설치된 앱 {{ apps.length }}개</h3>
+        <h3 class="text-sm font-bold">{{ t('listHeader', { count: apps.length }) }}</h3>
       </header>
-      <p v-if="!apps.length" class="px-4 py-6 text-sm text-muted">표시할 설치 앱이 없습니다.</p>
+      <p v-if="!apps.length" class="px-4 py-6 text-sm text-muted">{{ t('noApps') }}</p>
       <ul v-else class="divide-y divide-line">
         <li v-for="a in apps" :key="a.installedAppId">
           <button
@@ -262,7 +316,7 @@ if (hasToken.value) void ensureLocations()
 
     <!-- 상세 -->
     <div v-if="detailLoading" class="mt-8 flex items-center gap-2 text-sm text-muted">
-      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> 불러오는 중…
+      <span class="size-2 animate-pulse rounded-full bg-brand-2" /> {{ t('loading') }}
     </div>
 
     <div v-else-if="detail" class="mt-6 flex flex-col gap-4">
@@ -272,18 +326,18 @@ if (hasToken.value) void ensureLocations()
       <section class="overflow-hidden rounded-xl border border-line bg-card">
         <header class="flex items-center gap-2 border-b border-line px-4 py-3">
           <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-          <h3 class="text-sm font-bold">관리</h3>
+          <h3 class="text-sm font-bold">{{ t('manage') }}</h3>
         </header>
         <div class="flex flex-col gap-3 p-4">
           <div>
             <label class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-              이름 변경 (displayName)
+              {{ t('renameLabel') }}
             </label>
             <div class="mt-2 flex gap-2">
               <input
                 v-model="renameInput"
                 spellcheck="false"
-                placeholder="새 이름"
+                :placeholder="t('newNamePlaceholder')"
                 class="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
                 @keyup.enter="doRename"
               />
@@ -292,7 +346,7 @@ if (hasToken.value) void ensureLocations()
                 :disabled="busy || !renameInput.trim()"
                 @click="doRename"
               >
-                이름 변경
+                {{ t('rename') }}
               </button>
             </div>
           </div>
@@ -302,13 +356,13 @@ if (hasToken.value) void ensureLocations()
               :disabled="busy"
               @click="doDelete"
             >
-              삭제
+              {{ t('delete') }}
             </button>
           </div>
         </div>
       </section>
 
-      <JsonView :value="detail" label="Installed App (원본 JSON)" />
+      <JsonView :value="detail" :label="t('rawJson')" />
     </div>
   </template>
 </template>

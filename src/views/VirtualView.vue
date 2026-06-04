@@ -29,6 +29,134 @@ import {
   type VirtualDeviceSummary,
 } from '@/lib/api/virtual'
 import CliRef from '@/components/CliRef.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n({
+  useScope: 'local',
+  inheritLocale: true,
+  messages: {
+    ko: {
+      title: 'Virtual Device 생성',
+      desc: '프로토타입 / 내 device profile / 커스텀 capability 조합 중 한 방식으로 가상 디바이스를 만듭니다.',
+      commonSettings: '공통 설정',
+      executionTarget: '실행 대상',
+      location: '위치',
+      selectLocation: '위치 선택',
+      roomOptional: '방 (선택)',
+      noRoom: '방 선택 안 함',
+      hub: '허브',
+      selectHub: '허브 선택',
+      installedDriver: '설치된 드라이버',
+      selectDriver: '드라이버 선택',
+      tabPrototype: 'Prototype 으로 생성',
+      tabProfileId: '내 Profile 로 생성',
+      tabCustom: 'Custom Profile 로 생성',
+      prototype: '프로토타입',
+      creating: '생성 중…',
+      createDevice: '가상 디바이스 생성',
+      myDeviceProfile: '내 Device Profile',
+      selectProfile: '프로파일 선택',
+      selectProfileCount: '프로파일 선택 ({count})',
+      profileBodyPreview: '프로파일 본문 미리보기',
+      createByProfileId: '선택한 Profile ID 로 생성',
+      customProfileTitle: 'Custom Profile (capability 조합)',
+      capabilitySearch: 'Capability 검색',
+      filterPlaceholder: '입력해서 필터…',
+      standardCaps: '표준 Capabilities',
+      myCustomCaps: '내 커스텀 Capabilities',
+      countSuffix: '{count}개',
+      noCustomCaps: '커스텀 capability 가 없습니다.',
+      selectedCaps: '선택된 Capabilities ({count})',
+      uncheckAll: '전체 해제',
+      capCheckHint: '위 목록에서 capability 를 체크하세요.',
+      createResult: '생성 결과',
+      manageTitle: '가상 디바이스 관리',
+      refreshTitle: '목록 새로고침',
+      loading: '불러오는 중…',
+      refresh: '↻ 새로고침',
+      manageDesc: '기존 가상 디바이스의 라벨/방을 변경하거나 삭제합니다.',
+      selectVirtualDevice: '가상 디바이스 선택',
+      selectVirtualDeviceCount: '가상 디바이스 선택 ({count})',
+      noLocation: '위치 없음',
+      labelPlaceholder: '라벨',
+      processing: '처리 중…',
+      saveChanges: '변경 저장',
+      delete: '삭제',
+      noVirtualDevices: '가상 디바이스가 없습니다.',
+      labelPlaceholderExample: '예: My Virtual Switch',
+      errNeedLabel: 'Device Label 을 입력하세요.',
+      errNeedLocation: '위치를 선택하세요.',
+      errNeedHubDriver: 'LOCAL 실행 대상은 허브와 드라이버를 선택해야 합니다.',
+      okCreated: '가상 디바이스를 생성했습니다.',
+      errNeedPrototype: '프로토타입을 선택하세요.',
+      errNeedProfileId: 'Profile ID 를 입력하세요.',
+      errNeedCapability: 'capability 를 하나 이상 선택하세요.',
+      okUpdated: '가상 디바이스를 수정했습니다.',
+      confirmDelete: '가상 디바이스 "{label}" 를 삭제할까요? 되돌릴 수 없습니다.',
+      okDeleted: '가상 디바이스를 삭제했습니다.',
+    },
+    en: {
+      title: 'Create Virtual Device',
+      desc: 'Create a virtual device using one of: a prototype, your device profile, or a custom capability set.',
+      commonSettings: 'Common settings',
+      executionTarget: 'Execution target',
+      location: 'Location',
+      selectLocation: 'Select location',
+      roomOptional: 'Room (optional)',
+      noRoom: 'No room',
+      hub: 'Hub',
+      selectHub: 'Select hub',
+      installedDriver: 'Installed driver',
+      selectDriver: 'Select driver',
+      tabPrototype: 'Create from prototype',
+      tabProfileId: 'Create from my profile',
+      tabCustom: 'Create from custom profile',
+      prototype: 'Prototype',
+      creating: 'Creating…',
+      createDevice: 'Create virtual device',
+      myDeviceProfile: 'My device profile',
+      selectProfile: 'Select profile',
+      selectProfileCount: 'Select profile ({count})',
+      profileBodyPreview: 'Profile body preview',
+      createByProfileId: 'Create from selected profile ID',
+      customProfileTitle: 'Custom profile (capability set)',
+      capabilitySearch: 'Capability search',
+      filterPlaceholder: 'Type to filter…',
+      standardCaps: 'Standard capabilities',
+      myCustomCaps: 'My custom capabilities',
+      countSuffix: '{count}',
+      noCustomCaps: 'No custom capabilities.',
+      selectedCaps: 'Selected capabilities ({count})',
+      uncheckAll: 'Clear all',
+      capCheckHint: 'Check capabilities from the list above.',
+      createResult: 'Create result',
+      manageTitle: 'Manage virtual devices',
+      refreshTitle: 'Refresh list',
+      loading: 'Loading…',
+      refresh: '↻ Refresh',
+      manageDesc: 'Change the label/room of an existing virtual device, or delete it.',
+      selectVirtualDevice: 'Select virtual device',
+      selectVirtualDeviceCount: 'Select virtual device ({count})',
+      noLocation: 'No location',
+      labelPlaceholder: 'Label',
+      processing: 'Processing…',
+      saveChanges: 'Save changes',
+      delete: 'Delete',
+      noVirtualDevices: 'No virtual devices.',
+      labelPlaceholderExample: 'e.g. My Virtual Switch',
+      errNeedLabel: 'Enter a Device Label.',
+      errNeedLocation: 'Select a location.',
+      errNeedHubDriver: 'A LOCAL execution target requires a hub and driver.',
+      okCreated: 'Virtual device created.',
+      errNeedPrototype: 'Select a prototype.',
+      errNeedProfileId: 'Enter a Profile ID.',
+      errNeedCapability: 'Select at least one capability.',
+      okUpdated: 'Virtual device updated.',
+      confirmDelete: 'Delete virtual device "{label}"? This cannot be undone.',
+      okDeleted: 'Virtual device deleted.',
+    },
+  },
+})
 
 const { hasToken } = storeToRefs(useTokenStore())
 
@@ -168,15 +296,15 @@ async function onSelectProfile() {
 // --- 검증 + 생성 ---
 function validateBase(): boolean {
   if (!deviceName.value.trim()) {
-    toastError('Device Label 을 입력하세요.')
+    toastError(t('errNeedLabel'))
     return false
   }
   if (!locationId.value) {
-    toastError('위치를 선택하세요.')
+    toastError(t('errNeedLocation'))
     return false
   }
   if (isLocal.value && (!hubId.value || !driverId.value)) {
-    toastError('LOCAL 실행 대상은 허브와 드라이버를 선택해야 합니다.')
+    toastError(t('errNeedHubDriver'))
     return false
   }
   return true
@@ -198,7 +326,7 @@ async function run<T>(fn: () => Promise<T>) {
   result.value = null
   try {
     result.value = await fn()
-    toastSuccess('가상 디바이스를 생성했습니다.')
+    toastSuccess(t('okCreated'))
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
   } finally {
@@ -209,7 +337,7 @@ async function run<T>(fn: () => Promise<T>) {
 function createPrototypeDevice() {
   if (!validateBase()) return
   if (!prototype.value) {
-    toastError('프로토타입을 선택하세요.')
+    toastError(t('errNeedPrototype'))
     return
   }
   run(() => createByPrototype({ ...baseArgs(), prototype: prototype.value }))
@@ -218,7 +346,7 @@ function createPrototypeDevice() {
 function createProfileIdDevice() {
   if (!validateBase()) return
   if (!profileId.value.trim()) {
-    toastError('Profile ID 를 입력하세요.')
+    toastError(t('errNeedProfileId'))
     return
   }
   run(() => createByProfileId({ ...baseArgs(), profileId: profileId.value.trim() }))
@@ -227,7 +355,7 @@ function createProfileIdDevice() {
 function createCustomDevice() {
   if (!validateBase()) return
   if (selectedCaps.value.length === 0) {
-    toastError('capability 를 하나 이상 선택하세요.')
+    toastError(t('errNeedCapability'))
     return
   }
   run(() =>
@@ -297,13 +425,13 @@ async function saveManage() {
   if (!d) return
   const label = manageLabel.value.trim()
   if (!label) {
-    toastError('Device Label 을 입력하세요.')
+    toastError(t('errNeedLabel'))
     return
   }
   manageBusy.value = true
   try {
     await updateVirtualDevice(d.deviceId, { label, roomId: manageRoomId.value || undefined })
-    toastSuccess('가상 디바이스를 수정했습니다.')
+    toastSuccess(t('okUpdated'))
     await loadVirtualDevices()
   } catch (e) {
     toastError(e instanceof Error ? e.message : String(e))
@@ -316,11 +444,11 @@ async function removeManage() {
   const d = manageSelected.value
   if (!d) return
   const label = d.label || d.name || d.deviceId
-  if (!window.confirm(`가상 디바이스 "${label}" 를 삭제할까요? 되돌릴 수 없습니다.`)) return
+  if (!window.confirm(t('confirmDelete', { label }))) return
   manageBusy.value = true
   try {
     await deleteVirtualDevice(d.deviceId)
-    toastSuccess('가상 디바이스를 삭제했습니다.')
+    toastSuccess(t('okDeleted'))
     manageSelectedId.value = ''
     manageLabel.value = ''
     manageRoomId.value = ''
@@ -338,18 +466,18 @@ onMounted(() => {
   loadVirtualDevices()
 })
 
-const TABS: { key: Mode; label: string }[] = [
-  { key: 'prototype', label: 'Prototype 으로 생성' },
-  { key: 'profileId', label: '내 Profile 로 생성' },
-  { key: 'custom', label: 'Custom Profile 로 생성' },
-]
+const TABS = computed<{ key: Mode; labelKey: string }[]>(() => [
+  { key: 'prototype', labelKey: 'tabPrototype' },
+  { key: 'profileId', labelKey: 'tabProfileId' },
+  { key: 'custom', labelKey: 'tabCustom' },
+])
 </script>
 
 <template>
   <header class="mb-6">
-    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">Virtual Device 생성</h1>
+    <h1 class="text-2xl font-extrabold tracking-tight md:text-3xl">{{ t('title') }}</h1>
     <p class="mt-1 text-sm text-muted">
-      프로토타입 / 내 device profile / 커스텀 capability 조합 중 한 방식으로 가상 디바이스를 만듭니다.
+      {{ t('desc') }}
     </p>
   </header>
   <CliRef
@@ -368,7 +496,7 @@ const TABS: { key: Mode; label: string }[] = [
     v-if="!hasToken"
     class="rounded-xl border-l-[3px] border-warn bg-warn/10 px-4 py-3 text-sm text-warn"
   >
-    PAT 토큰이 없습니다. 우측 상단의 <strong>PAT 설정</strong> 으로 토큰을 입력하세요.
+    {{ $t('common.noToken') }}<strong>{{ $t('common.noTokenStrong') }}</strong>{{ $t('common.noTokenTail') }}
   </div>
 
   <template v-else>
@@ -376,7 +504,7 @@ const TABS: { key: Mode; label: string }[] = [
     <section class="rounded-xl border border-line bg-card p-4">
       <div class="flex items-center gap-2">
         <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
-        <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">공통 설정</span>
+        <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">{{ t('commonSettings') }}</span>
       </div>
       <div class="mt-3 grid gap-3 sm:grid-cols-2">
         <label class="flex flex-col gap-1">
@@ -384,12 +512,12 @@ const TABS: { key: Mode; label: string }[] = [
           <input
             v-model="deviceName"
             spellcheck="false"
-            placeholder="예: My Virtual Switch"
+            :placeholder="t('labelPlaceholderExample')"
             class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           />
         </label>
         <label class="flex flex-col gap-1">
-          <span class="text-xs font-semibold text-muted">실행 대상</span>
+          <span class="text-xs font-semibold text-muted">{{ t('executionTarget') }}</span>
           <select
             v-model="executionTarget"
             class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
@@ -399,26 +527,26 @@ const TABS: { key: Mode; label: string }[] = [
           </select>
         </label>
         <label class="flex flex-col gap-1">
-          <span class="text-xs font-semibold text-muted">위치</span>
+          <span class="text-xs font-semibold text-muted">{{ t('location') }}</span>
           <select
             v-model="locationId"
             class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
             @change="onLocationChange"
           >
-            <option value="">위치 선택</option>
+            <option value="">{{ t('selectLocation') }}</option>
             <option v-for="l in locations" :key="l.locationId" :value="l.locationId">
               {{ l.name }}
             </option>
           </select>
         </label>
         <label class="flex flex-col gap-1">
-          <span class="text-xs font-semibold text-muted">방 (선택)</span>
+          <span class="text-xs font-semibold text-muted">{{ t('roomOptional') }}</span>
           <select
             v-model="roomId"
             :disabled="!locationId"
             class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2 disabled:opacity-50"
           >
-            <option value="">방 선택 안 함</option>
+            <option value="">{{ t('noRoom') }}</option>
             <option v-for="r in rooms" :key="r.roomId" :value="r.roomId">{{ r.name }}</option>
           </select>
         </label>
@@ -427,25 +555,25 @@ const TABS: { key: Mode; label: string }[] = [
       <!-- LOCAL 전용 -->
       <div v-if="isLocal" class="mt-3 grid gap-3 sm:grid-cols-2">
         <label class="flex flex-col gap-1">
-          <span class="text-xs font-semibold text-muted">허브</span>
+          <span class="text-xs font-semibold text-muted">{{ t('hub') }}</span>
           <select
             v-model="hubId"
             :disabled="!locationId"
             class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2 disabled:opacity-50"
             @change="onHubChange"
           >
-            <option value="">허브 선택</option>
+            <option value="">{{ t('selectHub') }}</option>
             <option v-for="h in hubs" :key="h.deviceId" :value="h.deviceId">{{ h.label }}</option>
           </select>
         </label>
         <label class="flex flex-col gap-1">
-          <span class="text-xs font-semibold text-muted">설치된 드라이버</span>
+          <span class="text-xs font-semibold text-muted">{{ t('installedDriver') }}</span>
           <select
             v-model="driverId"
             :disabled="!hubId"
             class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2 disabled:opacity-50"
           >
-            <option value="">드라이버 선택</option>
+            <option value="">{{ t('selectDriver') }}</option>
             <option v-for="d in drivers" :key="d.driverId" :value="d.driverId">{{ d.name }}</option>
           </select>
         </label>
@@ -455,17 +583,17 @@ const TABS: { key: Mode; label: string }[] = [
     <!-- 모드 탭 -->
     <div class="mt-4 flex flex-wrap gap-2">
       <button
-        v-for="t in TABS"
-        :key="t.key"
+        v-for="tab in TABS"
+        :key="tab.key"
         class="rounded-lg border px-4 py-2 text-sm font-semibold transition"
         :class="
-          mode === t.key
+          mode === tab.key
             ? 'border-brand-2 bg-brand-2/10 text-brand-2'
             : 'border-line text-muted hover:border-brand-2 hover:text-text'
         "
-        @click="mode = t.key"
+        @click="mode = tab.key"
       >
-        {{ t.label }}
+        {{ t(tab.labelKey) }}
       </button>
     </div>
 
@@ -474,7 +602,7 @@ const TABS: { key: Mode; label: string }[] = [
       <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">Prototype</span>
       <div class="mt-3 flex flex-wrap items-end gap-3">
         <label class="flex min-w-60 flex-col gap-1">
-          <span class="text-xs font-semibold text-muted">프로토타입</span>
+          <span class="text-xs font-semibold text-muted">{{ t('prototype') }}</span>
           <select
             v-model="prototype"
             class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
@@ -489,7 +617,7 @@ const TABS: { key: Mode; label: string }[] = [
           :disabled="busy"
           @click="createPrototypeDevice"
         >
-          {{ busy ? '생성 중…' : '가상 디바이스 생성' }}
+          {{ busy ? t('creating') : t('createDevice') }}
         </button>
       </div>
     </section>
@@ -497,17 +625,17 @@ const TABS: { key: Mode; label: string }[] = [
     <!-- 2. Profile ID -->
     <section v-else-if="mode === 'profileId'" class="mt-4 rounded-xl border border-line bg-card p-4">
       <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-        내 Device Profile
+        {{ t('myDeviceProfile') }}
       </span>
       <div class="mt-3 grid gap-3 sm:grid-cols-2">
         <label class="flex flex-col gap-1">
-          <span class="text-xs font-semibold text-muted">프로파일 선택</span>
+          <span class="text-xs font-semibold text-muted">{{ t('selectProfile') }}</span>
           <select
             v-model="profileId"
             class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
             @change="onSelectProfile"
           >
-            <option value="">프로파일 선택 ({{ profiles.length }})</option>
+            <option value="">{{ t('selectProfileCount', { count: profiles.length }) }}</option>
             <option v-for="p in profiles" :key="p.id" :value="p.id">{{ p.name }}</option>
           </select>
         </label>
@@ -523,7 +651,7 @@ const TABS: { key: Mode; label: string }[] = [
         </label>
       </div>
       <details v-if="profileBody" class="mt-3">
-        <summary class="cursor-pointer text-xs font-semibold text-muted">프로파일 본문 미리보기</summary>
+        <summary class="cursor-pointer text-xs font-semibold text-muted">{{ t('profileBodyPreview') }}</summary>
         <textarea
           v-model="profileBody"
           readonly
@@ -537,14 +665,14 @@ const TABS: { key: Mode; label: string }[] = [
         :disabled="busy"
         @click="createProfileIdDevice"
       >
-        {{ busy ? '생성 중…' : '선택한 Profile ID 로 생성' }}
+        {{ busy ? t('creating') : t('createByProfileId') }}
       </button>
     </section>
 
     <!-- 3. Custom Profile -->
     <section v-else class="mt-4 rounded-xl border border-line bg-card p-4">
       <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-        Custom Profile (capability 조합)
+        {{ t('customProfileTitle') }}
       </span>
 
       <div class="mt-3 grid gap-3 sm:grid-cols-2">
@@ -558,11 +686,11 @@ const TABS: { key: Mode; label: string }[] = [
           </select>
         </label>
         <label class="flex flex-col gap-1">
-          <span class="text-xs font-semibold text-muted">Capability 검색</span>
+          <span class="text-xs font-semibold text-muted">{{ t('capabilitySearch') }}</span>
           <input
             v-model="capabilitySearch"
             spellcheck="false"
-            placeholder="입력해서 필터…"
+            :placeholder="t('filterPlaceholder')"
             class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
           />
         </label>
@@ -575,8 +703,8 @@ const TABS: { key: Mode; label: string }[] = [
           @click="capListOpen = !capListOpen"
         >
           <span class="text-brand-2 transition-transform" :class="capListOpen ? 'rotate-90' : ''">▶</span>
-          <span class="text-sm font-bold">표준 Capabilities</span>
-          <span class="ml-auto text-xs text-muted">{{ filteredStandard.length }}개</span>
+          <span class="text-sm font-bold">{{ t('standardCaps') }}</span>
+          <span class="ml-auto text-xs text-muted">{{ t('countSuffix', { count: filteredStandard.length }) }}</span>
         </button>
         <div
           v-if="capListOpen"
@@ -605,15 +733,15 @@ const TABS: { key: Mode; label: string }[] = [
           @click="customListOpen = !customListOpen"
         >
           <span class="text-brand-2 transition-transform" :class="customListOpen ? 'rotate-90' : ''">▶</span>
-          <span class="text-sm font-bold">내 커스텀 Capabilities</span>
-          <span class="ml-auto text-xs text-muted">{{ filteredCustom.length }}개</span>
+          <span class="text-sm font-bold">{{ t('myCustomCaps') }}</span>
+          <span class="ml-auto text-xs text-muted">{{ t('countSuffix', { count: filteredCustom.length }) }}</span>
         </button>
         <div
           v-if="customListOpen"
           class="mt-2 grid max-h-64 grid-cols-1 gap-1 overflow-auto rounded-lg border border-line bg-bg-2 p-3 sm:grid-cols-2 lg:grid-cols-3"
         >
           <p v-if="filteredCustom.length === 0" class="col-span-full text-xs text-muted">
-            커스텀 capability 가 없습니다.
+            {{ t('noCustomCaps') }}
           </p>
           <label
             v-for="c in filteredCustom"
@@ -635,14 +763,14 @@ const TABS: { key: Mode; label: string }[] = [
       <div class="mt-4">
         <div class="flex items-center justify-between">
           <span class="text-xs font-semibold text-muted">
-            선택된 Capabilities ({{ selectedCaps.length }})
+            {{ t('selectedCaps', { count: selectedCaps.length }) }}
           </span>
           <button
             class="rounded-lg border border-warn/50 bg-warn/10 px-3 py-1 text-xs font-semibold text-warn transition hover:border-warn disabled:opacity-50"
             :disabled="selectedCaps.length === 0"
             @click="uncheckAll"
           >
-            전체 해제
+            {{ t('uncheckAll') }}
           </button>
         </div>
         <textarea
@@ -650,7 +778,7 @@ const TABS: { key: Mode; label: string }[] = [
           readonly
           spellcheck="false"
           rows="6"
-          placeholder="위 목록에서 capability 를 체크하세요."
+          :placeholder="t('capCheckHint')"
           class="mt-2 w-full resize-y rounded-lg border border-line bg-bg-2 px-3 py-2 font-mono text-[13px] leading-relaxed text-text outline-none"
         />
       </div>
@@ -660,13 +788,13 @@ const TABS: { key: Mode; label: string }[] = [
         :disabled="busy"
         @click="createCustomDevice"
       >
-        {{ busy ? '생성 중…' : '가상 디바이스 생성' }}
+        {{ busy ? t('creating') : t('createDevice') }}
       </button>
     </section>
 
     <!-- 결과 -->
     <div v-if="result" class="mt-4">
-      <JsonView :value="result" label="생성 결과" :default-open="true" />
+      <JsonView :value="result" :label="t('createResult')" :default-open="true" />
     </div>
 
     <!-- 가상 디바이스 관리 (update / delete) -->
@@ -674,23 +802,23 @@ const TABS: { key: Mode; label: string }[] = [
       <div class="flex items-center gap-2">
         <span class="h-3.5 w-1 rounded-full bg-gradient-to-b from-brand to-brand-2" />
         <span class="text-[11px] font-semibold tracking-wider text-muted uppercase">
-          가상 디바이스 관리
+          {{ t('manageTitle') }}
         </span>
         <button
           class="ml-auto rounded-md border border-line px-3 py-1 text-xs font-semibold text-muted transition hover:border-brand-2 hover:text-brand-2 disabled:opacity-50"
           :disabled="vDevicesLoading"
-          title="목록 새로고침"
+          :title="t('refreshTitle')"
           @click="loadVirtualDevices"
         >
-          {{ vDevicesLoading ? '불러오는 중…' : '↻ 새로고침' }}
+          {{ vDevicesLoading ? t('loading') : t('refresh') }}
         </button>
       </div>
 
-      <p class="mt-2 text-xs text-muted">기존 가상 디바이스의 라벨/방을 변경하거나 삭제합니다.</p>
+      <p class="mt-2 text-xs text-muted">{{ t('manageDesc') }}</p>
 
       <div class="mt-3 grid gap-3 sm:grid-cols-2">
         <label class="flex flex-col gap-1 sm:col-span-2">
-          <span class="text-xs font-semibold text-muted">가상 디바이스 선택</span>
+          <span class="text-xs font-semibold text-muted">{{ t('selectVirtualDevice') }}</span>
           <select
             v-model="manageSelectedId"
             :disabled="vDevicesLoading"
@@ -698,10 +826,10 @@ const TABS: { key: Mode; label: string }[] = [
             @change="onManageSelect"
           >
             <option value="">
-              {{ vDevicesLoading ? '불러오는 중…' : `가상 디바이스 선택 (${vDevices.length})` }}
+              {{ vDevicesLoading ? t('loading') : t('selectVirtualDeviceCount', { count: vDevices.length }) }}
             </option>
             <option v-for="d in vDevices" :key="d.deviceId" :value="d.deviceId">
-              [{{ (d.locationId && locationNameById.get(d.locationId)) || '위치 없음' }}]
+              [{{ (d.locationId && locationNameById.get(d.locationId)) || t('noLocation') }}]
               {{ d.label || d.name || d.deviceId }}
             </option>
           </select>
@@ -713,17 +841,17 @@ const TABS: { key: Mode; label: string }[] = [
             <input
               v-model="manageLabel"
               spellcheck="false"
-              placeholder="라벨"
+              :placeholder="t('labelPlaceholder')"
               class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
             />
           </label>
           <label class="flex flex-col gap-1">
-            <span class="text-xs font-semibold text-muted">방 (선택)</span>
+            <span class="text-xs font-semibold text-muted">{{ t('roomOptional') }}</span>
             <select
               v-model="manageRoomId"
               class="rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-text outline-none focus:border-brand-2"
             >
-              <option value="">방 선택 안 함</option>
+              <option value="">{{ t('noRoom') }}</option>
               <option v-for="r in manageRooms" :key="r.roomId" :value="r.roomId">{{ r.name }}</option>
             </select>
           </label>
@@ -739,19 +867,19 @@ const TABS: { key: Mode; label: string }[] = [
           :disabled="manageBusy"
           @click="saveManage"
         >
-          {{ manageBusy ? '처리 중…' : '변경 저장' }}
+          {{ manageBusy ? t('processing') : t('saveChanges') }}
         </button>
         <button
           class="rounded-lg border border-warn/50 bg-warn/10 px-4 py-2 text-sm font-semibold text-warn transition hover:border-warn disabled:opacity-50"
           :disabled="manageBusy"
           @click="removeManage"
         >
-          삭제
+          {{ t('delete') }}
         </button>
       </div>
 
       <p v-else-if="!vDevicesLoading && !vDevices.length" class="mt-3 text-xs text-muted">
-        가상 디바이스가 없습니다.
+        {{ t('noVirtualDevices') }}
       </p>
     </section>
   </template>
